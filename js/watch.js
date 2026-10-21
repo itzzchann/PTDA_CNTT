@@ -33,7 +33,7 @@
     setupCommentSection();
 
     if (!slug) {
-      showWatchError("Không tìm thấy phim! Đường dẫn thiếu mã phim.");
+      showLoadFailure("Không tìm thấy phim. Đường dẫn thiếu mã phim.");
       return;
     }
 
@@ -45,11 +45,18 @@
     const movie = res.data?.data?.item;
 
     if (!res.success || !movie) {
-      showWatchError(
-        res.success ? "Không tìm thấy phim này." : `Lỗi tải phim: ${res.error}`,
+      const notFound = res.success || res.status === 404;
+      showLoadFailure(
+        notFound
+          ? "Không tìm thấy phim này. Có thể phim đã bị gỡ hoặc đường dẫn sai."
+          : "Không kết nối được máy chủ phim. Kiểm tra mạng rồi thử lại.",
+        notFound ? null : () => loadMovie(slug),
       );
       return;
     }
+
+    hidePlayerMessage();
+    setMovieSectionsVisible(true);
 
     movie.episodes = movie.episodes || [];
     if (!movie.episodes[state.server]) {
@@ -72,13 +79,41 @@
     saveWatchHistory(movie, state.episode, 0);
   }
 
-  function showWatchError(message) {
-    const container = document.querySelector(".watch-page");
+  // Không tải được phim: báo ngay trong khung video, ẩn các khu vực phụ thuộc dữ liệu phim.
+  function showLoadFailure(message, onRetry = null) {
+    setText("header-movie-title", "Không tải được phim");
+    setMovieSectionsVisible(false);
+    showPlayerMessage(message, onRetry);
+  }
+
+  function setMovieSectionsVisible(visible) {
+    const sections = document.querySelector(".content-wrapper");
+    if (sections) sections.hidden = !visible;
+  }
+
+  function showPlayerMessage(message, onRetry = null) {
+    const container = document.getElementById("player-container");
     if (!container) return;
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "error-message watch-error";
-    errorDiv.textContent = message;
-    container.prepend(errorDiv);
+    let box = container.querySelector(".player-message");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "player-message";
+      container.appendChild(box);
+    }
+    renderEmptyState(box, {
+      icon: "fa-solid fa-circle-exclamation",
+      message,
+      onRetry: onRetry
+        ? () => {
+            renderEmptyState(box, { icon: "fa-solid fa-spinner fa-spin", message: "Đang thử lại..." });
+            onRetry();
+          }
+        : null,
+    });
+  }
+
+  function hidePlayerMessage() {
+    document.querySelector("#player-container .player-message")?.remove();
   }
 
   function setText(id, value) {
@@ -167,7 +202,11 @@
   function renderVideo() {
     const server = state.movie.episodes[state.server] || state.movie.episodes[0];
     const ep = server?.server_data?.find((e) => isSameEpisode(e, state.episode)) || server?.server_data?.[0];
-    if (!ep) return;
+    if (!ep) {
+      showPlayerMessage("Phim này hiện chưa có tập nào để phát. Vui lòng quay lại sau.");
+      return;
+    }
+    hidePlayerMessage();
     state.episode = ep.name;
 
     if (state.hls) {
@@ -218,10 +257,21 @@
       video.hidden = true;
     }
     if (controls) controls.hidden = true;
-    if (iframe) {
-      iframe.hidden = false;
-      iframe.src = embedUrl || "";
+    if (!iframe) return;
+
+    if (!embedUrl) {
+      iframe.hidden = true;
+      iframe.src = "";
+      const hasOtherServers = (state.movie?.episodes?.length || 0) > 1;
+      showPlayerMessage(
+        hasOtherServers
+          ? "Không phát được tập này trên máy chủ hiện tại. Hãy chọn máy chủ khác bên dưới."
+          : "Không phát được tập này. Nguồn phim đang lỗi, vui lòng thử lại sau.",
+      );
+      return;
     }
+    iframe.hidden = false;
+    iframe.src = embedUrl;
   }
 
   function playWithHlsJs(video, ep) {
