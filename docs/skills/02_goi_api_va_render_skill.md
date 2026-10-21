@@ -13,6 +13,7 @@
 | **Đang tải** | `renderSkeleton(gridId, n)` | US-16 |
 | **Lỗi mạng / server** (`!res.success`) | `renderEmptyState(grid, { icon, message, onRetry })` → có nút **Thử lại** | US-16, US-06 |
 | **Rỗng** (thành công nhưng không có dữ liệu) | `renderEmptyState(grid, { icon, message, actionText, actionHref })` + ẩn phân trang | US-30 |
+| **Không tồn tại** (`res.status === 404` hoặc thành công nhưng không có `item`) | Như "Rỗng" — **không** có nút Thử lại (thử lại cũng vô ích), có lối về trang chủ | |
 | **Có dữ liệu** | `grid.innerHTML = items.map(createMovieCard).join("")` | |
 
 Không bao giờ để khu vực trắng trơn hoặc chỉ báo lỗi trong console.

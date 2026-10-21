@@ -14,6 +14,9 @@ Chuẩn bị: chạy Live Server, mở DevTools (F12) → **Console** luôn mở
 - [ ] Console không có lỗi đỏ (cảnh báo của bên thứ ba có thể bỏ qua).
 - [ ] Tham số URL sai/thiếu → có thông báo, không trắng trang.
 - [ ] Network → **Offline** → tải lại → khối lỗi + nút Thử lại; bật mạng, bấm Thử lại → có dữ liệu.
+  Lưu ý: chọn Offline **sau khi** trang đã tải xong HTML/JS (hoặc dùng Network → Request blocking chặn `phimapi.com`),
+  nếu không cả trang sẽ không mở được.
+- [ ] Phân biệt 2 loại lỗi: **mất mạng / máy chủ lỗi** → có nút Thử lại; **không tồn tại** (slug sai) → không có Thử lại, có lối về trang chủ.
 - [ ] Network → **Slow 3G** → thấy skeleton trước khi có dữ liệu.
 
 ## 2. Hồi quy khi sửa CORE

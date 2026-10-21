@@ -77,6 +77,22 @@
 
 ---
 
+## 2b. Xử lý lỗi mạng / mất dữ liệu (22/10/2026)
+
+Kiểm tra bằng cách chặn toàn bộ request tới phimapi trên từng trang, rồi bật lại mạng và bấm "Thử lại".
+
+| Chỗ | Trước | Sau |
+|---|---|---|
+| Trang xem phim | Dòng chữ xám "Lỗi tải phim: Failed to fetch", tiêu đề kẹt "Đang tải...", khung video đen | Thông báo trong khung video + nút **Thử lại**; ẩn các khu vực trống; phim không tồn tại thì không có nút Thử lại |
+| Tập không có nguồn phát (không m3u8, không link nhúng) | Khung đen, không giải thích | Báo "Không phát được tập này" + gợi ý chọn máy chủ khác |
+| Trang chi tiết | Chỉ có "Về trang chủ" | Lỗi mạng → **Thử lại**; phim không tồn tại → "Về trang chủ" |
+| Ô tìm kiếm header | Im lặng khi lỗi | "Không tải được gợi ý. Kiểm tra kết nối mạng rồi thử lại." |
+
+Đã ổn từ trước (kiểm tra lại cùng đợt): trang chủ, phim lẻ/bộ/thể loại/quốc gia, tìm kiếm (thông báo + Thử lại, ẩn phân trang),
+menu thể loại/quốc gia (dữ liệu dự phòng), yêu thích/lịch sử (không cần mạng), ảnh lỗi (ảnh mặc định), hls.js không tải được (chuyển iframe).
+
+---
+
 ## 3. Còn lại — không phải nợ code mà là việc tính năng / nội dung
 
 | Mục | Vì sao chưa làm | Thuộc |
