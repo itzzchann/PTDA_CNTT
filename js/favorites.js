@@ -1,221 +1,108 @@
-const FAVORITES_KEY =
-  (typeof STORAGE_KEYS !== "undefined" && STORAGE_KEYS.FAVORITES) ||
-  "rophim_favorites";
-const ITEMS_PER_PAGE = 12;
+(() => {
+  const GRID_ID = "favorites-grid";
+  const ITEMS_PER_PAGE = APP_CONFIG.LOCAL_ITEMS_PER_PAGE;
 
-let currentPage = 1;
-let totalPages = 1;
-let favoritesData = [];
+  let currentPage = 1;
+  let pagination = null;
 
-let favoritesGrid;
-let currentPageEl;
-let totalPageEl;
-let firstBtn, prevBtn, nextBtn, lastBtn;
-let clearFavoritesBtn;
+  document.addEventListener("DOMContentLoaded", () => {
+    pagination = setupPagination((page) => {
+      currentPage = page;
+      renderFavorites();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    document
+      .getElementById("clearFavoritesBtn")
+      ?.addEventListener("click", clearAllFavorites);
+    renderFavorites();
+  });
 
-document.addEventListener("DOMContentLoaded", () => {
-  initElements();
-  setupPaginationEvents();
-  setupActions();
-  loadFavorites();
-});
-
-function initElements() {
-  favoritesGrid = document.getElementById("favorites-grid");
-  currentPageEl = document.getElementById("currentPage");
-  totalPageEl = document.getElementById("totalPage");
-
-  firstBtn = document.getElementById("firstPage");
-  prevBtn = document.getElementById("prevPage");
-  nextBtn = document.getElementById("nextPage");
-  lastBtn = document.getElementById("lastPage");
-
-  clearFavoritesBtn = document.getElementById("clearFavoritesBtn");
-}
-
-function setupActions() {
-  if (clearFavoritesBtn) {
-    clearFavoritesBtn.addEventListener("click", clearAllFavorites);
-  }
-}
-
-function loadFavorites() {
-  if (typeof renderSkeleton === "function") {
-    renderSkeleton("favorites-grid", 12);
-  }
-
-  setTimeout(() => {
-    try {
-      const stored = localStorage.getItem(FAVORITES_KEY);
-      favoritesData = stored ? JSON.parse(stored) : [];
-      if (!Array.isArray(favoritesData)) favoritesData = [];
-    } catch (error) {
-      console.error("Favorites parse error:", error);
-      favoritesData = [];
-    }
-
-    favoritesData.sort(
+  function getSortedFavorites() {
+    return getStoredList(STORAGE_KEYS.FAVORITES).sort(
       (a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0),
     );
-
-    totalPages = Math.max(1, Math.ceil(favoritesData.length / ITEMS_PER_PAGE));
-    if (currentPage > totalPages) currentPage = totalPages;
-
-    renderFavorites(currentPage);
-    updatePagination();
-  }, 250);
-}
-
-function renderFavorites(page) {
-  if (!favoritesGrid) return;
-  favoritesGrid.innerHTML = "";
-
-  if (favoritesData.length === 0) {
-    favoritesGrid.innerHTML = `
-      <div style="padding:40px;text-align:center;color:#aaa;grid-column:1/-1">
-        <i class="fa-solid fa-heart-crack" style="font-size:48px;margin-bottom:12px;"></i>
-        <p>Bạn chưa có phim yêu thích nào.</p>
-        <a href="movies.html" style="color:var(--primary-color)">
-          Khám phá phim ngay →
-        </a>
-      </div>
-    `;
-    return;
   }
 
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  const currentItems = favoritesData.slice(start, end);
+  function renderFavorites() {
+    const grid = document.getElementById(GRID_ID);
+    if (!grid) return;
 
-  currentItems.forEach((movie) => {
-    const cardHtml = createMovieCard(movie);
-    const temp = document.createElement("div");
-    temp.innerHTML = cardHtml.trim();
-    const card = temp.firstElementChild;
+    const favorites = getSortedFavorites();
+    const totalPages = Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
+    currentPage = Math.min(currentPage, totalPages);
 
-    if (!card) return;
-    const heartBtn =
-      card.querySelector(".favorite-btn") ||
-      card.querySelector(".btn-favorite") ||
-      card.querySelector(".favorite-icon") ||
-      card.querySelector("[data-favorite-btn]");
-
-    if (heartBtn) {
-      heartBtn.style.display = "none";
+    if (favorites.length === 0) {
+      pagination.setVisible(false);
+      renderEmptyState(GRID_ID, {
+        icon: "fa-solid fa-heart-crack",
+        message: "Bạn chưa có phim yêu thích nào.",
+        actionText: "Khám phá phim ngay",
+        actionHref: "movies.html",
+      });
+      return;
     }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    grid.innerHTML = "";
+    favorites.slice(start, start + ITEMS_PER_PAGE).forEach((movie) => {
+      const card = buildFavoriteCard(movie);
+      if (card) grid.appendChild(card);
+    });
+
+    pagination.setVisible(true);
+    pagination.update(currentPage, totalPages);
+  }
+
+  function buildFavoriteCard(movie) {
+    const temp = document.createElement("div");
+    temp.innerHTML = createMovieCard(movie).trim();
+    const card = temp.firstElementChild;
+    if (!card) return null;
+
+    card.querySelector(".btn-favorite")?.remove();
 
     const removeBtn = document.createElement("button");
-    removeBtn.className = "btn-remove-favorite-page";
-    removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    removeBtn.type = "button";
+    removeBtn.className = "btn-remove-card";
     removeBtn.title = "Xóa khỏi yêu thích";
-    removeBtn.style.cssText = `
-      position:absolute;
-      top:10px;
-      left:10px;
-      width:32px;
-      height:32px;
-      border-radius:50%;
-      background:rgba(0,0,0,0.7);
-      color:#fff;
-      border:none;
-      z-index:11;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    `;
-    removeBtn.onclick = (e) => {
+    removeBtn.setAttribute("aria-label", "Xóa khỏi yêu thích");
+    removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    removeBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      removeFavoriteAndReload(movie.slug);
-    };
-
+      removeFromFavorites(movie.slug);
+      showToast("Đã xóa khỏi danh sách yêu thích", "info");
+      renderFavorites();
+    });
     card.appendChild(removeBtn);
 
-    const info = card.querySelector(".movie-info");
-    if (info && movie.addedAt) {
+    if (movie.addedAt) {
       const added = document.createElement("div");
-      added.style.cssText = "font-size:12px;color:#aaa;margin-top:4px;";
+      added.className = "movie-added-at";
       added.textContent = `Đã thêm: ${formatDate(movie.addedAt)}`;
-      info.appendChild(added);
+      card.querySelector(".movie-info")?.appendChild(added);
     }
 
-    favoritesGrid.appendChild(card);
-  });
-}
-
-function removeFavoriteAndReload(slug) {
-  if (typeof removeFromFavorites === "function") {
-    removeFromFavorites(slug);
-  } else {
-    favoritesData = favoritesData.filter((item) => item.slug !== slug);
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoritesData));
+    return card;
   }
 
-  if (typeof showToast === "function") {
-    showToast("Đã xóa khỏi danh sách yêu thích", "info");
-  }
-
-  loadFavorites();
-}
-
-function clearAllFavorites() {
-  if (favoritesData.length === 0) {
-    if (typeof showToast === "function") {
+  async function clearAllFavorites() {
+    if (getStoredList(STORAGE_KEYS.FAVORITES).length === 0) {
       showToast("Danh sách yêu thích đang trống", "info");
+      return;
     }
-    return;
-  }
 
-  if (!confirm("Bạn có chắc muốn xoá toàn bộ danh sách yêu thích?")) return;
+    const confirmed = await showConfirmDialog({
+      title: "Xóa toàn bộ yêu thích?",
+      message: "Tất cả phim trong danh sách yêu thích sẽ bị xóa. Không thể hoàn tác.",
+      confirmText: "Xóa tất cả",
+      danger: true,
+    });
+    if (!confirmed) return;
 
-  localStorage.removeItem(FAVORITES_KEY);
-
-  if (typeof showToast === "function") {
+    removeFromStorage(STORAGE_KEYS.FAVORITES);
     showToast("Đã xóa toàn bộ danh sách yêu thích", "success");
+    currentPage = 1;
+    renderFavorites();
   }
-
-  currentPage = 1;
-  loadFavorites();
-}
-
-function setupPaginationEvents() {
-  if (firstBtn) firstBtn.addEventListener("click", () => changePage(1));
-  if (lastBtn) lastBtn.addEventListener("click", () => changePage(totalPages));
-
-  if (prevBtn) {
-    prevBtn.addEventListener("click", () => {
-      if (currentPage > 1) changePage(currentPage - 1);
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-      if (currentPage < totalPages) changePage(currentPage + 1);
-    });
-  }
-}
-
-function changePage(page) {
-  currentPage = page;
-  renderFavorites(page);
-  updatePagination();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function updatePagination() {
-  if (currentPageEl) currentPageEl.textContent = currentPage;
-  if (totalPageEl) totalPageEl.textContent = totalPages;
-
-  if (firstBtn) firstBtn.disabled = currentPage === 1;
-  if (prevBtn) prevBtn.disabled = currentPage === 1;
-  if (nextBtn) nextBtn.disabled = currentPage === totalPages;
-  if (lastBtn) lastBtn.disabled = currentPage === totalPages;
-}
-
-function formatDate(dateString) {
-  if (!dateString) return "Không rõ";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "Không rõ";
-  return date.toLocaleDateString("vi-VN");
-}
+})();

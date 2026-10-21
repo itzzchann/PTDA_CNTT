@@ -3,8 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lịch sử xem | Rophim</title>
+    <title>Lịch sử xem | RoPhim</title>
+    <meta name="description" content="Lịch sử xem phim của bạn trên RoPhim." />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -18,47 +24,44 @@
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/components.css" />
 
+    <script src="./js/components.js"></script>
     <script src="./js/config.js"></script>
     <script src="./js/utils.js"></script>
     <script src="./js/api.js"></script>
     <script src="./js/main.js"></script>
-    <script src="./js/components.js"></script>
     <script src="./js/history.js" defer></script>
   </head>
 
   <body>
     <div id="header-placeholder"></div>
-    <main style="padding-top: 90px; max-width: 1692px; margin: 0 auto">
+
+    <main class="page-container history-page">
       <section class="mt-3 mb-4">
-        <h2 class="section-title">
+        <h1 class="section-title">
           <i class="fa-solid fa-clock-rotate-left"></i>
           Lịch sử xem
-        </h2>
+        </h1>
 
         <div class="movie-grid" id="history-grid"></div>
 
-        <div class="pagination">
-          <button class="page-btn" id="firstPage" title="Về trang đầu">
+        <nav class="pagination" aria-label="Phân trang" hidden>
+          <button type="button" class="page-btn" id="firstPage" title="Về trang đầu" aria-label="Về trang đầu">
             <i class="fa-solid fa-angles-left"></i>
           </button>
-
-          <button class="page-btn" id="prevPage" title="Trang trước">
+          <button type="button" class="page-btn" id="prevPage" title="Trang trước" aria-label="Trang trước">
             <i class="fa-solid fa-angle-left"></i>
           </button>
-
           <span class="page-info">
             Trang <strong id="currentPage">1</strong> /
             <strong id="totalPage">1</strong>
           </span>
-
-          <button class="page-btn" id="nextPage" title="Trang sau">
+          <button type="button" class="page-btn" id="nextPage" title="Trang sau" aria-label="Trang sau">
             <i class="fa-solid fa-angle-right"></i>
           </button>
-
-          <button class="page-btn" id="lastPage" title="Về trang cuối">
+          <button type="button" class="page-btn" id="lastPage" title="Về trang cuối" aria-label="Về trang cuối">
             <i class="fa-solid fa-angles-right"></i>
           </button>
-        </div>
+        </nav>
       </section>
     </main>
 

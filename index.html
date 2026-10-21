@@ -3,13 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rophim</title>
+    <title>RoPhim - Phim hay cả rổ</title>
+    <meta
+      name="description"
+      content="RoPhim - xem phim online miễn phí chất lượng cao, Vietsub, thuyết minh. Phim mới, phim lẻ, phim bộ cập nhật mỗi ngày."
+    />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -25,24 +32,18 @@
     <script src="./js/utils.js"></script>
     <script src="./js/api.js"></script>
     <script src="./js/main.js"></script>
-    <script src="./js/homepage.js"></script>
+    <script src="./js/homepage.js" defer></script>
   </head>
 
-  <body>
+  <body class="home-page">
     <div id="header-placeholder"></div>
 
-    <main
-      style="
-        background: url(&quot;./assets/images/banners/home-background.jpg&quot;)
-          no-repeat center top/cover;
-      "
-      class="home"
-    >
+    <main class="home">
       <section class="banner" id="heroBanner">
         <div class="banner-content" id="heroContent">
           <h1 id="heroTitle">Đang tải...</h1>
           <p id="heroDesc">Vui lòng chờ trong giây lát</p>
-          <a href="#" class="btn-watch" id="heroPlayBtn">Xem Ngay</a>
+          <a href="movies.html" class="btn-watch" id="heroPlayBtn">Xem Ngay</a>
         </div>
       </section>
 
@@ -50,16 +51,17 @@
         <section class="movie-section">
           <div class="section-header">
             <h2 class="section-title">PHIM MỚI CẬP NHẬT</h2>
-            <a href="movies.html" class="btn-more-link" title="Xem thêm">
+            <a href="movies.html" class="btn-more-link" title="Xem thêm phim mới" aria-label="Xem thêm phim mới">
               <i class="fa-solid fa-chevron-right"></i>
             </a>
           </div>
           <div class="movie-grid" id="movieGrid"></div>
         </section>
+
         <section class="movie-section">
           <div class="section-header">
             <h2 class="section-title">PHIM LẺ MỚI</h2>
-            <a href="movies.html" class="btn-more-link">
+            <a href="movies.html" class="btn-more-link" title="Xem thêm phim lẻ" aria-label="Xem thêm phim lẻ">
               <i class="fa-solid fa-chevron-right"></i>
             </a>
           </div>
@@ -69,7 +71,7 @@
         <section class="movie-section">
           <div class="section-header">
             <h2 class="section-title">PHIM BỘ MỚI</h2>
-            <a href="series.html" class="btn-more-link">
+            <a href="series.html" class="btn-more-link" title="Xem thêm phim bộ" aria-label="Xem thêm phim bộ">
               <i class="fa-solid fa-chevron-right"></i>
             </a>
           </div>

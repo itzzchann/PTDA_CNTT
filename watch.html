@@ -3,8 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Xem Phim - RoPhim</title>
+    <title>Xem phim | RoPhim</title>
+    <meta name="description" content="Xem phim online chất lượng cao, Vietsub, thuyết minh trên RoPhim." />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -18,15 +23,22 @@
     <link rel="stylesheet" href="./css/variables.css" />
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/components.css" />
-    <link rel="stylesheet" href="./css/watch.css?v=2" />
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="./css/watch.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
+    <script src="./js/components.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/watch.js" defer></script>
   </head>
   <body>
     <div id="header-placeholder"></div>
 
     <main class="watch-page">
       <div class="watch-header">
-        <a href="javascript:history.back()" class="back-btn">
+        <a href="javascript:history.back()" class="back-btn" title="Quay lại" aria-label="Quay lại">
           <i class="fas fa-chevron-left"></i>
         </a>
         <div class="header-info">
@@ -50,18 +62,18 @@
               gyroscope;
               picture-in-picture;
             "
-            style="display: none"
+            hidden
           ></iframe>
           <video
             id="hls-player"
             preload="auto"
-            style="display: none; width: 100%; height: 100%; background: #000"
+            hidden
           ></video>
 
           <div
             id="custom-controls"
             class="custom-controls"
-            style="display: none"
+            hidden
           >
             <div class="seekbar-container">
               <div class="seekbar-progress" id="seekbar-progress"></div>
@@ -123,7 +135,7 @@
                   </label>
                 </div>
 
-                <div id="quality-selector" class="quality-selector-v2">
+                <div id="quality-selector" class="quality-selector-v2" hidden>
                   <button class="quality-btn-v2" id="quality-current-btn">
                     <i class="fas fa-gear"></i>
                     <span id="current-quality-label">Auto</span>
@@ -144,15 +156,15 @@
         </div>
 
         <div class="video-toolbar">
-          <button class="toolbar-btn" id="lights-btn" title="Tắt đèn">
+          <button type="button" class="toolbar-btn" id="lights-btn" title="Tắt đèn">
             <i class="fas fa-lightbulb"></i>
             <span>Tắt đèn</span>
           </button>
-          <button class="toolbar-btn" id="favorite-btn" title="Yêu thích">
+          <button type="button" class="toolbar-btn" id="favorite-btn" title="Yêu thích">
             <i class="far fa-heart"></i>
             <span>Yêu thích</span>
           </button>
-          <button class="toolbar-btn" id="share-btn" title="Chia sẻ">
+          <button type="button" class="toolbar-btn" id="share-btn" title="Chia sẻ">
             <i class="fas fa-share-alt"></i>
             <span>Chia sẻ</span>
           </button>
@@ -165,7 +177,7 @@
             <img
               id="movie-poster"
               class="poster-small"
-              src="https://placehold.co/100x150/1a1c26/666?text=Loading"
+              src="./assets/images/defaults/no-poster.svg"
               alt="Poster"
             />
             <div class="info-wrapper">
@@ -210,7 +222,7 @@
             <div class="episodes-controls">
               <div class="left-controls">
                 <div class="season-selector custom-dropdown">
-                  <button class="dropdown-btn" onclick="toggleSeasonDropdown()">
+                  <button type="button" class="dropdown-btn" id="season-toggle-btn">
                     <i class="fas fa-layer-group"></i>
                     <span id="current-season-text">Phần 1</span>
                     <i class="fas fa-caret-down"></i>
@@ -234,13 +246,13 @@
             <div class="comments-section-rich">
               <div class="comment-header-tabs">
                 <div class="left-tabs">
-                  <button class="cmt-tab-btn active">
+                  <button type="button" class="cmt-tab-btn active">
                     <i class="fas fa-comment-alt"></i> Bình luận (
                     <span id="comment-count-display">8</span> )
                   </button>
                   <div class="toggle-pill">
-                    <button class="pill-btn active">Bình luận</button>
-                    <button class="pill-btn">Đánh giá</button>
+                    <button type="button" class="pill-btn active" data-tab="comments">Bình luận</button>
+                    <button type="button" class="pill-btn" data-tab="ratings">Đánh giá</button>
                   </div>
                 </div>
               </div>
@@ -251,7 +263,13 @@
               </p>
 
               <div class="rich-comment-form">
-                <textarea placeholder="Viết bình luận..." rows="3"></textarea>
+                <textarea
+                  id="comment-input"
+                  placeholder="Viết bình luận..."
+                  rows="3"
+                  maxlength="1000"
+                  aria-label="Nội dung bình luận"
+                ></textarea>
                 <div class="form-actions">
                   <div class="left-action">
                     <label class="spoiler-toggle">
@@ -261,8 +279,8 @@
                     </label>
                   </div>
                   <div class="right-action">
-                    <span class="char-count">0 / 1000</span>
-                    <button class="send-btn">
+                    <span class="char-count" id="comment-char-count">0 / 1000</span>
+                    <button type="button" class="send-btn">
                       <i class="fas fa-paper-plane"></i> Gửi
                     </button>
                   </div>
@@ -275,60 +293,20 @@
         </div>
 
         <aside class="sidebar">
-          <div
-            class="sidebar-widget interaction-widget"
-            style="padding: 0; background: transparent; margin-bottom: 20px"
-          >
-            <div
-              class="action-row"
-              style="
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-                background: rgba(255, 255, 255, 0.03);
-                padding: 12px 15px;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-              "
-            >
-              <div
-                class="action-item"
-                id="btn-rate-action"
-                style="text-align: center; cursor: pointer; color: #fff"
-              >
-                <i
-                  class="fas fa-star"
-                  style="
-                    font-size: 20px;
-                    display: block;
-                    margin-bottom: 5px;
-                    transition: color 0.3s;
-                  "
-                ></i>
-                <span style="font-size: 11px; color: #aaa">Đánh giá</span>
-              </div>
+          <div class="sidebar-widget interaction-widget">
+            <div class="action-row">
+              <button type="button" class="action-item" id="btn-rate-action">
+                <i class="fas fa-star"></i>
+                <span>Đánh giá</span>
+              </button>
 
-              <div
-                class="action-item"
-                id="btn-comment-scroll"
-                style="text-align: center; cursor: pointer; color: #fff"
-              >
-                <i
-                  class="fas fa-comment-dots"
-                  style="
-                    font-size: 20px;
-                    display: block;
-                    margin-bottom: 5px;
-                    transition: color 0.3s;
-                  "
-                ></i>
-                <span style="font-size: 11px; color: #aaa">Bình luận</span>
-              </div>
+              <button type="button" class="action-item" id="btn-comment-scroll">
+                <i class="fas fa-comment-dots"></i>
+                <span>Bình luận</span>
+              </button>
 
               <div class="rating-box-premium" title="Điểm TMDB">
-                <img src="./assets/images/logos/ro-icon.svg" alt="Icon" />
+                <img src="./assets/images/logos/ro-icon.svg" alt="" />
                 <span class="rating-score" id="sidebar-rating">--</span>
                 <span class="rating-label">Đánh giá</span>
               </div>
@@ -341,6 +319,11 @@
           </div>
 
           <div class="sidebar-widget">
+            <h3 class="widget-title">Hình ảnh</h3>
+            <div id="gallery-grid" class="gallery-grid"></div>
+          </div>
+
+          <div class="sidebar-widget">
             <h3 class="widget-title">Đề xuất cho bạn</h3>
             <div id="recommendations-list" class="recommendations-list"></div>
           </div>
@@ -349,12 +332,5 @@
     </main>
 
     <div id="footer-placeholder"></div>
-
-    <script src="./js/config.js?v=3"></script>
-    <script src="./js/utils.js?v=3"></script>
-    <script src="./js/api.js?v=3"></script>
-    <script src="./js/main.js?v=3"></script>
-    <script src="./js/components.js?v=3"></script>
-    <script src="./js/watch.js?v=3" defer></script>
   </body>
 </html>
