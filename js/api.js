@@ -1,23 +1,75 @@
 async function fetchAPI(url, options = {}) {
+  const { timeout = API_CONFIG.TIMEOUT_MS, headers = {}, ...fetchOptions } =
+    options;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
   try {
     const response = await fetch(url, {
+      ...fetchOptions,
       headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
+        ...(fetchOptions.body ? { "Content-Type": "application/json" } : {}),
+        ...headers,
       },
-      ...options,
+      signal: controller.signal,
     });
 
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return {
+        success: false,
+        status: response.status,
+        error: data?.error?.message || `HTTP error! status: ${response.status}`,
+        data,
+      };
     }
 
-    const data = await response.json();
-    return { success: true, data };
+    return { success: true, status: response.status, data };
   } catch (error) {
-    console.error("API Error:", error);
-    return { success: false, error: error.message };
+    const message =
+      error.name === "AbortError" ? "Hết thời gian chờ phản hồi" : error.message;
+    console.error("API Error:", url, message);
+    return { success: false, status: 0, error: message };
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+/**
+ * Gọi backend riêng của RoPhim (tài khoản, bình luận, admin). Tự gắn token đăng nhập.
+ * Trả về cùng dạng với fetchAPI: { success, status, data | error }.
+ * @param {string} path endpoint trong BACKEND_CONFIG.ENDPOINTS (đã thay [slug]...)
+ * @param {{method?: string, body?: object}} options
+ */
+async function fetchBackend(path, options = {}) {
+  if (!BACKEND_CONFIG.BASE_URL) {
+    return {
+      success: false,
+      status: 0,
+      error: "BACKEND_NOT_CONFIGURED",
+    };
+  }
+
+  const { body, headers = {}, ...rest } = options;
+  const session = getAuthSession();
+
+  const res = await fetchAPI(`${BACKEND_CONFIG.BASE_URL}${path}`, {
+    ...rest,
+    timeout: BACKEND_CONFIG.TIMEOUT_MS,
+    headers: {
+      ...(session ? { Authorization: `Bearer ${session.token}` } : {}),
+      ...headers,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+  if (res.status === 401 && session) {
+    clearAuthSession();
+    document.dispatchEvent(new CustomEvent("auth:expired"));
+  }
+
+  return res;
 }
 
 async function getNewMovies(page = 1) {
@@ -124,21 +176,19 @@ async function getMovieStreamLink(slug, episode = 1) {
 }
 
 async function getRecommendedMovies(categories, limit = 12) {
-  if (!categories || categories.length === 0) {
-    return await getNewMovies(1);
+  const firstCategory = categories?.[0];
+  const catSlug =
+    typeof firstCategory === "object" ? firstCategory?.slug : firstCategory;
+
+  let res = catSlug ? await getMoviesByCategory(catSlug, 1) : null;
+  if (!res || !res.success || extractMovieItems(res).length === 0) {
+    res = await getNewMovies(1);
   }
 
-  const firstCategory = categories[0];
-  const catSlug = typeof firstCategory === "object" ? firstCategory.slug : firstCategory;
-  if (!catSlug) {
-    return await getNewMovies(1);
-  }
-
-  const res = await getMoviesByCategory(catSlug, 1);
-  if (res.success && res.data?.data?.items?.length > 0) {
-    return res;
-  }
-  return await getNewMovies(1);
+  // Cắt danh sách tại chỗ (v1: data.data.items, v0: data.items) để giữ nguyên dạng response.
+  const list = res.data?.data?.items ? res.data.data : res.data;
+  if (Array.isArray(list?.items)) list.items = list.items.slice(0, limit);
+  return res;
 }
 
 async function getMovieImages(slug) {
@@ -180,6 +230,7 @@ async function getMoviesByListSlug(listSlug, page = 1) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     fetchAPI,
+    fetchBackend,
     getNewMovies,
     getCategoriesList,
     getCountriesList,
@@ -197,7 +248,3 @@ if (typeof module !== "undefined" && module.exports) {
     getMoviesByListSlug,
   };
 }
-window.getNewMovies = getNewMovies;
-window.getSingleMovies = getSingleMovies;
-window.getSeriesMovies = getSeriesMovies;
-window.getMoviesByCategory = getMoviesByCategory;
