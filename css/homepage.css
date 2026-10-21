@@ -17,11 +17,10 @@ body.home-page {
 
 .banner {
   height: 75vh;
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   position: relative;
+  overflow: hidden;
   margin-bottom: 30px;
 }
 
@@ -29,6 +28,7 @@ body.home-page {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   background:
     linear-gradient(to top, #0f1014, transparent),
     linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);

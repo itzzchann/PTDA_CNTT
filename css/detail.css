@@ -9,17 +9,18 @@
 
 .detail-page .hero-banner {
   height: 420px;
-  background-size: cover;
-  background-position: center;
   border-radius: 14px;
   margin-bottom: 20px;
   position: relative;
+  overflow: hidden;
+  background-color: var(--bg-2);
 }
 
 .detail-page .hero-banner::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   border-radius: 14px;
   background: linear-gradient(
     to bottom,

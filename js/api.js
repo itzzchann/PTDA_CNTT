@@ -200,6 +200,28 @@ async function getMovieImages(slug) {
   return await fetchAPI(url);
 }
 
+/**
+ * Ảnh nền ngang độ phân giải cao (TMDB) của phim, đủ nét cho banner rộng.
+ * thumb_url của phimapi thường chỉ 780px nên bị vỡ khi phóng to.
+ * @param {string} slug
+ * @param {number} targetWidth số điểm ảnh thật cần (bề rộng khung × devicePixelRatio)
+ * @returns {Promise<{url: string, width: number} | null>} null nếu phim không có ảnh nền
+ */
+async function getMovieBackdrop(slug, targetWidth = 1280) {
+  const res = await getMovieImages(slug);
+  const backdrops = (res.data?.data?.images || []).filter(
+    (img) => img.type === "backdrop" && img.file_path,
+  );
+  if (backdrops.length === 0) return null;
+
+  const best = backdrops.reduce((a, b) => ((b.width || 0) > (a.width || 0) ? b : a));
+  const useOriginal = targetWidth > 1280 && (best.width || 0) > 1280;
+  return {
+    url: `${API_CONFIG.TMDB_IMAGE_HOST}/${useOriginal ? "original" : "w1280"}${best.file_path}`,
+    width: useOriginal ? best.width : Math.min(best.width || 1280, 1280),
+  };
+}
+
 async function getMoviePeoples(slug) {
   const endpoint = API_CONFIG.ENDPOINTS.MOVIE_PEOPLES.replace(
     "[slug]",
@@ -243,6 +265,7 @@ if (typeof module !== "undefined" && module.exports) {
     getMovieStreamLink,
     getRecommendedMovies,
     getMovieImages,
+    getMovieBackdrop,
     getMoviePeoples,
     getMovieKeywords,
     getMoviesByListSlug,

@@ -68,10 +68,7 @@
       playBtn.href = `watch.html?slug=${encodeURIComponent(movie.slug)}`;
     }
 
-    if (banner) {
-      const bg = getImageUrl(movie.poster_url || movie.thumb_url || "");
-      banner.style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.3) 100%), url("${bg.replace(/["\\]/g, "")}")`;
-    }
+    showMovieBackdrop(banner, movie);
   }
 
   function showHeroFallback() {

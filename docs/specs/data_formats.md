@@ -15,8 +15,10 @@
   name: "Tiếng Nói Sợ Hãi",            // tên tiếng Việt
   slug: "tieng-noi-so-hai",            // ⭐ khóa định danh phim trong toàn dự án
   origin_name: "Violet",
-  poster_url: "uploads/movies/...jpg", // v1: tương đối · v0: URL đầy đủ → luôn dùng getImageUrl()
-  thumb_url:  "uploads/movies/...jpg",
+  poster_url: "uploads/movies/...webp", // ẢNH DỌC 2:3 (500×750 → 2000×3000) — dùng cho thẻ phim, poster
+  thumb_url:  "uploads/movies/...webp", // ẢNH NGANG 16:9, thường chỉ 780×439 — nhỏ, phóng to sẽ vỡ
+                                        // v1: đường dẫn tương đối · v0: URL đầy đủ → luôn dùng getImageUrl()
+                                        // Banner lớn → showMovieBackdrop() (lấy ảnh TMDB nét hơn)
   year: 2021,
   type: "single",                      // single | series | hoathinh | tvshows  (chỉ v1)
   time: "92 phút",                     // (chỉ v1)

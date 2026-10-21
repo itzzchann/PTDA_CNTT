@@ -341,6 +341,22 @@ function showToast(message, type = "info") {
 }
 
 /**
+ * Ảnh nền banner của một phim, ưu tiên ảnh nét nhất:
+ * ảnh nền TMDB → thumb_url (ngang, thường 780px) → poster_url (dọc, chỉ khi không còn gì khác).
+ * @param {HTMLElement} container
+ * @param {object} movie object phim từ API (cần slug, thumb_url, poster_url)
+ */
+async function showMovieBackdrop(container, movie) {
+  if (!container || !movie) return;
+  // Khung có thể đang bị ẩn (clientWidth = 0) lúc trang còn tải → lấy bề rộng cửa sổ.
+  const cssWidth = container.clientWidth || window.innerWidth;
+  const targetWidth = cssWidth * (window.devicePixelRatio || 1);
+  const backdrop = await getMovieBackdrop(movie.slug, targetWidth);
+  const fallback = movie.thumb_url || movie.poster_url;
+  setBackdropImage(container, backdrop ? backdrop.url : getImageUrl(fallback));
+}
+
+/**
  * Hộp thoại xác nhận dùng chung (thay cho confirm() của trình duyệt).
  * @param {{title?: string, message: string, confirmText?: string, cancelText?: string, danger?: boolean}} options
  * @returns {Promise<boolean>} true nếu người dùng xác nhận
@@ -453,6 +469,7 @@ if (typeof module !== "undefined" && module.exports) {
     initializeApp,
     showToast,
     showConfirmDialog,
+    showMovieBackdrop,
     toggleFavorite,
   };
 }

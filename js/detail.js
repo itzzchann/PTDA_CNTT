@@ -64,7 +64,6 @@
 
   function renderMovie(movie, episodes) {
     const posterUrl = getImageUrl(movie.poster_url || movie.thumb_url || "");
-    const backdropUrl = getImageUrl(movie.thumb_url || movie.poster_url || "");
 
     document.title = `${movie.name} | ${APP_CONFIG.APP_NAME}`;
     setText("title", movie.name || "");
@@ -79,8 +78,7 @@
       posterEl.src = posterUrl;
     }
 
-    const hero = document.getElementById("heroBanner");
-    if (hero) hero.style.backgroundImage = `url("${backdropUrl.replace(/["\\]/g, "")}")`;
+    showMovieBackdrop(document.getElementById("heroBanner"), movie);
 
     const chips = [
       formatYear(movie.year),

@@ -322,6 +322,32 @@ function setupPagination(onPageChange) {
   };
 }
 
+/**
+ * Đặt ảnh nền cho banner qua lớp .backdrop-layer (để làm mờ ảnh mà không làm mờ chữ bên trên).
+ * Ảnh phải phóng > 2.5 lần so với khung → tự làm mờ thay vì để lộ vỡ hạt.
+ * @param {HTMLElement} container phần tử banner (cần position: relative + overflow: hidden)
+ * @param {string} url
+ */
+function setBackdropImage(container, url) {
+  if (!container || !url) return;
+
+  let layer = container.querySelector(":scope > .backdrop-layer");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "backdrop-layer";
+    container.prepend(layer);
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    const neededWidth = container.clientWidth * (window.devicePixelRatio || 1);
+    layer.classList.toggle("is-low-res", img.naturalWidth * 2.5 < neededWidth);
+    layer.style.backgroundImage = `url("${url.replace(/["\\]/g, "")}")`;
+    layer.classList.add("is-loaded");
+  };
+  img.src = url;
+}
+
 function smoothScrollTo(element, offset = 0) {
   if (!element) return;
   const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
@@ -450,6 +476,7 @@ if (typeof module !== "undefined" && module.exports) {
     showError,
     renderEmptyState,
     setupPagination,
+    setBackdropImage,
     smoothScrollTo,
     copyToClipboard,
     formatNumber,

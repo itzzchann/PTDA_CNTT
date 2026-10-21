@@ -14,6 +14,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 |---|---|---|
 | `API_CONFIG.BASE_URL` | `"https://phimapi.com"` | api.js |
 | `API_CONFIG.IMAGE_HOST` | `"https://phimimg.com/"` | utils `getImageUrl` |
+| `API_CONFIG.TMDB_IMAGE_HOST` | `"https://image.tmdb.org/t/p"` — ảnh diễn viên, gallery, ảnh nền banner | api `getMovieBackdrop`, watch |
 | `API_CONFIG.BACKUP_URL` | Máy chủ phim dự phòng (chưa dùng — US-62) | — |
 | `API_CONFIG.ENDPOINTS.*` | Endpoint phimapi, placeholder `[slug]`, `[keyword]` — [api_spec.md](api_spec.md) | api.js |
 | `API_CONFIG.TIMEOUT_MS` | `15000` | api `fetchAPI` |
@@ -95,6 +96,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `getImageUrl(path)` | `string` | URL tuyệt đối giữ nguyên; tương đối → ghép `IMAGE_HOST`; rỗng → `DEFAULT_POSTER` | 🔴 |
 | `showError(element, message)` | `void` | Nhận **phần tử**, message được escape | 🟢 |
 | `showLoading(element)` | `void` | Spinner tròn trong `.loading-container` | 🟢 |
+| `setBackdropImage(container, url)` | `void` | Ảnh nền banner qua lớp `.backdrop-layer` (chữ không bị mờ theo); ảnh phải phóng > 2.5 lần → tự làm mờ. Container cần `position: relative; overflow: hidden` | 🟡 main |
 | `smoothScrollTo(element, offset = 0)` | `void` | | 🟢 |
 | `copyToClipboard(text)` | `Promise<boolean>` | | 🟡 watch |
 
@@ -126,7 +128,8 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `searchMovies(keyword, page = 1)` | 🔴 main, search, watch |
 | `getMovieDetail(slug)` → `res.data.data.item` | 🔴 homepage, detail, watch, api |
 | `getCategoriesList()` / `getCountriesList()` | 🟡 main |
-| `getMovieImages(slug)` / `getMoviePeoples(slug)` / `getMovieKeywords(slug)` | 🟡 watch |
+| `getMovieImages(slug)` / `getMoviePeoples(slug)` / `getMovieKeywords(slug)` | 🟡 watch, api |
+| `getMovieBackdrop(slug, targetWidth = 1280)` → `{ url, width } \| null` — ảnh nền ngang TMDB nét nhất, chọn cỡ `w1280`/`original` theo `targetWidth` (px thật). `null` nếu phim không có | 🟡 main `showMovieBackdrop` |
 | `getMovieStreamLink(slug, episode = 1)` → `data: { link, slug, name }` | 🟢 |
 | `getRecommendedMovies(categories, limit = 12)` — phim cùng thể loại đầu tiên, rỗng/lỗi → phim mới; danh sách đã cắt theo `limit`; có thể là dạng v0 → đọc bằng `extractMovieItems` | 🟡 detail, watch |
 
@@ -139,6 +142,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `initializeApp()` | Gọi bởi `components.js`. **Không gọi lại từ trang** | components |
 | `showToast(message, type = "info")` | `type`: `success \| error \| warning \| info`. Nội dung là **text** (an toàn). Tự mất sau 3s | 🔴 main, favorites, watch |
 | `showConfirmDialog({ title, message, confirmText, cancelText, danger })` → `Promise<boolean>` | ⭐ Hộp thoại xác nhận (thay `confirm()`); Esc / bấm nền = hủy. `danger: true` → nút đỏ | 🟢 favorites (V2: xóa bình luận, khóa thành viên) |
+| `showMovieBackdrop(container, movie)` | ⭐ **Banner ngang của phim** — ưu tiên ảnh TMDB → `thumb_url` → `poster_url`. Đừng đặt `poster_url` (ảnh dọc) làm nền banner: bị cắt và phóng to nên vỡ | 🟡 homepage, detail |
 | `toggleFavorite(movie)` → `boolean` | Trạng thái **sau** khi bấm; tự toast (cả khi lỗi bộ nhớ). `movie` cần `{ slug, name, poster_url }` | 🟡 main, watch |
 | `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `setupComingSoonFeatures`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
 
@@ -202,5 +206,6 @@ Class dùng làm "móc" cho JS (không đổi): `.menu-toggle`, `.search-toggle`
 | `.page-heading` | Hàng tiêu đề + nút hành động (vd favorites) |
 | `.empty-state` (+ `-icon`, `-message`, `-action`) | Do `renderEmptyState` sinh |
 | `.btn-remove-card`, `.movie-added-at` | Nút xóa trên thẻ, dòng phụ dưới thẻ |
+| `.backdrop-layer` (`.is-loaded`, `.is-low-res`) | Do `setBackdropImage` sinh |
 | `.skeleton-*`, `.toast*`, `.loading-container`, `.loading-spinner`, `.error-message` | Trạng thái |
 | `.text-center`, `.mt-0…5`, `.mb-0…5` | Tiện ích (bước 8px) |

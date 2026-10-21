@@ -1,6 +1,7 @@
 const API_CONFIG = {
   BASE_URL: "https://phimapi.com",
   IMAGE_HOST: "https://phimimg.com/",
+  TMDB_IMAGE_HOST: "https://image.tmdb.org/t/p",
 
   BACKUP_URL: "https://phimapi.com",
 

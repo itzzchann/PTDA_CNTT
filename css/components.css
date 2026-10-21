@@ -692,3 +692,23 @@
     opacity: 1;
   }
 }
+
+/* Lớp ảnh nền banner — do setBackdropImage() tạo. Container cần position: relative + overflow: hidden. */
+.backdrop-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center 20%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.backdrop-layer.is-loaded {
+  opacity: 1;
+}
+
+.backdrop-layer.is-low-res {
+  filter: blur(6px);
+  transform: scale(1.08);
+}
