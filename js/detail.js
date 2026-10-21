@@ -3,7 +3,7 @@
 
   document.addEventListener("DOMContentLoaded", initDetailPage);
 
-  async function initDetailPage() {
+  function initDetailPage() {
     const slug = new URLSearchParams(window.location.search).get("slug");
 
     if (!slug) {
@@ -11,17 +11,25 @@
       return;
     }
 
+    loadDetail(slug);
+  }
+
+  async function loadDetail(slug) {
     const res = await getMovieDetail(slug);
     const movie = res.data?.data?.item;
 
     if (!res.success || !movie) {
+      const notFound = res.status === 404 || res.success;
       showDetailError(
-        res.status === 404 || res.success
-          ? "Không tìm thấy phim này."
-          : "Lỗi tải dữ liệu. Kiểm tra kết nối mạng rồi tải lại trang.",
+        notFound
+          ? "Không tìm thấy phim này. Có thể phim đã bị gỡ hoặc đường dẫn sai."
+          : "Không kết nối được máy chủ phim. Kiểm tra mạng rồi thử lại.",
+        notFound ? null : () => loadDetail(slug),
       );
       return;
     }
+
+    document.getElementById("error").hidden = true;
 
     renderMovie(movie, movie.episodes || []);
     loadRecommendations(movie);
@@ -30,19 +38,28 @@
     document.getElementById("content").hidden = false;
   }
 
-  function showDetailError(message) {
+  // onRetry có → nút "Thử lại" (lỗi mạng); không có → nút "Về trang chủ" (phim không tồn tại).
+  function showDetailError(message, onRetry = null) {
     const loadingEl = document.getElementById("loading");
     const errorEl = document.getElementById("error");
     if (loadingEl) loadingEl.hidden = true;
-    if (errorEl) {
-      errorEl.hidden = false;
-      renderEmptyState(errorEl, {
-        icon: "fa-solid fa-film",
-        message,
-        actionText: "Về trang chủ",
-        actionHref: "index.html",
-      });
-    }
+    if (!errorEl) return;
+
+    errorEl.hidden = false;
+    renderEmptyState(
+      errorEl,
+      onRetry
+        ? {
+            icon: "fa-solid fa-triangle-exclamation",
+            message,
+            onRetry: () => {
+              errorEl.hidden = true;
+              if (loadingEl) loadingEl.hidden = false;
+              onRetry();
+            },
+          }
+        : { icon: "fa-solid fa-film", message, actionText: "Về trang chủ", actionHref: "index.html" },
+    );
   }
 
   function setText(id, value) {

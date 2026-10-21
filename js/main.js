@@ -143,13 +143,13 @@ async function handleSearch(keyword) {
   if (result.success) {
     showSearchResults(extractMovieItems(result), keyword);
   } else {
-    hideSearchResults();
+    showSearchMessage("Không tải được gợi ý. Kiểm tra kết nối mạng rồi thử lại.");
   }
 }
 
-function showSearchResults(movies, keyword) {
+function getSearchDropdown() {
   const searchBox = document.getElementById("search");
-  if (!searchBox) return;
+  if (!searchBox) return null;
   let resultsDropdown = document.getElementById("search-results-dropdown");
 
   if (!resultsDropdown) {
@@ -160,6 +160,18 @@ function showSearchResults(movies, keyword) {
   }
 
   resultsDropdown.classList.add("active");
+  return resultsDropdown;
+}
+
+function showSearchMessage(message) {
+  const resultsDropdown = getSearchDropdown();
+  if (!resultsDropdown) return;
+  resultsDropdown.innerHTML = `<div class="search-no-results">${escapeHtml(message)}</div>`;
+}
+
+function showSearchResults(movies, keyword) {
+  const resultsDropdown = getSearchDropdown();
+  if (!resultsDropdown) return;
   const safeKeyword = escapeHtml(keyword);
 
   if (movies.length === 0) {

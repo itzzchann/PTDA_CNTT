@@ -1483,10 +1483,18 @@ body.lights-off #header {
   color: #888;
 }
 
-.watch-error {
-  max-width: 1500px;
-  width: 95%;
-  margin: 20px auto 0;
+.player-message {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+}
+
+.player-message .empty-state {
+  min-height: 0;
 }
 
 /* ===== Bổ sung 10/2026: class thay cho style inline + phần trước đây chưa có CSS ===== */
