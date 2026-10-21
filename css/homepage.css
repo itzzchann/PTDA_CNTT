@@ -1,36 +1,26 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Inter", sans-serif;
-}
-
-body {
+body.home-page {
   background-color: #0f1014;
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
 }
 
-.container {
+.home {
+  color: var(--text-light);
+  padding-bottom: 50px;
+  background: url("../assets/images/banners/home-background.jpg") no-repeat
+    center top / cover;
+}
+
+.home .container {
   width: 95%;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-main {
-  flex: 1 0 auto;
-  padding-bottom: 50px;
-}
-
 .banner {
   height: 75vh;
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   position: relative;
+  overflow: hidden;
   margin-bottom: 30px;
 }
 
@@ -38,6 +28,7 @@ main {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   background:
     linear-gradient(to top, #0f1014, transparent),
     linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
@@ -60,7 +51,7 @@ main {
   display: inline-block;
   margin-top: 15px;
   padding: 12px 35px;
-  background: #ffd875;
+  background: var(--primary-color);
   color: black;
   text-decoration: none;
   border-radius: 5px;
@@ -69,40 +60,20 @@ main {
   transition: 0.3s;
 }
 
-.movie-section {
-  padding: 25px 0;
+.btn-watch:hover {
+  background: var(--primary-color-hover);
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.btn-more-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ccc;
-  text-decoration: none;
-  font-size: 12px;
-  transition: 0.3s;
-}
-
-.btn-more-link:hover {
-  background: #ffd875;
-  color: #fff;
-  transform: translateX(3px);
-}
-
-@media (max-width: 1024px) {
-}
 @media (max-width: 768px) {
-}
-@media (max-width: 480px) {
+  .banner {
+    height: 60vh;
+  }
+
+  .banner-content {
+    padding: 0 16px;
+  }
+
+  .banner-content h1 {
+    font-size: 2rem;
+  }
 }

@@ -1,3 +1,22 @@
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function stripHtml(html) {
+  if (!html) return "";
+  if (typeof DOMParser !== "undefined") {
+    const doc = new DOMParser().parseFromString(String(html), "text/html");
+    return (doc.body.textContent || "").trim();
+  }
+  return String(html).replace(/<[^>]*>?/gm, "").trim();
+}
+
 function truncateText(text, maxLength = APP_CONFIG.MAX_DESCRIPTION_LENGTH) {
   if (!text) return "";
   if (text.length <= maxLength) return text;
@@ -14,18 +33,32 @@ function formatDuration(time) {
   return time;
 }
 
+// Tên tập từ API đã có chữ "Tập" ("Tập 01") hoặc là "Full"; chỉ thêm chữ "Tập" khi tên là số trần ("1").
+function formatEpisodeName(name) {
+  const text = String(name ?? "").trim();
+  if (!text) return "Đang cập nhật";
+  return /^\d+$/.test(text) ? `Tập ${text}` : text;
+}
+
+function formatDate(dateString) {
+  if (!dateString) return "Không rõ";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "Không rõ";
+  return date.toLocaleDateString("vi-VN");
+}
+
 function formatQuality(quality) {
   if (!quality) return "";
 
   const qualityClass = quality.toLowerCase().includes("hd")
     ? "quality-hd"
     : "quality-cam";
-  return `<span class="badge ${qualityClass}">${quality}</span>`;
+  return `<span class="badge ${qualityClass}">${escapeHtml(quality)}</span>`;
 }
 
 function formatStatus(status) {
   if (!status) return "";
-  return `<span class="badge badge-status">${status}</span>`;
+  return `<span class="badge badge-status">${escapeHtml(status)}</span>`;
 }
 
 function formatCategories(categories) {
@@ -43,7 +76,7 @@ function createSlug(title) {
   return title
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/[đĐ]/g, "d")
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
@@ -53,14 +86,12 @@ function createSlug(title) {
 
 function debounce(func, wait = APP_CONFIG.SEARCH_DEBOUNCE_TIME) {
   let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
+  function executedFunction(...args) {
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+    timeout = setTimeout(() => func(...args), wait);
+  }
+  executedFunction.cancel = () => clearTimeout(timeout);
+  return executedFunction;
 }
 
 function throttle(func, limit = 1000) {
@@ -102,8 +133,13 @@ function removeFromStorage(key) {
   }
 }
 
+function getStoredList(key) {
+  const value = getFromStorage(key, []);
+  return Array.isArray(value) ? value : [];
+}
+
 function addToFavorites(movie) {
-  const favorites = getFromStorage(STORAGE_KEYS.FAVORITES, []);
+  const favorites = getStoredList(STORAGE_KEYS.FAVORITES);
 
   const exists = favorites.some((fav) => fav.slug === movie.slug);
   if (exists) return false;
@@ -111,7 +147,7 @@ function addToFavorites(movie) {
   favorites.unshift({
     slug: movie.slug,
     name: movie.name,
-    poster: movie.poster_url,
+    poster: movie.poster_url || movie.thumb_url || movie.poster || "",
     addedAt: new Date().toISOString(),
   });
 
@@ -119,44 +155,197 @@ function addToFavorites(movie) {
 }
 
 function removeFromFavorites(slug) {
-  const favorites = getFromStorage(STORAGE_KEYS.FAVORITES, []);
+  const favorites = getStoredList(STORAGE_KEYS.FAVORITES);
   const filtered = favorites.filter((fav) => fav.slug !== slug);
   return saveToStorage(STORAGE_KEYS.FAVORITES, filtered);
 }
 
 function isInFavorites(slug) {
-  const favorites = getFromStorage(STORAGE_KEYS.FAVORITES, []);
+  const favorites = getStoredList(STORAGE_KEYS.FAVORITES);
   return favorites.some((fav) => fav.slug === slug);
 }
 
 function saveWatchHistory(movie, episode = 1, progress = 0) {
-  const history = getFromStorage(STORAGE_KEYS.WATCH_HISTORY, []);
+  const history = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
 
   const filtered = history.filter((item) => item.slug !== movie.slug);
 
   filtered.unshift({
     slug: movie.slug,
     name: movie.name,
-    poster: movie.poster_url,
+    poster: movie.poster_url || movie.thumb_url || movie.poster || "",
     episode: episode,
     progress: progress,
     watchedAt: new Date().toISOString(),
   });
 
-  const limited = filtered.slice(0, 50);
+  const limited = filtered.slice(0, APP_CONFIG.MAX_HISTORY_ITEMS);
 
   return saveToStorage(STORAGE_KEYS.WATCH_HISTORY, limited);
+}
+
+function removeFromWatchHistory(slug) {
+  const history = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
+  const filtered = history.filter((item) => item.slug !== slug);
+  return saveToStorage(STORAGE_KEYS.WATCH_HISTORY, filtered);
+}
+
+function getAuthSession() {
+  const session = getFromStorage(STORAGE_KEYS.AUTH_SESSION, null);
+  return session && session.token ? session : null;
+}
+
+function saveAuthSession(session) {
+  return saveToStorage(STORAGE_KEYS.AUTH_SESSION, session);
+}
+
+function clearAuthSession() {
+  removeFromStorage(STORAGE_KEYS.AUTH_SESSION);
+}
+
+function isLoggedIn() {
+  return getAuthSession() !== null;
+}
+
+function extractMovieItems(res) {
+  const items = res?.data?.data?.items || res?.data?.items;
+  return Array.isArray(items) ? items : [];
+}
+
+function extractPagination(res) {
+  const pagination =
+    res?.data?.data?.params?.pagination || res?.data?.pagination || {};
+  return {
+    currentPage: Number(pagination.currentPage) || 1,
+    totalPages: Math.max(1, Number(pagination.totalPages) || 1),
+    totalItems: Number(pagination.totalItems) || 0,
+  };
+}
+
+function resolveElement(target) {
+  return typeof target === "string" ? document.getElementById(target) : target;
 }
 
 function showLoading(element) {
   if (!element) return;
   element.innerHTML =
-    '<div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
+    '<div class="loading-container"><div class="loading-spinner" role="status" aria-label="Đang tải"></div></div>';
 }
 
 function showError(element, message = "Có lỗi xảy ra. Vui lòng thử lại sau.") {
   if (!element) return;
-  element.innerHTML = `<div class="error-message"><i class="fa-solid fa-triangle-exclamation"></i> ${message}</div>`;
+  element.innerHTML = `<div class="error-message"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(message)}</div>`;
+}
+
+/**
+ * Hiển thị khối trạng thái rỗng / lỗi (chiếm trọn hàng nếu nằm trong .movie-grid).
+ * @param {string|HTMLElement} target id hoặc phần tử
+ * @param {{icon?: string, message: string, actionText?: string, actionHref?: string, onRetry?: Function}} options
+ */
+function renderEmptyState(target, options = {}) {
+  const container = resolveElement(target);
+  if (!container) return;
+
+  const {
+    icon = "fa-solid fa-film",
+    message = "Không có dữ liệu.",
+    actionText = "",
+    actionHref = "",
+    onRetry = null,
+  } = options;
+
+  let action = "";
+  if (onRetry) {
+    action = `<button type="button" class="btn btn-outline empty-state-action">
+        <i class="fa-solid fa-rotate-right"></i> ${escapeHtml(actionText || "Thử lại")}
+      </button>`;
+  } else if (actionText && actionHref) {
+    action = `<a class="btn btn-primary empty-state-action" href="${escapeHtml(actionHref)}">${escapeHtml(actionText)}</a>`;
+  }
+
+  container.innerHTML = `
+    <div class="empty-state">
+      <i class="${escapeHtml(icon)} empty-state-icon"></i>
+      <p class="empty-state-message">${escapeHtml(message)}</p>
+      ${action}
+    </div>
+  `;
+
+  if (onRetry) {
+    container
+      .querySelector(".empty-state-action")
+      .addEventListener("click", onRetry);
+  }
+}
+
+/**
+ * Gắn 4 nút phân trang chuẩn (#firstPage, #prevPage, #nextPage, #lastPage, #currentPage, #totalPage).
+ * @param {(page: number) => void} onPageChange gọi khi người dùng chọn trang khác
+ * @returns {{update: (currentPage: number, totalPages: number) => void, setVisible: (visible: boolean) => void}}
+ */
+function setupPagination(onPageChange) {
+  const firstBtn = document.getElementById("firstPage");
+  const prevBtn = document.getElementById("prevPage");
+  const nextBtn = document.getElementById("nextPage");
+  const lastBtn = document.getElementById("lastPage");
+  const currentPageEl = document.getElementById("currentPage");
+  const totalPageEl = document.getElementById("totalPage");
+  const container = firstBtn ? firstBtn.closest(".pagination") : null;
+
+  let current = 1;
+  let total = 1;
+
+  const goTo = (page) => {
+    if (page < 1 || page > total || page === current) return;
+    onPageChange(page);
+  };
+
+  firstBtn?.addEventListener("click", () => goTo(1));
+  prevBtn?.addEventListener("click", () => goTo(current - 1));
+  nextBtn?.addEventListener("click", () => goTo(current + 1));
+  lastBtn?.addEventListener("click", () => goTo(total));
+
+  return {
+    update(currentPage, totalPages) {
+      current = currentPage;
+      total = Math.max(1, totalPages);
+      if (currentPageEl) currentPageEl.textContent = current;
+      if (totalPageEl) totalPageEl.textContent = total;
+      if (firstBtn) firstBtn.disabled = current <= 1;
+      if (prevBtn) prevBtn.disabled = current <= 1;
+      if (nextBtn) nextBtn.disabled = current >= total;
+      if (lastBtn) lastBtn.disabled = current >= total;
+    },
+    setVisible(visible) {
+      if (container) container.hidden = !visible;
+    },
+  };
+}
+
+/**
+ * Đặt ảnh nền cho banner qua lớp .backdrop-layer (để làm mờ ảnh mà không làm mờ chữ bên trên).
+ * Ảnh phải phóng > 2.5 lần so với khung → tự làm mờ thay vì để lộ vỡ hạt.
+ * @param {HTMLElement} container phần tử banner (cần position: relative + overflow: hidden)
+ * @param {string} url
+ */
+function setBackdropImage(container, url) {
+  if (!container || !url) return;
+
+  let layer = container.querySelector(":scope > .backdrop-layer");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "backdrop-layer";
+    container.prepend(layer);
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    const neededWidth = container.clientWidth * (window.devicePixelRatio || 1);
+    layer.classList.toggle("is-low-res", img.naturalWidth * 2.5 < neededWidth);
+    layer.style.backgroundImage = `url("${url.replace(/["\\]/g, "")}")`;
+    layer.classList.add("is-loaded");
+  };
+  img.src = url;
 }
 
 function smoothScrollTo(element, offset = 0) {
@@ -181,12 +370,10 @@ function formatNumber(num) {
 }
 
 function getImageUrl(path) {
-  if (!path) return "https://via.placeholder.com/200x300?text=No+Image";
+  if (!path) return APP_CONFIG.DEFAULT_POSTER;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-  const host = (typeof API_CONFIG !== "undefined" && API_CONFIG.IMAGE_HOST
-    ? API_CONFIG.IMAGE_HOST
-    : "https://phimimg.com/").replace(/\/+$/, "");
+  const host = API_CONFIG.IMAGE_HOST.replace(/\/+$/, "");
   return `${host}/${cleanPath}`;
 }
 
@@ -196,28 +383,33 @@ function createMovieCard(movie) {
 
   const slug = movie.slug || "";
   const safeSlug = encodeURIComponent(slug);
-  const badge = movie.episode_current || movie.quality || "HD";
-  const name = movie.name || "";
-  const originName = movie.origin_name || "";
-  const year = movie.year || "2026";
+  const badge = escapeHtml(movie.episode_current || movie.quality || "HD");
+  const name = escapeHtml(movie.name || "");
+  const originName = escapeHtml(movie.origin_name || "");
+  const year = escapeHtml(movie.year || "");
+  const movieData = escapeHtml(
+    JSON.stringify({ slug, name: movie.name || "", poster_url: thumb }),
+  );
 
   const isFav = isInFavorites(slug);
 
   return `
-    <div class="movie-card" data-slug="${slug}">
+    <div class="movie-card" data-slug="${escapeHtml(slug)}">
       <div class="movie-poster" onclick="location.href='./detail.html?slug=${safeSlug}'">
-        <img src="${finalImg}" alt="${name}" loading="lazy"
-             onerror="this.onerror=null;this.src='https://via.placeholder.com/200x300?text=No+Image'">
+        <img src="${escapeHtml(finalImg)}" alt="${name}" loading="lazy"
+             onerror="this.onerror=null;this.src='${APP_CONFIG.DEFAULT_POSTER}'">
         <div class="poster-overlay">
-          <div class="play-icon"><i class="fas fa-play"></i></div>
+          <div class="play-icon"><i class="fa-solid fa-play"></i></div>
         </div>
       </div>
       <div class="movie-badges">
         <span class="badge badge-quality">${badge}</span>
       </div>
-      <button class="btn-favorite ${isFav ? "active" : ""}" 
-              data-movie='${JSON.stringify({ slug, name, poster_url: thumb }).replace(/'/g, "&apos;")}'
-              title="${isFav ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}">
+      <button type="button" class="btn-favorite ${isFav ? "active" : ""}"
+              data-slug="${escapeHtml(slug)}"
+              data-movie="${movieData}"
+              title="${isFav ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}"
+              aria-label="${isFav ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}">
         <i class="${isFav ? "fa-solid" : "fa-regular"} fa-heart"></i>
       </button>
       <div class="movie-info" onclick="location.href='./detail.html?slug=${safeSlug}'">
@@ -250,10 +442,14 @@ function renderSkeleton(gridId, count = 6) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
+    escapeHtml,
+    stripHtml,
     getImageUrl,
     truncateText,
     formatYear,
     formatDuration,
+    formatEpisodeName,
+    formatDate,
     formatQuality,
     formatStatus,
     formatCategories,
@@ -264,20 +460,27 @@ if (typeof module !== "undefined" && module.exports) {
     saveToStorage,
     getFromStorage,
     removeFromStorage,
+    getStoredList,
     addToFavorites,
     removeFromFavorites,
     isInFavorites,
     saveWatchHistory,
+    removeFromWatchHistory,
+    getAuthSession,
+    saveAuthSession,
+    clearAuthSession,
+    isLoggedIn,
+    extractMovieItems,
+    extractPagination,
     showLoading,
     showError,
+    renderEmptyState,
+    setupPagination,
+    setBackdropImage,
     smoothScrollTo,
     copyToClipboard,
     formatNumber,
     createMovieCard,
     renderSkeleton,
   };
-}
-
-if (typeof window !== "undefined") {
-  window.getImageUrl = getImageUrl;
 }

@@ -1,0 +1,150 @@
+.detail-page .detail-wrap {
+  padding: 16px 0;
+}
+
+.detail-page .detail-state {
+  padding: 20px;
+  color: var(--text-base);
+}
+
+.detail-page .hero-banner {
+  height: 420px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-2);
+}
+
+.detail-page .hero-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 14px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.4),
+    var(--bg-color) 95%
+  );
+}
+
+.detail-page .detail-head {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: -160px;
+  position: relative;
+  z-index: 2;
+}
+
+.detail-page .detail-poster {
+  width: 260px;
+  flex: 0 0 260px;
+}
+
+.detail-page .detail-poster img {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.detail-page .detail-info {
+  flex: 1;
+  min-width: 280px;
+}
+
+.detail-page .detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #bdbdbd;
+  margin: 8px 0 12px;
+}
+
+.detail-page .chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detail-page .btn-watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 15px 0 20px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 40px;
+  background: var(--primary-color);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.detail-page .btn-watch:hover {
+  background: var(--primary-color-hover);
+  box-shadow: 0 6px 16px rgba(255, 216, 117, 0.35);
+}
+
+.detail-page .detail-desc {
+  color: #d0d0d0;
+  line-height: 1.7;
+}
+
+.detail-page .detail-row {
+  margin-top: 10px;
+  color: #d0d0d0;
+}
+
+.detail-page .detail-divider {
+  margin: 30px 0;
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+.detail-page .server-name {
+  margin: 15px 0 8px;
+  font-weight: 600;
+  color: var(--text-light);
+  width: 100%;
+}
+
+.detail-page .episode-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.detail-page .episode-btn {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  transition: 0.2s ease;
+}
+
+.detail-page .episode-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #000;
+}
+
+@media (max-width: 768px) {
+  .detail-page .hero-banner {
+    height: 260px;
+  }
+
+  .detail-page .detail-head {
+    margin-top: -100px;
+  }
+
+  .detail-page .detail-poster {
+    width: 160px;
+    flex-basis: 160px;
+  }
+}

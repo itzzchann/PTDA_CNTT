@@ -1,6 +1,7 @@
 const API_CONFIG = {
   BASE_URL: "https://phimapi.com",
   IMAGE_HOST: "https://phimimg.com/",
+  TMDB_IMAGE_HOST: "https://image.tmdb.org/t/p",
 
   BACKUP_URL: "https://phimapi.com",
 
@@ -29,10 +30,42 @@ const API_CONFIG = {
     MOVIE_LIST: "/v1/api/danh-sach/[slug]",
   },
 
-  DEFAULT_PARAMS: {
-    page: 1,
-    limit: 24,
+  TIMEOUT_MS: 15000,
+};
+
+// Backend riêng của RoPhim (tài khoản, bình luận, đánh giá, admin) — xem docs/specs/backend_api_contract.md.
+// BASE_URL rỗng = chưa có backend: fetchBackend() trả lỗi BACKEND_NOT_CONFIGURED thay vì gọi mạng.
+// Ví dụ: "http://localhost:3000/api" (dev) hoặc "https://api.<ten-mien>/api" (production).
+const BACKEND_CONFIG = {
+  BASE_URL: "",
+
+  ENDPOINTS: {
+    REGISTER: "/auth/register",
+    LOGIN: "/auth/login",
+    LOGOUT: "/auth/logout",
+    ME: "/auth/me",
+
+    MY_FAVORITES: "/me/favorites",
+    MY_FAVORITE: "/me/favorites/[slug]",
+    MY_HISTORY: "/me/history",
+
+    COMMENTS: "/movies/[slug]/comments",
+    COMMENT: "/comments/[id]",
+    RATINGS: "/movies/[slug]/ratings",
+    VIEWS: "/movies/[slug]/views",
+
+    SETTINGS: "/settings",
+
+    ADMIN_STATS: "/admin/stats",
+    ADMIN_SETTINGS: "/admin/settings",
+    ADMIN_USERS: "/admin/users",
+    ADMIN_USER: "/admin/users/[id]",
+    ADMIN_COMMENTS: "/admin/comments",
+    ADMIN_COMMENT: "/admin/comments/[id]",
   },
+
+  // Render gói free "ngủ" khi không có request — lần gọi đầu có thể mất 30–60 giây.
+  TIMEOUT_MS: 60000,
 };
 
 const APP_CONFIG = {
@@ -40,13 +73,19 @@ const APP_CONFIG = {
 
   ITEMS_PER_PAGE: 24,
 
+  LOCAL_ITEMS_PER_PAGE: 12,
+
   MAX_DESCRIPTION_LENGTH: 200,
 
   SEARCH_DEBOUNCE_TIME: 500,
 
-  SLIDER_ITEMS: 10,
+  SEARCH_MIN_LENGTH: 2,
 
-  AUTO_SLIDE_INTERVAL: 5000,
+  MAX_HISTORY_ITEMS: 50,
+
+  DEFAULT_POSTER: "./assets/images/defaults/no-poster.svg",
+
+  DEFAULT_AVATAR: "./assets/images/defaults/default-avatar1.jpg",
 };
 
 const CATEGORIES = [
@@ -127,12 +166,13 @@ const STORAGE_KEYS = {
   FAVORITES: "rophim_favorites",
   WATCH_HISTORY: "rophim_watch_history",
   USER_PREFERENCES: "rophim_user_prefs",
-  CONTINUE_WATCHING: "rophim_continue_watching",
+  AUTH_SESSION: "rophim_auth_session",
 };
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     API_CONFIG,
+    BACKEND_CONFIG,
     APP_CONFIG,
     CATEGORIES,
     COUNTRIES,

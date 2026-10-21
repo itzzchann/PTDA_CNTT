@@ -3,7 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chi tiết phim | Rophim</title>
+    <title>Chi tiết phim | RoPhim</title>
+    <meta name="description" content="Thông tin chi tiết phim, danh sách tập, diễn viên trên RoPhim." />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
@@ -16,135 +22,28 @@
     <link rel="stylesheet" href="./css/variables.css" />
     <link rel="stylesheet" href="./css/style.css" />
     <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/detail.css" />
 
     <script src="./js/components.js"></script>
     <script src="./js/config.js"></script>
     <script src="./js/utils.js"></script>
     <script src="./js/api.js"></script>
-    <script src="./js/detail.js" defer></script>
     <script src="./js/main.js"></script>
-
-    <style>
-      .detail-wrap {
-        padding: 16px;
-      }
-      .detail-head {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-      .detail-poster {
-        width: 260px;
-        flex: 0 0 260px;
-      }
-      .detail-poster img {
-        width: 100%;
-        border-radius: 12px;
-      }
-      .detail-info {
-        flex: 1;
-        min-width: 280px;
-      }
-      .detail-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        color: #bdbdbd;
-        margin: 8px 0 12px;
-      }
-      .detail-desc {
-        color: #d0d0d0;
-        line-height: 1.7;
-      }
-      .detail-row {
-        margin-top: 10px;
-        color: #d0d0d0;
-      }
-      .chip {
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-      }
-      .episode-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
-      }
-
-      .episode-btn {
-        padding: 8px 14px;
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-        cursor: pointer;
-        transition: 0.2s ease;
-      }
-
-      .episode-btn:hover {
-        background: #e50914;
-        border-color: #e50914;
-      }
-
-      .hero-banner {
-        height: 420px;
-        background-size: cover;
-        background-position: center;
-        border-radius: 14px;
-        margin-bottom: 20px;
-        position: relative;
-      }
-
-      .hero-banner::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: 14px;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), #0f172a 95%);
-      }
-
-      .detail-head {
-        margin-top: -160px;
-        position: relative;
-        z-index: 2;
-      }
-
-      .btn-watch {
-        background: #facc15;
-        color: #000;
-        padding: 12px 26px;
-        border-radius: 40px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        margin: 15px 0 20px;
-        transition: 0.2s;
-      }
-
-      .btn-watch:hover {
-        opacity: 0.9;
-      }
-    </style>
+    <script src="./js/detail.js" defer></script>
   </head>
 
   <body>
     <div id="header-placeholder"></div>
 
-    <main style="padding-top: 90px; max-width: 1692px; margin: 0 auto">
+    <main class="page-container detail-page">
       <section class="mt-3 mb-4">
         <div class="detail-wrap">
-          <div id="loading" style="padding: 20px; color: #aaa">
-            🎬 Đang tải thông tin phim...
+          <div id="loading" class="detail-state">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin phim...
           </div>
-          <div
-            id="error"
-            style="display: none; padding: 20px; color: #ff6b6b"
-          ></div>
+          <div id="error" hidden></div>
 
-          <div id="content" style="display: none">
+          <div id="content" hidden>
             <div id="heroBanner" class="hero-banner"></div>
             <div class="detail-head">
               <div class="detail-poster">
@@ -152,15 +51,15 @@
               </div>
 
               <div class="detail-info">
-                <h2 class="section-title" style="margin: 0">
+                <h1 class="section-title mb-0">
                   <i class="fa-solid fa-film"></i>
                   <span id="title"></span>
-                </h2>
+                </h1>
 
                 <div class="detail-meta" id="meta"></div>
-                <div class="btn-watch" id="watchBtn">
-                  <i class="fa fa-play"></i> Xem ngay
-                </div>
+                <a class="btn-watch" id="watchBtn" href="#">
+                  <i class="fa-solid fa-play"></i> Xem ngay
+                </a>
 
                 <p class="detail-desc" id="desc"></p>
 
@@ -178,13 +77,12 @@
                 </div>
               </div>
             </div>
-            <hr
-              style="margin: 30px 0; border-color: rgba(255, 255, 255, 0.08)"
-            />
-            <h3 class="section-title">
-              <i class="fa-solid fa-list"></i> Danh sách tập
-            </h3>
 
+            <hr class="detail-divider" />
+
+            <h2 class="section-title">
+              <i class="fa-solid fa-list"></i> Danh sách tập
+            </h2>
             <div id="episodeList" class="episode-grid"></div>
 
             <section class="movie-section mt-5">

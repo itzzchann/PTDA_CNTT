@@ -1,11 +1,22 @@
 <header id="header">
   <div class="header-elements">
-    <div class="for-mobile menu-toggle">
+    <button
+      type="button"
+      class="for-mobile menu-toggle"
+      aria-label="Mở menu"
+      aria-controls="main_menu"
+      aria-expanded="false"
+    >
       <i class="fa-solid fa-bars"></i>
-    </div>
-    <div class="for-mobile search-toggle">
+    </button>
+    <button
+      type="button"
+      class="for-mobile search-toggle"
+      aria-label="Tìm kiếm"
+      aria-controls="search"
+    >
       <i class="fa-solid fa-magnifying-glass"></i>
-    </div>
+    </button>
 
     <a id="logo" href="index.html" title="Rophim">
       <img src="./assets/images/logos/logo.svg" alt="RoPhim" />
@@ -20,6 +31,7 @@
           id="main-search"
           class="search-input"
           placeholder="Tìm kiếm phim, diễn viên"
+          aria-label="Tìm kiếm phim, diễn viên"
           autocomplete="off"
         />
       </div>
@@ -58,7 +70,7 @@
       <div class="flex-grow-1"></div>
 
       <div class="app-download">
-        <a class="app-download-button">
+        <a class="app-download-button" href="#">
           <div class="inc-icon">
             <svg
               width="24"

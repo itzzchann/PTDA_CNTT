@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Không tìm thấy trang | RoPhim</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="/assets/images/logos/ro-icon.svg" />
+
+    <!-- Trang này được host trả về cho MỌI đường dẫn sai (kể cả /a/b/c) nên dùng đường dẫn tuyệt đối "/..."
+         và không nạp header/footer (components.js dùng đường dẫn tương đối). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/variables.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+  </head>
+
+  <body>
+    <main class="page-container">
+      <a href="/index.html" class="not-found-logo">
+        <img src="/assets/images/logos/logo.svg" alt="RoPhim" height="34" />
+      </a>
+      <div class="empty-state">
+        <i class="fa-solid fa-film empty-state-icon"></i>
+        <h1 class="section-title mb-0">404 — Không tìm thấy trang</h1>
+        <p class="empty-state-message">
+          Đường dẫn bạn mở không tồn tại hoặc đã bị đổi. Hãy quay về trang chủ để tiếp tục xem phim.
+        </p>
+        <a class="btn btn-primary" href="/index.html">Về trang chủ</a>
+      </div>
+    </main>
+  </body>
+</html>

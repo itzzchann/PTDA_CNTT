@@ -270,7 +270,7 @@ components/, css/, js/{components,config,utils,api,main}.js
 **✅ PAGE Files** (An toàn, chỉ ảnh hưởng 1 trang):
 
 ```
-index.html, detail.html, watch.html, js/{home,detail,watch}.js
+index.html, detail.html, watch.html, js/{homepage,detail,watch,...}.js
 ```
 
 - Tự do sửa, không ảnh hưởng trang khác
@@ -327,7 +327,7 @@ git commit -m "refactor(utils): improve formatDate with format option
 
 - Add optional format parameter (default: DD/MM/YYYY)
 - Backward compatible - existing code still works
-- Tested: home.js, detail.js, watch.js"
+- Tested: homepage.js, detail.js, watch.js"
 ```
 
 **⛔ KHI NÀO TUYỆT ĐỐI KHÔNG sửa:**
@@ -514,7 +514,7 @@ BTL-WEB-PRIVATE-2025/
 │   ├── utils.js     # Utility functions
 │   ├── api.js       # API calls and data fetching
 │   ├── main.js      # Main application logic
-│   ├── home.js      # Home page specific logic
+│   ├── homepage.js  # Home page specific logic
 │   └── detail.js    # Detail page specific logic
 └── index.html       # Main HTML file
 ```
@@ -646,7 +646,7 @@ function getMovies(cat, p, callback) {
 - `utils.js`: Helper functions, formatters
 - `api.js`: API calls, data fetching logic
 - `main.js`: Global initialization, event listeners
-- `home.js`: Home page specific functionality
+- `homepage.js`: Home page specific functionality
 - `detail.js`: Detail page specific functionality
 
 <a id="commit-message-guidelines"></a>
@@ -945,7 +945,7 @@ git push origin develop
 
 ### Q: Làm sao để setup development environment?
 
-**A:** Xem phần [Thiết Lập Môi Trường Development](#thiết-lập-môi-trường-development) ở trên.
+**A:** Xem [Bắt Đầu Nhanh](#bat-dau-nhanh) ở trên và [docs/guides/03_chay_du_an.md](docs/guides/03_chay_du_an.md).
 
 ### Q: PR của tôi bị reject, làm gì bây giờ?
 
