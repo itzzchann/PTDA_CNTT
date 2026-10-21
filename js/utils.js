@@ -33,6 +33,13 @@ function formatDuration(time) {
   return time;
 }
 
+// Tên tập từ API đã có chữ "Tập" ("Tập 01") hoặc là "Full"; chỉ thêm chữ "Tập" khi tên là số trần ("1").
+function formatEpisodeName(name) {
+  const text = String(name ?? "").trim();
+  if (!text) return "Đang cập nhật";
+  return /^\d+$/.test(text) ? `Tập ${text}` : text;
+}
+
 function formatDate(dateString) {
   if (!dateString) return "Không rõ";
   const date = new Date(dateString);
@@ -415,6 +422,7 @@ if (typeof module !== "undefined" && module.exports) {
     truncateText,
     formatYear,
     formatDuration,
+    formatEpisodeName,
     formatDate,
     formatQuality,
     formatStatus,

@@ -126,7 +126,7 @@
               `<a class="episode-btn" href="${buildWatchUrl(slug, ep.name, serverIdx)}">${
                 servers.length === 1 && server.server_data.length === 1
                   ? "Xem phim"
-                  : `Tập ${escapeHtml(ep.name)}`
+                  : escapeHtml(formatEpisodeName(ep.name))
               }</a>`,
           )
           .join("");

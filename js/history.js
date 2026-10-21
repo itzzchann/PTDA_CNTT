@@ -81,8 +81,7 @@
 
     const watchedInfo = document.createElement("div");
     watchedInfo.className = "movie-added-at";
-    const episodeLabel = /^\d+$/.test(String(episode)) ? `Tập ${episode}` : episode;
-    watchedInfo.textContent = `Đang xem: ${episodeLabel} · ${formatDate(movie.watchedAt)}`;
+    watchedInfo.textContent = `Đang xem: ${formatEpisodeName(episode)} · ${formatDate(movie.watchedAt)}`;
     card.querySelector(".movie-info")?.appendChild(watchedInfo);
 
     return card;

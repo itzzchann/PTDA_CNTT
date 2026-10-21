@@ -48,6 +48,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `truncateText(text, maxLength = 200)` | `string` | Cắt + `"..."` | 🟡 homepage, watch |
 | `formatYear(year)` | `string` | Thiếu → `"Đang cập nhật"` | 🟡 detail, watch |
 | `formatDuration(time)` | `string` | Thiếu → `"Đang cập nhật"` | 🟡 detail |
+| `formatEpisodeName(name)` | `string` | Tên tập để hiển thị: `"1"` → `"Tập 1"`; `"Tập 01"`, `"Full"` giữ nguyên. **Đừng tự ghép chữ "Tập"** — API thường đã có sẵn | 🟡 detail, history, watch |
 | `formatDate(dateString)` | `string` | `dd/mm/yyyy` (vi-VN); sai → `"Không rõ"` | 🟡 favorites, history |
 | `formatCategories(list)` / `formatCountries(list)` | `string` | Nối `.name` bằng `", "`; rỗng → `"Đang cập nhật"` | 🟡 detail |
 | `formatNumber(num)` | `string` | `1234567` → `"1.234.567"` | 🟢 (dùng cho dashboard admin) |

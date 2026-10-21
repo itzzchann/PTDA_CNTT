@@ -496,7 +496,7 @@
       .map((ep) => {
         const isPlaying = isSameEpisode(ep, state.episode) && state.selectedServer === state.server;
         return `<div class="episode-card ${isPlaying ? "active" : ""}" data-episode="${escapeHtml(ep.name)}">
-            <span class="ep-number">${escapeHtml(ep.name)}</span>
+            <span class="ep-number">${escapeHtml(formatEpisodeName(ep.name))}</span>
           </div>`;
       })
       .join("");
