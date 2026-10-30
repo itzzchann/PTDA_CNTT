@@ -11,7 +11,7 @@
 - **Mỗi người chỉ có 1 nhánh Git mang tên mình** và làm **mọi việc** của mình trên nhánh đó (§2). Không tạo `feat/...`, `fix/...` trong tuần này.
 - **V1** = các US thuộc **Sprint 1–3** trong Product Backlog (29 US). Đa số đã xong. Qua kiểm code còn **6 US chưa đạt đủ Scenario**:
   US-14, US-17, US-34, US-36, US-37, US-48. Còn **US-33** cần chạy thử trên trình duyệt để xác nhận.
-- **Quyết định của PO ngày 30/10** (§1.3): xóa **Rổ Bóng**, **Tải ứng dụng**, **mạng xã hội** (hệ thống không có những thứ này).
+- **Quyết định của PO ngày 30/10** (§1.3): xóa **Rổ Bóng**, **Tải ứng dụng** (hệ thống không có). **Giữ** icon mạng xã hội, trỏ tới trang chủ từng mạng.
   Đăng nhập V2 có **2 cách: tài khoản tự tạo, hoặc Google**.
 - Việc V1 còn lại ít, nên tuần này **thêm việc V2 không phụ thuộc người khác**:
   - **DEV-2**: lưu và phát tiếp đúng **giây** đang xem (US-52, US-53), giữ cài đặt trình phát (US-19 Sc2). Làm thuần frontend, xong trọn được.
@@ -34,7 +34,7 @@
 
 | US | Scenario không đạt | Bằng chứng trong code / dữ liệu | Ai |
 |---|---|---|---|
-| **US-14** Thông tin liên hệ | Theo tiêu chí **sửa lại** ở §1.3: chưa có thông tin liên hệ thật, chưa có link danh mục | `components/footer.html`: 7 icon mạng xã hội `href="#"` (sẽ xóa), hàng Hỏi-Đáp / Chính sách... đều `#`, hàng "Dongphim, Ghienphim..." là tên web khác, không có link Phim Lẻ / Phim Bộ | Lead (file CORE) |
+| **US-14** Thông tin liên hệ | Sc2: bấm icon mạng xã hội phải **mở thẻ mới**. Sc3: phải có **link danh mục** (Phim lẻ...) ở cuối trang | `components/footer.html`: 7 icon mạng xã hội `href="#"`, không mở thẻ mới, hàng Hỏi-Đáp / Chính sách... đều `#`, hàng "Dongphim, Ghienphim..." là tên web khác, không có link Phim Lẻ / Phim Bộ | Lead (file CORE) |
 | **US-17** Thẻ phim | Sc3: phim bộ hiện **số tập**, phim lẻ hiện **chất lượng** | ① Nhóm "Phim mới" ở trang chủ gọi `/danh-sach/phim-moi-cap-nhat`. Endpoint này **không trả** `episode_current`, `quality`, `type` → mọi thẻ đều hiện chữ "HD" mặc định. Bản `/danh-sach/phim-moi-cap-nhat-v3` thì có đủ (đã thử). ② `createMovieCard` ưu tiên `episode_current`, nên phim lẻ hiện **"Full"** thay vì "FHD" | Lead (file CORE) |
 | **US-34** Thông tin chung | Sc2: thiếu thông tin thì hiện "Đang cập nhật" | `js/detail.js`: `movie.quality \|\| "HD"`. Phim thiếu chất lượng vẫn hiện "HD" | DEV-1 |
 | **US-36** Diễn viên, đạo diễn | Sc2: phim có ảnh diễn viên thì **hiện ảnh kèm tên** ở trang chi tiết | `detail.html` chỉ có dòng chữ "Diễn viên: ...". Ảnh diễn viên mới chỉ có ở `watch.html` | DEV-1 |
@@ -58,7 +58,7 @@ Các US V1 còn lại đã ✅ trong [07 §2](07_lo_trinh_va_backlog.md#2-trạn
 | Quyết định | Xử lý trong code | Ảnh hưởng tới backlog |
 |---|---|---|
 | **Xóa "Rổ Bóng"** (menu có nhãn NEW) và **"Tải ứng dụng RoPhim"** (header). Hai thứ này chỉ để trang trí | Xóa hẳn khỏi `header.html`, xóa phần xử lý trong `main.js`, xóa CSS không còn dùng. **Không** thay bằng gì khác: header gọn hơn, ô tìm kiếm rộng hơn | **US-20** (báo tính năng chưa sẵn sàng) không còn đối tượng nào để áp dụng → chuyển trạng thái **"Bỏ, ngoài phạm vi"**. PO tự cập nhật file backlog |
-| **Xóa mạng xã hội** (hệ thống không có kênh nào) | Footer bỏ 7 icon + đường kẻ dọc, chỉ giữ logo. Bỏ luôn hàng "Dongphim, Ghienphim, Motphim, Subnhanh" (tên các web khác) và hàng Hỏi-Đáp / Chính sách... đang để `#` (không có trang thật). Thay bằng **1 hàng link danh mục** và **1 dòng liên hệ bằng email** | **US-14** sửa tiêu chí thành: Sc1 cuối trang thấy bản quyền + **email liên hệ**; Sc2 bấm email → mở ứng dụng thư (link `mailto:`); Sc3 bấm link danh mục → đúng trang (giữ nguyên) |
+| **Giữ mạng xã hội cho đẹp** (nhóm chưa có kênh riêng) | 7 icon giữ nguyên, `href` trỏ tới **trang chủ** của từng mạng (telegram.org, facebook.com...), mở thẻ mới. Có kênh thật thì chỉ đổi `href`. Bỏ hàng "Dongphim, Ghienphim, Motphim, Subnhanh" (tên các web khác) và hàng Hỏi-Đáp / Chính sách... đang để `#` (không có trang thật), thay bằng **1 hàng link danh mục** | **US-14** giữ nguyên tiêu chí gốc (Sc1 bản quyền + mạng xã hội, Sc2 mở thẻ mới, Sc3 link danh mục) |
 | **Đăng nhập 2 cách**: tài khoản tự tạo (tên đăng nhập / email + mật khẩu) **hoặc Google** | Backend thêm `POST /auth/google`. Frontend dùng **Google Identity Services** (nút "Đăng nhập bằng Google" chính chủ của Google). Chi tiết ở L4, D4 | **US-18** thêm Scenario: bấm "Đăng nhập bằng Google" → chọn tài khoản → đăng nhập thành công, menu hiện tên + ảnh Google. PO tự thêm vào backlog |
 
 Nguyên tắc chung cho phần trang trí: **thứ gì không có thật thì xóa**, không để link `#` hay thông báo "đang cập nhật". Người chấm hay người dùng bấm vào mà không có gì xảy ra sẽ thấy web chưa xong, tệ hơn là không có.
@@ -70,7 +70,7 @@ Nguyên tắc chung cho phần trang trí: **thứ gì không có thật thì x�
 | | **Lead** | **DEV-1** | **DEV-2** |
 |---|---|---|---|
 | **Nhánh** (tên không dấu, chữ thường) | `<ten-lead>` (cả repo frontend lẫn `rophim-api`) | `<ten-dev1>` | `<ten-dev2>` |
-| **V1** | US-14 (theo tiêu chí mới), US-17, dọn Rổ Bóng / Tải ứng dụng, kiểm US-11 | US-34, US-36, US-37, kiểm US-33 + US-21 | US-48, kiểm US-40 + US-43 |
+| **V1** | US-14, US-17, dọn Rổ Bóng / Tải ứng dụng, kiểm US-11 | US-34, US-36, US-37, kiểm US-33 + US-21 | US-48, kiểm US-40 + US-43 |
 | **V2** | Repo `rophim-api`: khung + `/api/health` + 7 bảng + `/auth/register\|login\|google\|me\|logout` | `login.html` + `js/login.js` + `css/login.css`: form + nút Google (US-18, phần giao diện) | US-52 (Sc1–3), US-53 (Sc1–3), US-19 Sc2 |
 | **Chỉ người này được sửa** | `js/config.js`, `js/utils.js`, `js/main.js`, `js/api.js`, `components/*.html`, `css/style.css`, `css/components.css`, `docs/**`, `CONTRIBUTING.md`, `AGENTS.md`, toàn bộ repo `rophim-api` | `detail.html`, `js/detail.js`, `css/detail.css`, `login.html`, `js/login.js`, `css/login.css` | `watch.html`, `js/watch.js`, `css/watch.css`, `history.html`, `js/history.js` |
 | **Hồi quy Ngày 5** | Epic 1.1, 1.2 | Epic 2.1, 2.2, 2.3 | Epic 3.1, 3.2 + US-52, 53, 19 |
@@ -175,7 +175,7 @@ Tất cả việc frontend làm trên nhánh `<ten-lead>` của repo frontend. V
 
 > Ghi chú cho PO: phimapi **không trả tổng số tập** trong danh sách, nên thẻ hiện "Tập 7" hoặc "Hoàn Tất (8/8)", chưa được "Tập 12/24" như ví dụ trong Testing. Lead chốt với nhóm rằng như vậy là đạt Sc3, rồi ghi vào 07.
 
-### L2. Dọn header + footer: Rổ Bóng, Tải ứng dụng, mạng xã hội, US-14 (Ngày 1) · CORE
+### L2. Dọn header + footer: Rổ Bóng, Tải ứng dụng, link giả, US-14 (Ngày 1) · CORE
 
 **File:** `components/header.html`, `components/footer.html`, `js/main.js`, `css/style.css`, docs
 
@@ -187,7 +187,7 @@ Tất cả việc frontend làm trên nhánh `<ten-lead>` của repo frontend. V
    Hàm chỉ còn xử lý nút Thành viên → đổi tên thành `setupMemberButton()` và sửa lời gọi trong `initializeApp()`.
    (Hàm này không được trang nào khác gọi và không nằm trong `module.exports`. Lead vẫn grep lại trước khi đổi tên.)
 3. `components/footer.html`:
-   - Xóa `<div class="vertical-line"></div>` và cả khối `<div class="socials">...</div>`. Logo giữ nguyên.
+   - 7 icon mạng xã hội: `href` = trang chủ của mạng đó, thêm `target="_blank" rel="noopener noreferrer" aria-label="<Tên mạng>"`.
    - Thay hàng `Hỏi-Đáp / Chính sách...` (đều `#`) bằng link danh mục:
      ```html
      <div class="footer-menu">
@@ -198,24 +198,16 @@ Tất cả việc frontend làm trên nhánh `<ten-lead>` của repo frontend. V
      </div>
      ```
    - Xóa hàng `footer-menu sub-links` (Dongphim, Ghienphim, Motphim, Subnhanh).
-   - Thêm dòng liên hệ ngay trên `footer-copyright`, dùng lại class `footer-menu` (không thêm CSS mới):
-     ```html
-     <div class="footer-menu">
-       <a href="mailto:<email-nhom>"><i class="fa-regular fa-envelope"></i> <email-nhom></a>
-     </div>
-     ```
-     `<email-nhom>` là một email nhóm thật sự đọc được. Không dùng email cá nhân nếu chưa hỏi người đó.
-4. `css/style.css`: xóa các rule không còn phần tử nào dùng: `.new`, `.menu-item .highlight`, `.app-download-button`, `.app-download-button:hover .text strong`, `.app-download` trong media query (~dòng 754), `.vertical-line`, `.socials`, `.social-item`, `.social-item:hover`, `.footer-menu.sub-links`.
-   Trước khi xóa mỗi rule, grep class đó trong `*.html`, `js/`, `components/` để chắc không còn chỗ nào dùng. Đổi `.brand-social-row` → **giữ tên class** (đổi tên phải sửa nhiều chỗ, không đáng).
-   Thư mục `assets/icons/social/` không file nào dùng → xóa.
+4. `css/style.css`: xóa các rule không còn phần tử nào dùng: `.new`, `.menu-item .highlight`, `.app-download-button`, `.app-download-button:hover .text strong`, `.inc-icon svg`, `.text.text-light` (+ `span`, `strong`), `.app-download` trong media query `max-width: 1400px`, `.footer-menu.sub-links`.
+   Trước khi xóa mỗi rule, grep class đó trong `*.html`, `js/`, `components/` để chắc không còn chỗ nào dùng.
 5. Docs: `core_registry.md` (bỏ hook `.app-download-button`, `#nav-basketball`, ghi tên hàm mới), `skills/05_sua_core_an_toan_skill.md` dòng 76 (tên hàm cũ), `skills/06_kiem_thu_thu_cong_skill.md` dòng "Tải ứng dụng, Rổ Bóng → toast", `01_tong_quan_du_an.md` §3–§4, `05_no_ky_thuat.md` §3 (dòng footer `#`).
 6. **Kiểm thử** trên `index.html`, `detail.html`, `watch.html`, `404.html` ở 375px / 768px / ≥ 1200px:
    - Header không còn Rổ Bóng / Tải ứng dụng, không lệch, không cuộn ngang. Menu mobile vẫn mở / đóng.
-   - US-14 theo tiêu chí mới: thấy bản quyền + email; bấm email → mở ứng dụng thư; bấm "Phim Lẻ" → đúng trang.
+   - US-14: thấy bản quyền + mạng xã hội; bấm icon Telegram → mở thẻ mới, trang cũ vẫn còn; bấm "Phim Lẻ" → đúng trang.
    - Console không có lỗi đỏ (đặc biệt lỗi `null` do JS tìm phần tử đã xóa).
 7. Commit (2 commit riêng):
    `refactor(header): remove placeholder basketball and app download entries`
-   `fix(footer): replace placeholder social links with category links and contact email (US-14)`
+   `fix(footer): open social links in new tab and replace placeholder links with categories (US-14)`
 
 ### L3. Cấu hình Google + review (Ngày 1 chiều)
 
@@ -298,7 +290,7 @@ curl -i localhost:3000/api/auth/me                                            # 
 
 1. Chạy hồi quy phần của mình (§7).
 2. Sau khi PR của DEV-1 (có `login.html`) đã merge: sửa `.button-login` trong `header.html` thành `href="login.html"`, xóa toast "Vui lòng đăng nhập..." trong `setupMemberButton()` (hoặc xóa hẳn hàm nếu không còn gì). Header hiện avatar / tên sau khi đăng nhập là việc của chặng sau.
-3. Gom kết quả Pass/Fail từ PR của DEV-1, DEV-2 → cập nhật bảng [07 §2](07_lo_trinh_va_backlog.md#2-trạng-thái-user-story) (US-14 tiêu chí mới, US-20 → "Bỏ", US-17, 33, 34, 36, 37, 48, 52, 53, 19, 11, 43) và [01 §4](01_tong_quan_du_an.md#4-chưa-có--đừng-tưởng-là-có).
+3. Gom kết quả Pass/Fail từ PR của DEV-1, DEV-2 → cập nhật bảng [07 §2](07_lo_trinh_va_backlog.md#2-trạng-thái-user-story) (US-14, US-20 → "Bỏ", US-17, 33, 34, 36, 37, 48, 52, 53, 19, 11, 43) và [01 §4](01_tong_quan_du_an.md#4-chưa-có--đừng-tưởng-là-có).
 4. Nếu cả 29 US V1 đều đạt: làm checklist [06_trien_khai.md §5](06_trien_khai.md#5-checklist-trước-khi-release-merge-develop--main), PR `develop` → `main`, tag `v1.1.0`.
 5. Dời ngày Chặng 2, Chặng 3 trong 07 §3.2 theo tiến độ thực tế.
 
@@ -593,7 +585,7 @@ Chạy trên `develop` mới nhất, **cửa sổ ẩn danh**, 3 kích thước 
 
 | Người | US (Sprint 1–3) | Cộng thêm |
 |---|---|---|
-| Lead | US-10, 13, 14 (tiêu chí mới), 28, 30 (Epic 1.1, 1.2) | US-11, 15 + header/footer sau khi dọn + `404.html` |
+| Lead | US-10, 13, 14, 28, 30 (Epic 1.1, 1.2) | US-11, 15 + header/footer sau khi dọn + `404.html` |
 | DEV-1 | US-21, 22, 23, 24, 25, 26, 27, 31, 32 (Epic 2.1, 2.2) + US-17, 33, 34, 35, 36, 39 (Epic 2.3) | Trang `login.html` |
 | DEV-2 | US-37, 38, 40, 41, 44, 45, 46, 47, 48 (Epic 3) | US-42, 43, 49, 52, 53, 19 Sc2 |
 
@@ -621,8 +613,8 @@ Fail ở file của mình thì sửa ngay trong ngày. Fail ở file người kh
 
 ## 9. Xong tuần khi
 
-- [ ] Cả 29 US Sprint 1–3 đạt **mọi Scenario** (US-14 theo tiêu chí mới). Hồi quy §7 không còn Fail.
-- [ ] Header / footer không còn Rổ Bóng, Tải ứng dụng, mạng xã hội, link `#`.
+- [ ] Cả 29 US Sprint 1–3 đạt **mọi Scenario** . Hồi quy §7 không còn Fail.
+- [ ] Header / footer không còn Rổ Bóng, Tải ứng dụng, link `#`; icon mạng xã hội mở thẻ mới.
 - [ ] US-52, US-53 đạt 3/3 Scenario. US-19 Sc2 đạt. (V2)
 - [ ] `login.html` có form + nút Google, báo lỗi đúng, không vỡ khi chưa có backend. (V2, phần giao diện US-18)
 - [ ] `rophim-api` chạy local: `/api/health`, đủ 7 bảng, `/auth/*` (cả Google) trả đúng mã. (V2, backend US-18)

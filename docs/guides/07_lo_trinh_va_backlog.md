@@ -33,8 +33,8 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 |---|---|---|---|---|---|---|
 | 1 | US-23 | Xem toàn bộ phim của danh mục | Must | ✅ | | |
 | 1 | US-22 | Nhóm phim mới trên trang chủ | Must | ✅ | | |
-| 1 | US-14 | Thông tin liên hệ, mạng xã hội | Must | 🟡 | Link mạng xã hội `href="#"`; chưa có link danh mục (Phim lẻ...) ở footer | DEV-1 |
-| 1 | US-17 | Thẻ phim trong danh sách | Must | ✅ | | |
+| 1 | US-14 | Thông tin liên hệ, mạng xã hội | Must | 🔍 | 30/10: icon mạng xã hội trỏ trang chủ từng mạng, mở thẻ mới; thêm link Phim Lẻ / Phim Bộ / Yêu thích / Lịch sử; bỏ link `#` và tên web khác. Cần kiểm trên trình duyệt | Lead |
+| 1 | US-17 | Thẻ phim trong danh sách | Must | 🔍 | 30/10: nhóm Phim mới dùng endpoint `-v3`; phim lẻ hiện chất lượng thay vì "Full". phimapi không trả tổng số tập nên hiện "Tập 7" / "Hoàn Tất (8/8)". Cần kiểm trên trình duyệt | Lead |
 | 1 | US-13 | Header dính + lên đầu trang | Must | ✅ | | |
 | 1 | US-21 | Phim nổi bật trang chủ | Must | ✅ | | |
 | 1 | US-24 | Danh sách phim lẻ | Must | ✅ | | |
@@ -80,7 +80,7 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 | 6 | US-43 | Chọn chất lượng | Should | ✅🔍 | Kiểm Scenario 3 (chỉ 1 mức → ẩn) | |
 | 6 | US-56 | Chấm điểm 1–10 + điểm chung | Should | 🔒🟡 | Tab có, dữ liệu giả; chưa có ô chấm điểm | DEV-1 |
 | 6 | US-57 | Bộ ảnh phim | Should | ✅ | | |
-| 6 | US-20 | Báo tính năng chưa sẵn sàng | Could | ✅ | Có nhãn NEW ở "Rổ Bóng" | |
+| 6 | US-20 | Báo tính năng chưa sẵn sàng | Could | 🚫 Bỏ | 30/10 PO quyết định xóa "Rổ Bóng" và "Tải ứng dụng" (không có thật) → US này không còn đối tượng áp dụng | |
 | 6 | US-49 | Tắt đèn + chia sẻ | Could | ✅ | | |
 | 6 | US-11 | Xem nhanh thể loại/quốc gia | Could | ✅🔍 | Kiểm Scenario 3 (mất mạng vẫn có danh sách — đã có `fallbackData`) | |
 
