@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "migrate": "node-pg-migrate -m migrations"
+    "migrate": "node-pg-migrate -m migrations",
+    "seed": "node src/scripts/seed-admin.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
