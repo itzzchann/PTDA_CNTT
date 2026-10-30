@@ -1,7 +1,7 @@
 # Backend API Contract — RoPhim V2
 
 > **Hợp đồng giữa frontend (repo này) và backend riêng của RoPhim.** Hai bên code song song dựa trên file này.
-> Trạng thái: **v0.1 (22/10/2026)** — đã chốt **Node.js + Express + PostgreSQL**, repo riêng `rophim-api`
+> Trạng thái: **v0.1 (22/10/2026)** — đã chốt **Node.js + Express + PostgreSQL**, thư mục `server/` trong repo này (chốt 30/10)
 > ([08_backend_node_skill.md](../skills/08_backend_node_skill.md)). Phân công endpoint: [07_lo_trinh_va_backlog.md §3](../guides/07_lo_trinh_va_backlog.md#31-ai-làm-gì).
 > Đổi bất cứ thứ gì ở đây = PR riêng, cả người làm FE và BE cùng duyệt. Tên endpoint khớp `BACKEND_CONFIG.ENDPOINTS` trong `js/config.js`.
 

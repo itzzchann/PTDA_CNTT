@@ -66,10 +66,11 @@ Sau khi PR được merge, bạn **giữ nguyên nhánh** và làm tiếp task s
 
 ### 1.2 Repo nằm ở đâu
 
-- Repo frontend (repo này): `https://github.com/itzzchann/PTDA_CNTT` — làm việc trực tiếp trên repo này, **không cần fork**.
+- **Một repo duy nhất** cho cả frontend lẫn backend: `https://github.com/itzzchann/PTDA_CNTT` — làm việc trực tiếp trên repo này, **không cần fork**.
   Trưởng nhóm sẽ mời bạn làm collaborator; nhận lời mời qua email/GitHub trước khi clone.
-- Repo backend: `rophim-api` (Node.js + Express + PostgreSQL) — cùng quy trình Git y hệt file này,
-  chuẩn code riêng xem [08_backend_node_skill.md](docs/skills/08_backend_node_skill.md).
+- Frontend: các file ở thư mục gốc (`*.html`, `js/`, `css/`, `components/`, `assets/`).
+- Backend: thư mục **`server/`** (Node.js + Express + PostgreSQL), chuẩn code xem [08_backend_node_skill.md](docs/skills/08_backend_node_skill.md).
+  Cùng nhánh tên mình, cùng PR — sửa cả frontend lẫn backend cho một US thì để chung một PR.
 - Mọi PR đều cần **chủ repo duyệt** (xem [.github/CODEOWNERS](.github/CODEOWNERS)) thì mới merge được.
 
 ---
@@ -275,7 +276,7 @@ Mỗi người **đúng một nhánh**, đặt bằng **họ tên không dấu, 
 | Nguyễn Văn A | `nguyenvana` |
 | Trần Thị B | `tranthib` |
 
-- Repo backend `rophim-api` dùng **cùng tên nhánh** đó.
+- Backend (`server/`) nằm cùng repo nên dùng luôn nhánh đó, không có nhánh riêng cho backend.
 - **Không** tạo thêm `feat/...`, `fix/...`, `docs/...` cho từng task. Loại việc (tính năng, sửa lỗi, tài liệu) đã thể hiện ở **commit message** (§4.2).
 - Ngoại lệ duy nhất: `hotfix/<mô-tả>` cho lỗi khẩn trên `main` — **chỉ trưởng nhóm** tạo ([§9.2](#92-hotfix-lỗi-nghiêm-trọng-trên-bản-đã-phát-hành)).
 

@@ -41,7 +41,7 @@ Chỉ đụng `api.js`/`config.js`/`catalog.js` → chạy các dòng liên quan
 - [ ] Hover Thể loại / Quốc gia / Thêm → dropdown; click một thể loại → đúng trang.
 - [ ] ♥ trên thẻ → toast + icon đổi, mọi thẻ cùng phim đổi theo; F5 vẫn giữ; có trong `favorites.html`.
 - [ ] Cuộn > 300px → nút về đầu trang; bấm → trượt lên.
-- [ ] "Thành viên", "Tải ứng dụng", "Rổ Bóng" → toast đúng.
+- [ ] "Thành viên" → toast đúng (cho tới khi có `login.html`).
 
 ## 3. Responsive
 

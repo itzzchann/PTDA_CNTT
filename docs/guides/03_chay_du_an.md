@@ -20,7 +20,7 @@ python3 -m http.server 5500          # Windows: py -m http.server 5500
 ## 3. Chạy kèm backend (khi đã có — V2)
 
 ```
-Terminal 1: chạy backend theo README của repo backend (vd http://localhost:3000)
+Terminal 1: cd server && npm run dev   (theo server/README.md, vd http://localhost:3000)
 Terminal 2: Live Server cho frontend (http://127.0.0.1:5500)
 ```
 Rồi đặt tạm trong `js/config.js` (KHÔNG commit giá trị local):

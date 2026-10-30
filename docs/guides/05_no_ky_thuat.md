@@ -99,6 +99,6 @@ menu thể loại/quốc gia (dữ liệu dự phòng), yêu thích/lịch sử 
 |---|---|---|
 | Bình luận/đánh giá vẫn là dữ liệu demo (`DEMO_COMMENTS`, `DEMO_RATINGS`) | Cần backend | US-54, 55, 56 |
 | `API_CONFIG.BACKUP_URL` chưa dùng | Là tính năng admin đổi máy chủ — cần backend | US-62 |
-| Footer: link mạng xã hội, Hỏi-Đáp, Chính sách... là `href="#"` | Cần **nội dung thật** (URL fanpage, trang chính sách) từ nhóm | US-14 |
+| Footer: icon mạng xã hội trỏ tới **trang chủ** của từng mạng (Telegram, Facebook...) vì nhóm chưa có kênh riêng | Có kênh thật thì chỉ cần đổi `href` trong `components/footer.html` | US-14 |
 | Danh sách "Phần" suy ra bằng tìm theo tên | phimapi không có quan hệ giữa các mùa phim — giới hạn của nguồn dữ liệu | US-48 |
 | Content-Security-Policy | Còn `onerror="..."` inline trên ảnh (fallback ảnh lỗi) và nhiều nguồn ngoài; bật CSP cần rà kỹ nguồn iframe player | Deploy |

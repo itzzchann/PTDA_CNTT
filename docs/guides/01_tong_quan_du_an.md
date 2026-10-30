@@ -26,7 +26,7 @@ Sản phẩm sẽ được **deploy công khai** ([06_trien_khai.md](06_trien_kh
 | Phát video | **hls.js 1.7.3** (CDN, ghim version) + iframe `link_embed` dự phòng; Safari phát HLS gốc |
 | Font / icon | Google Fonts **Inter**, Font Awesome **6.5.1** |
 | Dữ liệu cá nhân (V1) | `localStorage` |
-| Backend (V2) | **Node.js 20 + Express + PostgreSQL**, repo riêng `rophim-api` — giao tiếp theo [hợp đồng REST](../specs/backend_api_contract.md) |
+| Backend (V2) | **Node.js 20 + Express + PostgreSQL**, thư mục `server/` trong repo này — giao tiếp theo [hợp đồng REST](../specs/backend_api_contract.md) |
 | Dev | VS Code + Live Server, Prettier |
 
 ---
@@ -64,9 +64,7 @@ Sản phẩm sẽ được **deploy công khai** ([06_trien_khai.md](06_trien_kh
 | Trang Admin | Chưa có trang nào | US-58 → US-64 |
 | Lưu vị trí xem (phút/giây) | Chỉ lưu **tập**, `progress` luôn 0 | US-52 |
 | Backdrop mờ + poster 3D | Có backdrop + poster, chưa hiệu ứng mờ/3D | US-33 |
-| Link mạng xã hội, link footer | `href="#"` | US-14 |
 | Máy chủ API dự phòng | `API_CONFIG.BACKUP_URL` có nhưng chưa dùng | US-62 |
-| Rổ Bóng, Tải ứng dụng | Toast "đang cập nhật" (đúng theo US-20) | US-20 |
 
 ---
 

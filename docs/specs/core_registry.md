@@ -20,6 +20,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `API_CONFIG.TIMEOUT_MS` | `15000` | api `fetchAPI` |
 | `BACKEND_CONFIG.BASE_URL` | `""` = chưa có backend; production `"/api"` — [06_trien_khai.md](../guides/06_trien_khai.md) | api `fetchBackend` |
 | `BACKEND_CONFIG.ENDPOINTS.*` | Endpoint backend, placeholder `[slug]`, `[id]` — [backend_api_contract.md](backend_api_contract.md) | (V2) |
+| `BACKEND_CONFIG.GOOGLE_CLIENT_ID` | Client ID OAuth của Google (công khai, không phải bí mật). `""` = chưa cấu hình → ẩn nút Google. Endpoint đi kèm: `ENDPOINTS.GOOGLE_LOGIN` = `/auth/google` (US-18) | (V2) login |
 | `BACKEND_CONFIG.TIMEOUT_MS` | `60000` — dài vì Render free cần 30–60s để "thức dậy" | api `fetchBackend` |
 | `APP_CONFIG.APP_NAME` | `"RoPhim"` | catalog, detail, search, watch (title) |
 | `APP_CONFIG.ITEMS_PER_PAGE` | `24` (= số phim/trang của phimapi) | — |
@@ -89,7 +90,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 
 | Chữ ký | Trả về | Ghi chú | Dùng ở |
 |---|---|---|---|
-| `createMovieCard(movie)` | HTML | **Thẻ phim chuẩn.** Đọc `poster_url \|\| thumb_url \|\| poster`, `slug`, `name`, `origin_name`, `year`, `episode_current \|\| quality`. Có nút ♥ | 🔴 8 file |
+| `createMovieCard(movie)` | HTML | **Thẻ phim chuẩn.** Đọc `poster_url \|\| thumb_url \|\| poster`, `slug`, `name`, `origin_name`, `year`, nhãn góc: phim lẻ (`type: "single"` hoặc `episode_current: "Full"`) → `quality`, còn lại → `episode_current`, thiếu thì `quality` rồi `"HD"` (US-17). Có nút ♥ | 🔴 8 file |
 | `renderSkeleton(gridId, count = 6)` | `void` | Nhận **id** | 🔴 |
 | `renderEmptyState(target, options)` | `void` | ⭐ Khối rỗng/lỗi. `target`: id hoặc phần tử. `options`: `{ icon, message, actionText, actionHref }` hoặc `{ message, onRetry }` (nút "Thử lại") | 🔴 catalog, homepage, search, detail, favorites, history |
 | `setupPagination(onPageChange)` | `{ update(current, total), setVisible(bool) }` | ⭐ Gắn 4 nút phân trang theo **ID chuẩn** (§5). `onPageChange(page)` chỉ được gọi với trang hợp lệ khác trang hiện tại | 🟡 catalog, favorites, history |
@@ -144,10 +145,10 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `showConfirmDialog({ title, message, confirmText, cancelText, danger })` → `Promise<boolean>` | ⭐ Hộp thoại xác nhận (thay `confirm()`); Esc / bấm nền = hủy. `danger: true` → nút đỏ | 🟢 favorites (V2: xóa bình luận, khóa thành viên) |
 | `showMovieBackdrop(container, movie)` | ⭐ **Banner ngang của phim** — ưu tiên ảnh TMDB → `thumb_url` → `poster_url`. Đừng đặt `poster_url` (ảnh dọc) làm nền banner: bị cắt và phóng to nên vỡ | 🟡 homepage, detail |
 | `toggleFavorite(movie)` → `boolean` | Trạng thái **sau** khi bấm; tự toast (cả khi lỗi bộ nhớ). `movie` cần `{ slug, name, poster_url }` | 🟡 main, watch |
-| `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `setupComingSoonFeatures`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
+| `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `setupMemberButton`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
 
 Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-movie]` → toggle ♥ · click `.button-login` → toast đăng nhập
-(V2: thay bằng menu tài khoản) · click `.app-download-button`, `#nav-basketball` → toast "đang cập nhật" · Esc đóng menu mobile / dropdown tìm kiếm.
+(V2: thay bằng menu tài khoản) · Esc đóng menu mobile / dropdown tìm kiếm.
 
 ## 5. Sự kiện tùy chỉnh (bắn trên `document`)
 
@@ -167,7 +168,7 @@ Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-
 | `firstPage`, `prevPage`, `nextPage`, `lastPage`, `currentPage`, `totalPage` (trong `.pagination`) | trang có phân trang | `setupPagination` |
 | `catalog-grid`, `catalog-title`, `catalog-icon`, `<main data-catalog>` | movies, series, category, country | catalog.js |
 
-Class dùng làm "móc" cho JS (không đổi): `.menu-toggle`, `.search-toggle`, `.menu-item-sub`, `.dropdown`, `.button-login`, `.app-download-button`,
+Class dùng làm "móc" cho JS (không đổi): `.menu-toggle`, `.search-toggle`, `.menu-item-sub`, `.dropdown`, `.button-login`,
 `.btn-favorite`, `.movie-card`, `.movie-poster`, `.movie-info`, `.pagination`.
 
 ---

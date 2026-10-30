@@ -73,7 +73,7 @@ Header là CORE nặng nhất (mọi trang). Cách làm an toàn — **thêm**, 
    ```
 2. `js/main.js`: thêm `setupAuthHeader()` và gọi trong `initializeApp()`:
    - `isLoggedIn()` → ẩn `.button-login`, hiện `#user-menu`, điền tên bằng `textContent`.
-   - Gỡ nhánh `.button-login` trong `setupComingSoonFeatures` (thay bằng chuyển tới `login.html`).
+   - Gỡ nhánh `.button-login` trong `setupMemberButton` (thay bằng chuyển tới `login.html`).
    - Nghe `auth:expired` → về trạng thái khách + toast (US-19 Scenario 3).
 3. CSS mới vào `components.css` (`.user-menu ...`), kiểm tra header ở 1250px và menu mobile.
 4. Test tất cả trang (header có ở mọi trang) khi **đã** và **chưa** đăng nhập.

@@ -29,7 +29,7 @@ Lý do: deploy công khai — thư viện tự nâng phiên bản có thể làm
 | Nguồn | Vai trò | Giao tiếp |
 |---|---|---|
 | phimapi.com | Dữ liệu phim (chỉ đọc), bên thứ ba | `getXxx()` trong `api.js` |
-| Backend RoPhim (V2) — Node.js + Express + PostgreSQL, repo `rophim-api` | Người dùng, bình luận, đánh giá, cấu hình admin, thống kê | `fetchBackend()` theo [backend_api_contract.md](../specs/backend_api_contract.md) |
+| Backend RoPhim (V2) — Node.js + Express + PostgreSQL, thư mục `server/` | Người dùng, bình luận, đánh giá, cấu hình admin, thống kê | `fetchBackend()` theo [backend_api_contract.md](../specs/backend_api_contract.md) |
 | localStorage | Yêu thích, lịch sử (khách), phiên đăng nhập, cài đặt | Hàm storage trong `utils.js` |
 
 - Timeout: phimapi 15s (`API_CONFIG.TIMEOUT_MS`), backend 60s (`BACKEND_CONFIG.TIMEOUT_MS` — Render free khởi động chậm). `status === 0` = mất mạng / quá hạn.

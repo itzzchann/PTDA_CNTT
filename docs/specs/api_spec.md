@@ -21,7 +21,7 @@ phimapi có 2 thế hệ endpoint, **bọc dữ liệu khác nhau**:
 
 | | Kiểu cũ (v0) | Kiểu mới (v1 — `/v1/api/...`) |
 |---|---|---|
-| Endpoint | chỉ `/danh-sach/phim-moi-cap-nhat` | mọi endpoint còn lại |
+| Endpoint | chỉ `/danh-sach/phim-moi-cap-nhat-v3` | mọi endpoint còn lại |
 | Danh sách phim | `json.items` | `json.data.items` |
 | Phân trang | `json.pagination` | `json.data.params.pagination` |
 | `status` | `true` (boolean) | `true` (danh sách) hoặc `"success"` (chi tiết, thể loại) |
@@ -45,7 +45,7 @@ const { totalPages } = extractPagination(res);        // ≥ 1
 
 | Hàm | Endpoint | Kiểu |
 |---|---|---|
-| `getNewMovies(page)` | `GET /danh-sach/phim-moi-cap-nhat?page={page}` | v0 |
+| `getNewMovies(page)` | `GET /danh-sach/phim-moi-cap-nhat-v3?page={page}` — bản `-v3` có `type`, `episode_current`, `quality`, `lang` (bản không hậu tố thì không có, thẻ phim sẽ chỉ hiện "HD") | v0 |
 | `getSingleMovies(page)` | `GET /v1/api/danh-sach/phim-le?page={page}` | v1 |
 | `getSeriesMovies(page)` | `GET /v1/api/danh-sach/phim-bo?page={page}` | v1 |
 | `getMoviesByListSlug(slug, page)` | `GET /v1/api/danh-sach/{slug}?page={page}` — slug: `phim-le`, `phim-bo`, `hoat-hinh`, `tv-shows`... | v1 |

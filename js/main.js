@@ -4,7 +4,7 @@ function initializeApp() {
   setupScrollEffects();
   renderMenuDropdowns();
   setupGlobalFavoriteHandler();
-  setupComingSoonFeatures();
+  setupMemberButton();
 }
 
 function setupGlobalFavoriteHandler() {
@@ -451,22 +451,9 @@ function toggleFavorite(movie) {
   return isInFavorites(movie.slug);
 }
 
-function setupComingSoonFeatures() {
-  const basketball = document.getElementById("nav-basketball");
-  if (basketball) {
-    basketball.addEventListener("click", (e) => {
-      e.preventDefault();
-      showToast("Tính năng hiện đang cập nhật", "info");
-    });
-  }
-
+// Chưa có trang đăng nhập (US-18): nút "Thành viên" chỉ báo bằng toast.
+function setupMemberButton() {
   document.addEventListener("click", (e) => {
-    if (e.target.closest(".app-download-button")) {
-      e.preventDefault();
-      showToast("Tính năng hiện đang cập nhật", "info");
-      return;
-    }
-
     const memberBtn = e.target.closest(".button-login");
     if (memberBtn) {
       e.preventDefault();
