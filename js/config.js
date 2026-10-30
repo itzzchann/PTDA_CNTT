@@ -67,7 +67,7 @@ const BACKEND_CONFIG = {
 
   // Client ID của Google là thông tin công khai (Google thiết kế để nằm trong trang web), không phải bí mật.
   // Rỗng = chưa cấu hình: login.html tự ẩn nút "Đăng nhập bằng Google". KHÔNG dán Client secret vào đây.
-  GOOGLE_CLIENT_ID: "",
+  GOOGLE_CLIENT_ID: "134760757112-4gag2pjk4uj15jo68qfqnmtq06n0182g.apps.googleusercontent.com",
 
   // Render gói free "ngủ" khi không có request — lần gọi đầu có thể mất 30–60 giây.
   TIMEOUT_MS: 60000,
