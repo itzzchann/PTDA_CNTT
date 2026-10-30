@@ -18,7 +18,8 @@
 **Kiến trúc:**
 - **Frontend** (repo này): HTML + CSS + JavaScript **thuần**, không framework, không build tool. Host tĩnh.
 - **Dữ liệu phim**: API công khai **phimapi.com** (chỉ đọc).
-- **Backend riêng** (V2 — tài khoản, bình luận, admin): **Node.js + Express + PostgreSQL**, repo `rophim-api`; giao tiếp qua REST theo
+- **Backend** (V2 — tài khoản, bình luận, admin): **Node.js + Express + PostgreSQL**, nằm trong thư mục **`server/`** của chính repo này
+  (host tĩnh **không được phát** thư mục này ra web — [06 §3.4](docs/guides/06_trien_khai.md#34-những-gì-sẽ-bị-công-khai)); giao tiếp qua REST theo
   [backend_api_contract.md](docs/specs/backend_api_contract.md). Frontend gọi **chỉ qua `fetchBackend()`**.
 - **localStorage**: yêu thích, lịch sử, phiên đăng nhập.
 
@@ -93,6 +94,9 @@ css/components.css card, grid, badge, toast, skeleton,
 ```
 
 `js/catalog.js` là file trang nhưng **4 trang dùng chung** → sửa phải test cả 4.
+
+`server/` là **backend Node.js**, chạy trên máy chủ — frontend **không** nạp hay `import` gì từ đây, chỉ gọi qua `fetchBackend()`.
+Chuẩn code backend: [08_backend_node_skill.md](docs/skills/08_backend_node_skill.md).
 
 ---
 

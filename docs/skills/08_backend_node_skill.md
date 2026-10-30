@@ -6,13 +6,17 @@
 
 ---
 
-## 1. Repo riêng: `rophim-api`
+## 1. Thư mục `server/` trong repo chung
 
-Backend nằm ở **repo GitHub riêng**, không đặt trong repo frontend — vì host tĩnh phục vụ mọi file trong repo frontend
-(lộ mã nguồn server, file migration). Cùng Git flow: `main` / `develop` / mỗi người 1 nhánh tên mình (giống repo frontend), Conventional Commits, PR vào `develop`.
+Backend nằm ở thư mục **`server/`** của repo `PTDA_CNTT` (chốt 30/10/2026: một repo cho dễ quản lý). Cùng Git flow:
+`main` / `develop` / mỗi người 1 nhánh tên mình, Conventional Commits, PR vào `develop`.
+
+⚠️ Host tĩnh của frontend phục vụ **mọi file** trong repo → **bắt buộc** chặn `server/` khi deploy
+([06 §3.4](../guides/06_trien_khai.md#34-những-gì-sẽ-bị-công-khai)), nếu không ai cũng đọc được mã nguồn server và file migration.
+`server/.env` không bao giờ commit (`.gitignore` gốc đã chặn `.env` ở mọi thư mục). Mọi lệnh `npm` chạy **trong `server/`**.
 
 ```
-rophim-api/
+server/                       # trong repo PTDA_CNTT, cạnh index.html
 ├── package.json
 ├── .env.example              # liệt kê biến môi trường, KHÔNG có giá trị thật
 ├── .gitignore                # node_modules, .env

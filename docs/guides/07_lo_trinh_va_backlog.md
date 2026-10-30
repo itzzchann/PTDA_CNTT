@@ -22,7 +22,7 @@ thiết kế CSDL, môi trường  │ T4:    bộ lọc, tìm kiếm, trang chi
                            │ T8:    bình luận, đánh giá, kiểm duyệt, yêu cầu phi chức năng
 ```
 
-**Thực tế 28/10:** frontend V1 xong; **backend chưa bắt đầu** (chưa có repo `rophim-api`, `BACKEND_CONFIG.BASE_URL` rỗng).
+**Thực tế 28/10:** frontend V1 xong; **backend chưa bắt đầu** (chưa có thư mục `server/`, `BACKEND_CONFIG.BASE_URL` rỗng).
 Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](#3-kế-hoạch-v2--phân-công-3-người)).
 
 ## 2. Trạng thái user story
@@ -99,10 +99,10 @@ Hợp đồng [backend_api_contract.md](../specs/backend_api_contract.md) đã �
 
 | | **Lead** — Nền tảng, Tài khoản, Hệ thống | **DEV-1** — Cộng đồng & Thống kê | **DEV-2** — Cá nhân & Thành viên |
 |---|---|---|---|
-| **Vai trò** | Dựng khung 2 repo, giữ file CORE, deploy, **review mọi PR** | Dev mới | Dev mới |
+| **Vai trò** | Dựng khung `server/`, giữ file CORE, deploy, **review mọi PR** | Dev mới | Dev mới |
 | **User story** | US-18 (BE + header), US-19 (Scenario 1, 3), US-59, US-60, US-62, chặn quyền admin (US-58 Scenario 3) | US-14 (khởi động), US-54, US-55, US-56, US-58, US-61 | US-33 + US-48 (khởi động), US-18 (trang `login.html`), US-19 (Scenario 2), US-52, US-53, đồng bộ US-50/51, US-63 |
 | **Endpoint** | `/auth/*`, `/settings`, `PATCH /admin/settings`, `/api/health` | `/movies/:slug/comments`, `/comments/:id`, `/movies/:slug/ratings`, `/movies/:slug/views`, `/admin/stats`, `/admin/comments*` | `/me/favorites*`, `/me/history`, `/admin/users*` |
-| **File BE sở hữu** (`rophim-api`) | `app.js`, `server.js`, `config.js`, `db.js`, `errors.js`, `middlewares/*`, `migrations/*`, `auth.*`, `settings.*`, `phimapi.service.js` | `movies.routes.js`, `comments.routes.js`, `comment.service.js`, `rating.service.js`, `stats.service.js`, khối *DEV-1* trong `admin.routes.js` | `me.routes.js`, `user.service.js`, khối *DEV-2* trong `admin.routes.js` |
+| **File BE sở hữu** (`server/`) | `app.js`, `server.js`, `config.js`, `db.js`, `errors.js`, `middlewares/*`, `migrations/*`, `auth.*`, `settings.*`, `phimapi.service.js` | `movies.routes.js`, `comments.routes.js`, `comment.service.js`, `rating.service.js`, `stats.service.js`, khối *DEV-1* trong `admin.routes.js` | `me.routes.js`, `user.service.js`, khối *DEV-2* trong `admin.routes.js` |
 | **File FE sở hữu** | **Mọi file CORE** (`js/api.js`, `js/main.js`, `js/components.js`, `components/header.html`, `js/config.js`), `js/homepage.js`, khung `admin.html` / `js/admin.js` / `css/admin.css`, tab *Hệ thống* + *Bộ nhớ* | Khu bình luận / đánh giá trong `js/watch.js` + `css/watch.css`, tab *Dashboard* + *Bình luận* trong `js/admin.js` | `login.html` / `js/login.js` / `css/login.css`, phần player + lịch sử trong `js/watch.js`, `js/favorites.js`, `js/history.js`, tab *Thành viên* trong `js/admin.js` |
 | **Story Pts** | ≈ 17 + hạ tầng + review | ≈ 19 | ≈ 19 |
 
@@ -118,7 +118,7 @@ Vì sao chia như vậy:
 
 | Người | Việc | Xong khi |
 |---|---|---|
-| Lead | ① Mời DEV-1, DEV-2 làm collaborator ở **cả 2 repo**; bật branch protection cho `main` và `develop` (bắt buộc PR + 1 approve). ② Merge PR tài liệu (CONTRIBUTING mới, file này). ③ 30 phút hướng dẫn Git flow cho 2 bạn. ④ **Tạo `rophim-api`** theo [skill 08](../skills/08_backend_node_skill.md): `app.js`, error handler, CORS, `/api/health`, migration **đủ 7 bảng** (hợp đồng §5), README chạy local, `.env.example`; **tạo sẵn mọi file route rỗng và đăng ký trong `app.js`**, chia `admin.routes.js` thành 3 khối có comment *Lead / DEV-1 / DEV-2* → không ai phải sửa `app.js` nữa. ⑤ PR CORE frontend: `buildBackendPath()` + **toàn bộ wrapper backend** trong `js/api.js` (danh sách ở §3.4), cập nhật `core_registry.md` | 2 dev clone `rophim-api` về, `npm run migrate` + `npm run dev` → `GET /api/health` trả `ok`. Wrapper đã ở trên `develop` |
+| Lead | ① Mời DEV-1, DEV-2 làm collaborator; bật branch protection cho `main` và `develop` (bắt buộc PR + 1 approve). ② Merge PR tài liệu (CONTRIBUTING mới, file này). ③ 30 phút hướng dẫn Git flow cho 2 bạn. ④ **Tạo khung `server/`** theo [skill 08](../skills/08_backend_node_skill.md): `app.js`, error handler, CORS, `/api/health`, migration **đủ 7 bảng** (hợp đồng §5), README chạy local, `.env.example`; **tạo sẵn mọi file route rỗng và đăng ký trong `app.js`**, chia `admin.routes.js` thành 3 khối có comment *Lead / DEV-1 / DEV-2* → không ai phải sửa `app.js` nữa. ⑤ PR CORE frontend: `buildBackendPath()` + **toàn bộ wrapper backend** trong `js/api.js` (danh sách ở §3.4), cập nhật `core_registry.md` | 2 dev `cd server`, `npm run migrate` + `npm run dev` → `GET /api/health` trả `ok`. Wrapper đã ở trên `develop` |
 | DEV-1 | Cài đặt theo [CONTRIBUTING §2](../../CONTRIBUTING.md#2-cài-đặt-lần-đầu-làm-1-lần); đọc `AGENTS.md`, `02_kien_truc.md`. **PR đầu tiên: US-14** — link mạng xã hội mở thẻ mới (`target="_blank" rel="noopener"`), thêm link Phim lẻ / Phim bộ ở footer (`components/footer.html` là CORE nên báo nhóm trước, chỉ sửa link) | PR US-14 được merge, đạt 3 Scenario |
 | DEV-2 | Cài đặt như DEV-1. **PR đầu tiên:** chạy 3 Scenario của **US-33** và **US-48** theo tiêu chí mới, sửa chỗ nào Fail (`js/detail.js`, `css/detail.css`, phần chọn phần phim trong `js/watch.js`); cập nhật trạng thái 2 US này ở §2 | PR merge, ghi rõ Pass/Fail từng Scenario |
 
@@ -126,8 +126,8 @@ Vì sao chia như vậy:
 
 | Người | Việc | Xong khi |
 |---|---|---|
-| Lead | **30/10:** middleware `requireAuth` (đọc lại user từ CSDL mỗi request → bị khóa thì `403 ACCOUNT_BANNED`), `optionalAuth`, `requireRole`, validate, rate limit; 4 endpoint `/auth/*`; script seed super admin. **31/10:** header tài khoản (`header.html` + `main.js`): avatar + tên (US-18 Sc2), menu cá nhân → Đăng xuất + toast (US-19 Sc1), link Admin nếu role admin, xử lý `auth:expired` **không dừng video** (US-19 Sc3); khách bấm ♥ → hộp thoại mời đăng nhập (US-18 Sc4, xem §3.6). **01/11:** deploy `rophim-api` lên Render + Neon; frontend preview (Netlify/Vercel) + proxy `/api`, `BASE_URL = "/api"` ([06_trien_khai.md](06_trien_khai.md)). **02/11:** khung `admin.html`: chặn quyền (không phải admin → về `index.html`, US-58 Sc3), 5 tab với hàm rỗng `initDashboardTab` / `initCommentsTab` / `initUsersTab` / `initSystemTab` / `initStorageTab`, ghi tên người sở hữu từng tab | Trên preview: đăng ký → đăng nhập → header hiện avatar → đăng xuất. Mở `admin.html` bằng tài khoản thường → về trang chủ |
-| DEV-1 | **30/10:** clone `rophim-api`, tạo DB dev riêng trên Neon (không cần cài PostgreSQL); viết **endpoint công khai trước** (chưa cần đăng nhập): `GET /movies/:slug/comments`, `GET /movies/:slug/ratings`, `POST /movies/:slug/views`; chèn bình luận mẫu bằng SQL để test. **31/10:** `watch.js` bỏ `DEMO_COMMENTS` / `DEMO_RATINGS`, gọi `getMovieComments` / `getMovieRatings`; hiện "Chưa có bình luận" (US-54 Sc2); gọi `recordMovieView` khi mở trang xem. **01–02/11:** (đã có `requireAuth` của Lead) `POST /movies/:slug/comments`, `DELETE /comments/:id` (chủ hoặc admin), `POST /movies/:slug/ratings` (upsert, tính trung bình) | US-54 đạt 3 Scenario khi chạy local; 3 endpoint ghi chạy đúng bằng curl, kể cả mã lỗi `400` / `401` / `403` |
+| Lead | **30/10:** middleware `requireAuth` (đọc lại user từ CSDL mỗi request → bị khóa thì `403 ACCOUNT_BANNED`), `optionalAuth`, `requireRole`, validate, rate limit; 4 endpoint `/auth/*`; script seed super admin. **31/10:** header tài khoản (`header.html` + `main.js`): avatar + tên (US-18 Sc2), menu cá nhân → Đăng xuất + toast (US-19 Sc1), link Admin nếu role admin, xử lý `auth:expired` **không dừng video** (US-19 Sc3); khách bấm ♥ → hộp thoại mời đăng nhập (US-18 Sc4, xem §3.6). **01/11:** deploy `server/` lên Render + Neon; frontend preview (Netlify/Vercel) + proxy `/api`, `BASE_URL = "/api"` ([06_trien_khai.md](06_trien_khai.md)). **02/11:** khung `admin.html`: chặn quyền (không phải admin → về `index.html`, US-58 Sc3), 5 tab với hàm rỗng `initDashboardTab` / `initCommentsTab` / `initUsersTab` / `initSystemTab` / `initStorageTab`, ghi tên người sở hữu từng tab | Trên preview: đăng ký → đăng nhập → header hiện avatar → đăng xuất. Mở `admin.html` bằng tài khoản thường → về trang chủ |
+| DEV-1 | **30/10:** `cd server && npm install`, tạo DB dev riêng trên Neon (không cần cài PostgreSQL); viết **endpoint công khai trước** (chưa cần đăng nhập): `GET /movies/:slug/comments`, `GET /movies/:slug/ratings`, `POST /movies/:slug/views`; chèn bình luận mẫu bằng SQL để test. **31/10:** `watch.js` bỏ `DEMO_COMMENTS` / `DEMO_RATINGS`, gọi `getMovieComments` / `getMovieRatings`; hiện "Chưa có bình luận" (US-54 Sc2); gọi `recordMovieView` khi mở trang xem. **01–02/11:** (đã có `requireAuth` của Lead) `POST /movies/:slug/comments`, `DELETE /comments/:id` (chủ hoặc admin), `POST /movies/:slug/ratings` (upsert, tính trung bình) | US-54 đạt 3 Scenario khi chạy local; 3 endpoint ghi chạy đúng bằng curl, kể cả mã lỗi `400` / `401` / `403` |
 | DEV-2 | **30/10:** `login.html` + `js/login.js` + `css/login.css` theo [skill 07 §3](../skills/07_backend_auth_skill.md): 2 tab Đăng nhập / Đăng ký, kiểm tra input, gọi `loginUser` / `registerUser`, báo lỗi "Tên đăng nhập hoặc mật khẩu không chính xác" (US-18 Sc3), lưu phiên, quay lại trang trước. Tối 30/10 chạy với auth local của Lead. **31/10–01/11:** việc **không cần backend**: lưu tập + **giây đang xem** (`timeupdate` có throttle + `pagehide`) — US-52 Sc1; mở từ lịch sử → phát tiếp đúng giây — US-53 Sc1; lưu âm lượng + tắt đèn vào `STORAGE_KEYS.USER_PREFERENCES`, đăng xuất không xóa — US-19 Sc2. **02/11:** `GET/POST/DELETE /me/favorites`, `GET/PUT /me/history` (upsert, giữ 50 mục) | US-18 Sc1–3 đạt trên preview; US-52 Sc1 + US-53 Sc1 đạt (xem tập 3 đến phút 10, thoát, mở lại → đúng tập 3 phút 10) |
 
 **Demo cuối chặng — tối 02/11:** cả nhóm chạy thử trên preview 15 phút.
@@ -160,16 +160,16 @@ cộng checklist [06_kiem_thu_thu_cong_skill.md](../skills/06_kiem_thu_thu_cong_
 #### 12/11 — Release V2
 
 Sáng: sửa nốt lỗi chặn. Chiều (Lead): checklist [06_trien_khai.md §5](06_trien_khai.md#5-checklist-trước-khi-release-merge-develop--main),
-chạy migration production, PR `develop` → `main` ở cả 2 repo, tag `v2.0.0`. **13/11:** ngày dự phòng.
+chạy migration production, PR `develop` → `main`, tag `v2.0.0`. **13/11:** ngày dự phòng.
 
 ### 3.3 Phụ thuộc — ai chờ gì, trong lúc chờ làm gì
 
 | Cần | Người cung cấp | Có lúc | Trong lúc chưa có, làm gì |
 |---|---|---|---|
-| Khung `rophim-api` + migration | Lead | Tối 29/10 | DEV-1, DEV-2 đang làm PR khởi động (task frontend) |
+| Khung `server/` + migration | Lead | Tối 29/10 | DEV-1, DEV-2 đang làm PR khởi động (task frontend) |
 | Wrapper backend trong `js/api.js` | Lead | Tối 29/10 | Chưa có `BASE_URL` → wrapper trả `BACKEND_NOT_CONFIGURED`, trang vẫn chạy ([skill 07 §9](../skills/07_backend_auth_skill.md)) |
 | `requireAuth` + `/auth/login` để lấy token test | Lead | Tối 30/10 | DEV-1 làm endpoint **công khai** trước; DEV-2 làm `login.html` + việc thuần localStorage (US-52/53/19 Sc2) |
-| Backend chạy trên Internet | Lead | 01/11 | Mỗi người chạy `rophim-api` ở **máy mình**, đặt tạm `BASE_URL = "http://localhost:3000/api"` (**không commit**) |
+| Backend chạy trên Internet | Lead | 01/11 | Mỗi người chạy `server/` ở **máy mình**, đặt tạm `BASE_URL = "http://localhost:3000/api"` (**không commit**) |
 | Khung `admin.html` | Lead | 02/11 | Tab admin của DEV-1, DEV-2 nằm ở Chặng 3 → không bị chặn |
 | Lượt xem (`view_events`) cho US-58 | DEV-1 | 30/10 | — (cùng một người) |
 | Hook đồng bộ ♥ trong `main.js` | Lead | 04/11 | DEV-2 làm phần lịch sử trước |

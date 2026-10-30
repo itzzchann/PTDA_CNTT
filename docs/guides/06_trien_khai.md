@@ -10,11 +10,12 @@
 | Thành phần | Bản chất | Gợi ý nơi host (có gói miễn phí) |
 |---|---|---|
 | **Frontend** (repo này) | File tĩnh, không build | **Netlify** hoặc **Vercel** (cùng có proxy `/api`) · GitHub Pages (có hạn chế, §3.3) |
-| **Backend** (repo `rophim-api`) | Node.js 20 + Express, REST theo [backend_api_contract.md](../specs/backend_api_contract.md) | **Render** (Web Service, gói free) |
+| **Backend** (thư mục `server/` trong repo này) | Node.js 20 + Express, REST theo [backend_api_contract.md](../specs/backend_api_contract.md) | **Render** (Web Service, gói free) |
 | **CSDL** | PostgreSQL 16 (users, comments, ratings, favorites, watch_history, view_events, settings) | **Neon** (PostgreSQL managed, gói free) |
 | **Dữ liệu phim** | phimapi.com | Bên thứ ba — không host |
 
 Cách dựng và chuẩn code backend: [08_backend_node_skill.md](../skills/08_backend_node_skill.md).
+Trên Render (Web Service): kết nối repo này, **Root Directory = `server`**, Build `npm ci`, Start `npm start`, biến môi trường ở §4.
 Lưu ý gói free của Render: server "ngủ" sau ~15 phút không có request, lần gọi đầu mất 30–60 giây — trước khi demo hãy mở
 `/api/health` một lần để đánh thức. Vì vậy `BACKEND_CONFIG.TIMEOUT_MS` đặt 60s (phimapi vẫn 15s); giao diện nên hiện trạng thái "đang xử lý" khi chờ.
 
@@ -38,6 +39,7 @@ trên GitHub (Settings → Branches) — đây cũng là Scenario 2 của US-01.
    - Build command: **để trống** (không có bước build)
    - Publish / Output directory: **`.`** (thư mục gốc)
    - Production branch: **`main`**
+   - **Chặn thư mục `server/`** (bắt buộc, xem §3.4) trước lần deploy đầu tiên.
 3. Bật **Deploy Previews** cho PR và **Branch deploy** cho `develop`.
 4. Gắn tên miền (nếu có) → HTTPS tự cấp.
 
@@ -45,7 +47,7 @@ trên GitHub (Settings → Branches) — đây cũng là Scenario 2 của US-01.
 
 ### 3.2 Gọi backend: dùng proxy `/api` (khuyên dùng)
 
-Thay vì để trình duyệt gọi thẳng `https://rophim-api.onrender.com`, cho host tĩnh **chuyển tiếp** `/api/*` sang backend.
+Thay vì để trình duyệt gọi thẳng `https://<ten-service>.onrender.com`, cho host tĩnh **chuyển tiếp** `/api/*` sang backend.
 Lợi ích: frontend và API **cùng origin** → không cần CORS, `BACKEND_CONFIG.BASE_URL` chỉ là `"/api"` cho mọi môi trường deploy.
 
 Netlify — tạo `netlify.toml` ở gốc khi đã có backend:
@@ -71,12 +73,20 @@ Local (Live Server không có proxy): đặt tạm `"http://localhost:3000/api"`
 - Site nằm ở `https://<user>.github.io/<repo>/` (thư mục con) → `404.html` dùng đường dẫn tuyệt đối `/css/...` sẽ **hỏng**;
   phải sửa thành `/<repo>/css/...`.
 - Không có proxy → phải gọi backend trực tiếp (`BASE_URL` = URL đầy đủ của backend) và backend phải bật CORS (§4).
+- **Không chặn được thư mục `server/`** → mã nguồn backend bị phát công khai. Repo có `server/` thì **không dùng GitHub Pages**.
 
 ### 3.4 Những gì sẽ bị công khai
 
 Host tĩnh phục vụ **mọi file trong repo**: `docs/`, `AGENTS.md`, `README.md`... ai cũng tải được (file backlog Excel và ảnh lộ trình không nằm trong repo nên không bị lộ).
-→ **Không bao giờ commit bí mật** (key, mật khẩu, file `.env`, dữ liệu cá nhân). Không cần giấu docs, nhưng nếu muốn gọn:
-Vercel có `.vercelignore`; Netlify thì đặt site vào thư mục con (ví dụ `public/`) — việc lớn, cần nhóm đồng ý.
+→ **Không bao giờ commit bí mật** (key, mật khẩu, file `.env`, dữ liệu cá nhân). Không cần giấu docs.
+
+**Thư mục `server/` (backend) thì PHẢI chặn** — trong đó là mã nguồn server và migration CSDL:
+
+| Host | Cách chặn | Kiểm tra sau deploy |
+|---|---|---|
+| Netlify | `netlify.toml` ở gốc: `[[redirects]]` `from = "/server/*"`, `to = "/404.html"`, `status = 404`, `force = true` (`force` để chặn cả file có thật) | Mở `https://<site>/server/package.json` → phải ra trang 404 |
+| Vercel | File `.vercelignore` ở gốc có dòng `server/` → thư mục không được upload | Như trên |
+| GitHub Pages | Không chặn được → **không dùng** | — |
 
 ### 3.5 Cache
 
@@ -127,6 +137,7 @@ Backend nên có `GET /api/health` trả `{ "status": "ok" }` để host kiểm 
 - [ ] `js/config.js`: `BACKEND_CONFIG.BASE_URL` là giá trị production (`"/api"`), **không** phải `localhost`.
 - [ ] Không có `console.log` debug, không bí mật trong repo (`git grep -nI "password\|secret\|api_key"`).
 - [ ] Backend: migration đã chạy trên CSDL production, `GET /api/health` OK, CORS đúng origin.
+- [ ] `https://<site>/server/package.json` trả **404** (thư mục backend không bị phát ra web, §3.4).
 - [ ] Tag: `git tag -a v2.0.0 -m "Release V2"` sau khi merge vào `main`.
 
 ## 6. Sự cố & quay lui

@@ -16,7 +16,7 @@
 - Việc V1 còn lại ít, nên tuần này **thêm việc V2 không phụ thuộc người khác**:
   - **DEV-2**: lưu và phát tiếp đúng **giây** đang xem (US-52, US-53), giữ cài đặt trình phát (US-19 Sc2). Làm thuần frontend, xong trọn được.
   - **DEV-1**: trang `login.html`: form đăng nhập / đăng ký + nút **Đăng nhập bằng Google** (US-18, phần giao diện).
-  - **Lead**: repo backend `rophim-api` + đăng ký / đăng nhập bằng mật khẩu và bằng Google.
+  - **Lead**: backend `server/` + đăng ký / đăng nhập bằng mật khẩu và bằng Google.
 - **Không ai phải chờ ai**: mỗi người **sở hữu riêng một nhóm file** (§2). Không có file nào hai người cùng sửa trong tuần này.
 - Cuối tuần (Ngày 5): kiểm hồi quy đủ 29 US V1 → merge `develop` → `main`, gắn tag **`v1.1.0`** (V1 hoàn chỉnh).
 
@@ -69,10 +69,10 @@ Nguyên tắc chung cho phần trang trí: **thứ gì không có thật thì x�
 
 | | **Lead** | **DEV-1** | **DEV-2** |
 |---|---|---|---|
-| **Nhánh** (tên không dấu, chữ thường) | `<ten-lead>` (cả repo frontend lẫn `rophim-api`) | `<ten-dev1>` | `<ten-dev2>` |
+| **Nhánh** (tên không dấu, chữ thường) | `<ten-lead>` (dùng cho cả frontend lẫn `server/`) | `<ten-dev1>` | `<ten-dev2>` |
 | **V1** | US-14, US-17, dọn Rổ Bóng / Tải ứng dụng, kiểm US-11 | US-34, US-36, US-37, kiểm US-33 + US-21 | US-48, kiểm US-40 + US-43 |
-| **V2** | Repo `rophim-api`: khung + `/api/health` + 7 bảng + `/auth/register\|login\|google\|me\|logout` | `login.html` + `js/login.js` + `css/login.css`: form + nút Google (US-18, phần giao diện) | US-52 (Sc1–3), US-53 (Sc1–3), US-19 Sc2 |
-| **Chỉ người này được sửa** | `js/config.js`, `js/utils.js`, `js/main.js`, `js/api.js`, `components/*.html`, `css/style.css`, `css/components.css`, `docs/**`, `CONTRIBUTING.md`, `AGENTS.md`, toàn bộ repo `rophim-api` | `detail.html`, `js/detail.js`, `css/detail.css`, `login.html`, `js/login.js`, `css/login.css` | `watch.html`, `js/watch.js`, `css/watch.css`, `history.html`, `js/history.js` |
+| **V2** | Repo `server/`: khung + `/api/health` + 7 bảng + `/auth/register\|login\|google\|me\|logout` | `login.html` + `js/login.js` + `css/login.css`: form + nút Google (US-18, phần giao diện) | US-52 (Sc1–3), US-53 (Sc1–3), US-19 Sc2 |
+| **Chỉ người này được sửa** | `js/config.js`, `js/utils.js`, `js/main.js`, `js/api.js`, `components/*.html`, `css/style.css`, `css/components.css`, `docs/**`, `CONTRIBUTING.md`, `AGENTS.md`, toàn bộ thư mục `server/` | `detail.html`, `js/detail.js`, `css/detail.css`, `login.html`, `js/login.js`, `css/login.css` | `watch.html`, `js/watch.js`, `css/watch.css`, `history.html`, `js/history.js` |
 | **Hồi quy Ngày 5** | Epic 1.1, 1.2 | Epic 2.1, 2.2, 2.3 | Epic 3.1, 3.2 + US-52, 53, 19 |
 
 ### 2.1 Quy trình "1 người 1 nhánh" (làm theo đúng thứ tự)
@@ -145,7 +145,7 @@ Hai phần dưới đây đang có code / tài liệu **chưa vào `develop`**. 
 
 ## 4. Lead: chi tiết từng việc
 
-Tất cả việc frontend làm trên nhánh `<ten-lead>` của repo frontend. Việc backend làm trên nhánh `<ten-lead>` của repo `rophim-api`.
+Tất cả việc (frontend lẫn backend trong `server/`) làm trên cùng nhánh `<ten-lead>`.
 
 ### L1. US-17: thẻ phim hiện đúng số tập / chất lượng (Ngày 1) · CORE
 
@@ -224,14 +224,14 @@ Tất cả việc frontend làm trên nhánh `<ten-lead>` của repo frontend. V
 3. Mở **PR Ngày 1** (L1 + L2 + L3) → merge trước 21h để DEV-1 có `GOOGLE_CLIENT_ID` từ Ngày 2 (DEV-1 tới Ngày 4 mới cần).
 4. Review PR của DEV-1, DEV-2 lúc 21h.
 
-### L4. V2: repo `rophim-api` + đăng nhập mật khẩu & Google (Ngày 2 → Ngày 4)
+### L4. V2: thư mục `server/` + đăng nhập mật khẩu & Google (Ngày 2 → Ngày 4)
 
 Làm theo [skill 08](../skills/08_backend_node_skill.md) và [hợp đồng §3.1](../specs/backend_api_contract.md). Việc này **không ai chờ** trong tuần (DEV-1 làm `login.html` bằng `fetchBackend` và tự xử lý được trường hợp chưa có backend).
 
 | Ngày | Bước | Xong khi |
 |---|---|---|
-| 2 (sáng) | **Hợp đồng trước:** sửa `backend_api_contract.md` trong repo frontend: thêm `POST /auth/google` `{ credential }` → `200 { data: { token, user } }`, lỗi `401 GOOGLE_TOKEN_INVALID`, `401 GOOGLE_EMAIL_NOT_VERIFIED`, `403 ACCOUNT_BANNED`. §5 lược đồ: `users.password_hash` **cho phép NULL** (tài khoản chỉ dùng Google), thêm `google_id TEXT UNIQUE NULL`. Commit vào nhánh `<ten-lead>` | DEV-1 đọc được hợp đồng mới khi tới D4 |
-| 2 | Tạo repo `rophim-api` (nhánh `main`, `develop`, `<ten-lead>`; bảo vệ `main`, `develop`). Cấu trúc thư mục đúng skill 08 §1. `package.json` + các gói ở §2 + **`google-auth-library`**. `.env.example` thêm `GOOGLE_CLIENT_ID=`, `.gitignore`, README cách chạy local. `src/app.js` (helmet, cors theo `CORS_ORIGINS`, json, error handler), `GET /api/health` → `{ data: { status: "ok" } }`. **Tạo sẵn mọi file route rỗng và đăng ký trong `app.js`**, `admin.routes.js` chia 3 khối có comment *Lead / DEV-1 / DEV-2* | `npm run dev` → `curl localhost:3000/api/health` trả `ok` |
+| 2 (sáng) | **Hợp đồng trước:** sửa `docs/specs/backend_api_contract.md`: thêm `POST /auth/google` `{ credential }` → `200 { data: { token, user } }`, lỗi `401 GOOGLE_TOKEN_INVALID`, `401 GOOGLE_EMAIL_NOT_VERIFIED`, `403 ACCOUNT_BANNED`. §5 lược đồ: `users.password_hash` **cho phép NULL** (tài khoản chỉ dùng Google), thêm `google_id TEXT UNIQUE NULL`. Commit vào nhánh `<ten-lead>` | DEV-1 đọc được hợp đồng mới khi tới D4 |
+| 2 | Tạo thư mục `server/` ở gốc repo (cạnh `index.html`). Cấu trúc thư mục đúng skill 08 §1. `package.json` + các gói ở §2 + **`google-auth-library`**. `.env.example` thêm `GOOGLE_CLIENT_ID=`, `.gitignore`, README cách chạy local. `src/app.js` (helmet, cors theo `CORS_ORIGINS`, json, error handler), `GET /api/health` → `{ data: { status: "ok" } }`. **Tạo sẵn mọi file route rỗng và đăng ký trong `app.js`**, `admin.routes.js` chia 3 khối có comment *Lead / DEV-1 / DEV-2* | `npm run dev` → `curl localhost:3000/api/health` trả `ok` |
 | 3 | Migration **đủ 7 bảng** theo hợp đồng §5 (đã có `google_id`, `password_hash` NULL). `db.js`, `errors.js`. Script seed super admin từ `ADMIN_EMAIL` / `ADMIN_INITIAL_PASSWORD` | `npm run migrate` chạy sạch trên DB mới (Neon hoặc local) |
 | 4 | **Mật khẩu:** `POST /auth/register` (zod: username, email, password ≥ 8; trùng → `409`), `POST /auth/login` (`login` = username hoặc email; sai, **hoặc tài khoản chỉ có Google** (`password_hash` NULL) → `401 INVALID_CREDENTIALS` "Tên đăng nhập hoặc mật khẩu không chính xác"). **Google:** `POST /auth/google` (§4.1). **Chung:** `GET /auth/me`, `POST /auth/logout`, middleware `requireAuth` (đọc lại user từ DB mỗi request, bị khóa → `403 ACCOUNT_BANNED`), `optionalAuth`, `requireRole`. Rate limit cho login / register / google. bcrypt cost 10–12 | Chạy được các lệnh `curl` ở §4.2, trả đúng mã. Đăng nhập Google thật từ `login.html` của DEV-1 chạy local |
 
@@ -444,7 +444,7 @@ curl -i localhost:3000/api/auth/me                                            # 
    - Không `console.log` mật khẩu, credential hay request.
 4. **`css/login.css`**: mọi selector bắt đầu bằng `.login-page`. Responsive 375px trở lên. Nút Google căn giữa.
 5. **Kiểm thử không cần backend:** mọi lỗi kiểm input hiện đúng; bấm gửi → "đang hoàn thiện"; nút Google hiện ra (cần mở bằng Live Server ở `localhost:5500` hoặc `127.0.0.1:5500`, **không** mở file trực tiếp); bấm Google, chọn tài khoản → "đang hoàn thiện"; Tab / Enter dùng được.
-   **Khi Lead xong L4 (Ngày 4–5):** chạy `rophim-api` ở máy mình, tạm đặt `BACKEND_CONFIG.BASE_URL = "http://localhost:3000/api"` (**không commit dòng này**). Thử: đăng ký → đăng nhập → sai mật khẩu → Google lần đầu (tạo tài khoản) → Google lần 2 (vào lại đúng tài khoản).
+   **Khi Lead xong L4 (Ngày 4–5):** chạy `server/` ở máy mình, tạm đặt `BACKEND_CONFIG.BASE_URL = "http://localhost:3000/api"` (**không commit dòng này**). Thử: đăng ký → đăng nhập → sai mật khẩu → Google lần đầu (tạo tài khoản) → Google lần 2 (vào lại đúng tài khoản).
    Nối nút "Thành viên" trên header vào `login.html` là việc của Lead (L5). Bạn mở thẳng `login.html` để test.
 6. Commit `feat(auth): add login page with password and Google sign-in (US-18)` → push → mở PR.
 
@@ -602,7 +602,7 @@ Fail ở file của mình thì sửa ngay trong ngày. Fail ở file người kh
 | Ngày | Lead | DEV-1 | DEV-2 |
 |---|---|---|---|
 | **1** · 30/10 | Sáng: merge `fix/error-handling-clean` + tài liệu, sửa CONTRIBUTING, tắt squash merge → báo "develop sẵn sàng". Chiều: **L1** (US-17), **L2** (dọn header/footer, US-14), **L3** (Google Client ID). **PR** → merge trước 21h | Sáng: cài đặt, đọc docs, chạy §1.2, tạo nhánh. Chiều: **D1** (US-34, 37) → **PR** | Sáng: cài đặt, đọc docs, chạy §1.2, tạo nhánh. Chiều: **W1** (US-48) |
-| **2** · 31/10 | Sửa hợp đồng (`/auth/google`). **L4**: khung `rophim-api` + `/api/health`. Review 12h/21h | **D2** (US-36) → push / **PR** | Sáng: xong **W1** → **PR**. **W2**. Chiều: bắt đầu **W3** |
+| **2** · 31/10 | Sửa hợp đồng (`/auth/google`). **L4**: khung `server/` + `/api/health`. Review 12h/21h | **D2** (US-36) → push / **PR** | Sáng: xong **W1** → **PR**. **W2**. Chiều: bắt đầu **W3** |
 | **3** · 01/11 | **L4**: migration 7 bảng + seed admin. Kiểm US-11 | **D3**: kiểm US-33, US-21 + hồi quy Epic 2, sửa lỗi phát hiện | **W3** (ghi giây + phát tiếp) |
 | **4** · 02/11 | **L4**: `/auth/register\|login\|google\|me\|logout` + middleware | **D4**: `login.html` (form + Google) | Xong **W3** → **PR**. Bắt đầu **W4** |
 | **5** · 03/11 | Sáng: hồi quy (§7) + test Google cùng DEV-1. Chiều: **L5**: nối nút Thành viên, cập nhật 07, release `v1.1.0` | Sáng: hồi quy. Chiều: xong **D4** → **PR** | Sáng: **W4** → **PR**. Chiều: hồi quy **W5** |
@@ -617,7 +617,7 @@ Fail ở file của mình thì sửa ngay trong ngày. Fail ở file người kh
 - [ ] Header / footer không còn Rổ Bóng, Tải ứng dụng, link `#`; icon mạng xã hội mở thẻ mới.
 - [ ] US-52, US-53 đạt 3/3 Scenario. US-19 Sc2 đạt. (V2)
 - [ ] `login.html` có form + nút Google, báo lỗi đúng, không vỡ khi chưa có backend. (V2, phần giao diện US-18)
-- [ ] `rophim-api` chạy local: `/api/health`, đủ 7 bảng, `/auth/*` (cả Google) trả đúng mã. (V2, backend US-18)
+- [ ] `server/` chạy local: `/api/health`, đủ 7 bảng, `/auth/*` (cả Google) trả đúng mã. (V2, backend US-18)
 - [ ] Mọi PR theo Definition of Done ở [AGENTS.md §5](../../AGENTS.md#5-definition-of-done): console sạch, không `console.log` debug, không chuỗi chưa escape, responsive 3 kích thước.
 - [ ] Bảng 07 §2 đã cập nhật (US-20 → Bỏ). `main` có tag `v1.1.0`.
 
