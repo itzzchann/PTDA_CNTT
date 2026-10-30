@@ -10,7 +10,7 @@ const API_CONFIG = {
 
     COUNTRIES_LIST: "/v1/api/quoc-gia",
 
-    MOVIES_LIST: "/danh-sach/phim-moi-cap-nhat",
+    MOVIES_LIST: "/danh-sach/phim-moi-cap-nhat-v3",
 
     MOVIE_DETAIL: "/v1/api/phim/[slug]",
 

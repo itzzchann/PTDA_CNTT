@@ -89,7 +89,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 
 | Chữ ký | Trả về | Ghi chú | Dùng ở |
 |---|---|---|---|
-| `createMovieCard(movie)` | HTML | **Thẻ phim chuẩn.** Đọc `poster_url \|\| thumb_url \|\| poster`, `slug`, `name`, `origin_name`, `year`, `episode_current \|\| quality`. Có nút ♥ | 🔴 8 file |
+| `createMovieCard(movie)` | HTML | **Thẻ phim chuẩn.** Đọc `poster_url \|\| thumb_url \|\| poster`, `slug`, `name`, `origin_name`, `year`, nhãn góc: phim lẻ (`type: "single"` hoặc `episode_current: "Full"`) → `quality`, còn lại → `episode_current`, thiếu thì `quality` rồi `"HD"` (US-17). Có nút ♥ | 🔴 8 file |
 | `renderSkeleton(gridId, count = 6)` | `void` | Nhận **id** | 🔴 |
 | `renderEmptyState(target, options)` | `void` | ⭐ Khối rỗng/lỗi. `target`: id hoặc phần tử. `options`: `{ icon, message, actionText, actionHref }` hoặc `{ message, onRetry }` (nút "Thử lại") | 🔴 catalog, homepage, search, detail, favorites, history |
 | `setupPagination(onPageChange)` | `{ update(current, total), setVisible(bool) }` | ⭐ Gắn 4 nút phân trang theo **ID chuẩn** (§5). `onPageChange(page)` chỉ được gọi với trang hợp lệ khác trang hiện tại | 🟡 catalog, favorites, history |

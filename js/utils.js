@@ -383,7 +383,11 @@ function createMovieCard(movie) {
 
   const slug = movie.slug || "";
   const safeSlug = encodeURIComponent(slug);
-  const badge = escapeHtml(movie.episode_current || movie.quality || "HD");
+  // Phim lẻ hiện chất lượng (FHD), phim bộ hiện tập đã phát hành ("Tập 7", "Hoàn Tất (8/8)") — US-17 Sc3.
+  const isSingle = movie.type === "single" || movie.episode_current === "Full";
+  const badge = escapeHtml(
+    (isSingle ? movie.quality : movie.episode_current) || movie.quality || "HD",
+  );
   const name = escapeHtml(movie.name || "");
   const originName = escapeHtml(movie.origin_name || "");
   const year = escapeHtml(movie.year || "");
