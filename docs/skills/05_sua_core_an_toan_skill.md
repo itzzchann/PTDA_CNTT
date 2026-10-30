@@ -11,7 +11,7 @@
 ```
 [ ] Chắc chắn không làm được trong file trang?          → làm được thì làm ở trang
 [ ] Đã báo nhóm: file nào, hàm nào, thêm hay sửa?
-[ ] git pull upstream develop ngay trước khi sửa
+[ ] git pull origin develop ngay trước khi sửa
 [ ] grep mọi chỗ dùng (nếu là SỬA)
 ```
 

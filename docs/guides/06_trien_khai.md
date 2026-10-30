@@ -22,7 +22,7 @@ Lưu ý gói free của Render: server "ngủ" sau ~15 phút không có request,
 
 | Môi trường | Nhánh | URL (ví dụ) | Dùng để |
 |---|---|---|---|
-| Local | nhánh feature | `http://127.0.0.1:5500` | Code, test tay |
+| Local | nhánh tên mình | `http://127.0.0.1:5500` | Code, test tay |
 | Preview / Staging | `develop` + mỗi PR | `https://develop--rophim.netlify.app` | Cả nhóm + giảng viên xem trước, test theo Scenario |
 | Production | `main` (gắn tag `v1.x`, `v2.0`) | `https://rophim.<ten-mien>` | Bản release chính thức |
 
