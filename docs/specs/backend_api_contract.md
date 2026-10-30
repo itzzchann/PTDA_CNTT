@@ -1,7 +1,7 @@
 # Backend API Contract — RoPhim V2
 
 > **Hợp đồng giữa frontend (repo này) và backend riêng của RoPhim.** Hai bên code song song dựa trên file này.
-> Trạng thái: **v0.1 (22/10/2026)** — đã chốt **Node.js + Express + PostgreSQL**, thư mục `server/` trong repo này (chốt 30/10)
+> Trạng thái: **v0.2 (30/10/2026)** — thêm đăng nhập Google (`POST /auth/google`). Đã chốt **Node.js + Express + PostgreSQL**, thư mục `server/` trong repo này (chốt 30/10)
 > ([08_backend_node_skill.md](../skills/08_backend_node_skill.md)). Phân công endpoint: [07_lo_trinh_va_backlog.md §3](../guides/07_lo_trinh_va_backlog.md#31-ai-làm-gì).
 > Đổi bất cứ thứ gì ở đây = PR riêng, cả người làm FE và BE cùng duyệt. Tên endpoint khớp `BACKEND_CONFIG.ENDPOINTS` trong `js/config.js`.
 
@@ -35,7 +35,9 @@ Trong frontend: `const res = await fetchBackend(...)` → payload ở **`res.dat
 | 400 | `VALIDATION_ERROR` | Thiếu/sai field. Có thể kèm `"fields": { "email": "Email không hợp lệ" }` |
 | 400 | `CANNOT_BAN_SELF` | Admin tự khóa chính mình (US-63 Scenario 3) |
 | 401 | `UNAUTHORIZED` | Thiếu / sai / hết hạn token → frontend xóa phiên, bắn `auth:expired` |
-| 401 | `INVALID_CREDENTIALS` | Đăng nhập sai (US-18 Scenario 2) |
+| 401 | `INVALID_CREDENTIALS` | Đăng nhập sai (US-18 Scenario 2). Cũng trả mã này khi tài khoản chỉ đăng nhập bằng Google mà lại dùng mật khẩu (không tiết lộ lý do) |
+| 401 | `GOOGLE_TOKEN_INVALID` | `credential` Google sai / hết hạn / không dành cho `GOOGLE_CLIENT_ID` của RoPhim |
+| 401 | `GOOGLE_EMAIL_NOT_VERIFIED` | Email của tài khoản Google chưa được xác minh |
 | 403 | `ACCOUNT_BANNED` | Tài khoản bị khóa |
 | 403 | `FORBIDDEN` | Không đủ quyền (không phải admin, không phải chủ bình luận) |
 | 404 | `NOT_FOUND`, `MOVIE_NOT_FOUND` | Không có tài nguyên / slug phim không tồn tại trên phimapi (US-60 Scenario 2) |
@@ -94,6 +96,7 @@ Settings {                    // cấu hình công khai, frontend đọc khi t�
 |---|---|---|---|
 | 🔓 | `POST /auth/register` | `{ username, email, password }` (password ≥ 8 ký tự) | `201 { data: { token, user } }` |
 | 🔓 | `POST /auth/login` | `{ login, password }` (`login` = username hoặc email) | `200 { data: { token, user } }` |
+| 🔓 | `POST /auth/google` | `{ credential }` — ID token do nút Google Identity Services trả về | `200 { data: { token, user } }`. Backend tự xác minh `credential` với Google. Lần đầu: tạo tài khoản (username sinh từ email, `avatarUrl` = ảnh Google); email đã có tài khoản mật khẩu → gắn Google vào tài khoản đó |
 | 🔑 | `POST /auth/logout` | — | `204` (backend thu hồi token nếu có cơ chế) |
 | 🔑 | `GET /auth/me` | — | `200 { data: { user } }` — frontend gọi khi tải trang để xác nhận phiên còn hạn |
 
@@ -154,12 +157,14 @@ Mọi endpoint `/admin/*` **bắt buộc** kiểm tra role ở backend. Không p
 - Validate độ dài/kiểu mọi field; giới hạn tốc độ `POST /auth/login` và `POST .../comments`.
 - Lưu nội dung bình luận nguyên văn (không tự escape) — frontend chịu trách nhiệm escape khi hiển thị.
 - CORS chỉ cho origin của RoPhim ([06_trien_khai.md §4](../guides/06_trien_khai.md#4-cors-và-cấu-hình-backend)).
-- `GET /api/health` → `{ "status": "ok" }`.
+- `GET /api/health` → `{ "status": "ok" }` (không bọc trong `data`, để host kiểm tra sống/chết).
+- Đăng nhập Google: xác minh `credential` bằng `google-auth-library` (`verifyIdToken` với `audience = GOOGLE_CLIENT_ID`), **không** tin email/tên do frontend gửi.
 
 ## 5. Gợi ý lược đồ CSDL
 
 ```
-users          (id PK, username UNIQUE, email UNIQUE, password_hash, avatar_url, role, status, created_at)
+users          (id PK, username UNIQUE, email UNIQUE, password_hash NULL, google_id UNIQUE NULL, avatar_url, role, status, created_at)
+               -- password_hash NULL = tài khoản chỉ đăng nhập bằng Google
 comments       (id PK, user_id FK, movie_slug, episode, content, is_spoiler, deleted_at NULL, created_at)   INDEX(movie_slug, created_at)
 ratings        (id PK, user_id FK, movie_slug, score 1..10, content, created_at, UNIQUE(user_id, movie_slug))
 favorites      (user_id FK, movie_slug, name, poster, added_at, PRIMARY KEY(user_id, movie_slug))
