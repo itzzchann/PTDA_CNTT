@@ -30,4 +30,6 @@ module.exports = {
   ADMIN_INITIAL_PASSWORD: process.env.ADMIN_INITIAL_PASSWORD || "",
   PHIMAPI_BASE_URL: process.env.PHIMAPI_BASE_URL || "https://phimapi.com",
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+  // Số proxy đứng trước server (Render = 1). Sai số này → rate limit đọc nhầm IP, mọi người dùng chung một giới hạn.
+  TRUST_PROXY: Number(process.env.TRUST_PROXY) || 0,
 };

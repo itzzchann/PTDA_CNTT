@@ -126,6 +126,8 @@ Biến môi trường backend (đặt trên trang quản trị của host, **kh�
 | `JWT_SECRET` | Khóa ký token — chuỗi ngẫu nhiên ≥ 32 ký tự, mỗi môi trường một khóa |
 | `JWT_EXPIRES_IN` | Hạn token, vd `7d` |
 | `CORS_ORIGINS` | Như trên |
+| `TRUST_PROXY` | Số proxy đứng trước server: Render = `1` (đi qua proxy `/api` của Netlify/Vercel thì thử `2`, kiểm tra IP trong log). Sai số → rate limit gộp mọi người dùng làm một |
+| `GOOGLE_CLIENT_ID` | Client ID OAuth của Google (trùng với frontend). Rỗng → `/auth/google` trả `503` |
 | `ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD` | Tạo tài khoản super admin lần đầu (đổi mật khẩu ngay sau đó) |
 
 Backend nên có `GET /api/health` trả `{ "status": "ok" }` để host kiểm tra sống/chết.

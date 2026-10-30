@@ -9,6 +9,7 @@ const errorHandler = require("./middlewares/error-handler");
 const app = express();
 
 app.disable("x-powered-by");
+app.set("trust proxy", config.TRUST_PROXY);
 app.use(helmet());
 app.use(
   cors({
