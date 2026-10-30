@@ -38,7 +38,7 @@ sửa một hàm CORE là sửa cho **tất cả các trang** và **tất cả t
 | Gọi API phim, cấu trúc JSON | [api_spec.md](docs/specs/api_spec.md) |
 | Làm tính năng cần backend (tài khoản, bình luận, admin) | [backend_api_contract.md](docs/specs/backend_api_contract.md) + [07_backend_auth_skill.md](docs/skills/07_backend_auth_skill.md) |
 | Code backend (Node.js + Express + PostgreSQL) | [08_backend_node_skill.md](docs/skills/08_backend_node_skill.md) |
-| Ai làm gì trong V2 | [07_lo_trinh_va_backlog.md §3](docs/guides/07_lo_trinh_va_backlog.md#3-kế-hoạch-v2--phân-công-3-người-chốt-22102026) |
+| Ai làm gì trong V2 | [07_lo_trinh_va_backlog.md §3](docs/guides/07_lo_trinh_va_backlog.md#3-kế-hoạch-v2--phân-công-3-người) |
 | Object phim, localStorage, query URL | [data_formats.md](docs/specs/data_formats.md) |
 | Quy tắc sửa file CORE (base) | [core_files_rules.md](docs/constraints/core_files_rules.md) ⭐ |
 | Style code, giới hạn kỹ thuật, bảo mật | [coding_style.md](docs/constraints/coding_style.md), [technical.md](docs/constraints/technical.md) |
@@ -125,5 +125,5 @@ Dự án **không có test tự động** → kiểm chứng = chạy các **k�
 - [ ] Đụng CORE: đã test **ít nhất 3 trang** (index, detail, watch + trang bị ảnh hưởng).
 - [ ] Không `console.log` debug, không URL/màu hardcode mới, không chuỗi chưa escape trong `innerHTML`.
 - [ ] Responsive: 375px, 768px, ≥1200px — không cuộn ngang.
-- [ ] Commit Conventional Commits tiếng Anh, có mã US: `feat(category): add category listing (US-26)`. Branch từ `develop`.
+- [ ] Commit Conventional Commits tiếng Anh, có mã US: `feat(category): add category listing (US-26)`. Làm trên **nhánh tên mình** (mỗi người 1 nhánh, xem [CONTRIBUTING §4.1](CONTRIBUTING.md#41-tên-nhánh)), PR vào `develop`.
 - [ ] Thêm/sửa CORE → đã cập nhật [core_registry.md](docs/specs/core_registry.md). Thêm endpoint backend → cập nhật [backend_api_contract.md](docs/specs/backend_api_contract.md).

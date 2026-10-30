@@ -9,7 +9,7 @@
 ## 1. Repo riêng: `rophim-api`
 
 Backend nằm ở **repo GitHub riêng**, không đặt trong repo frontend — vì host tĩnh phục vụ mọi file trong repo frontend
-(lộ mã nguồn server, file migration). Cùng Git flow: `main` / `develop` / `feat/*`, Conventional Commits, PR vào `develop`.
+(lộ mã nguồn server, file migration). Cùng Git flow: `main` / `develop` / mỗi người 1 nhánh tên mình (giống repo frontend), Conventional Commits, PR vào `develop`.
 
 ```
 rophim-api/

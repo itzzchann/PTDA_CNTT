@@ -1,1004 +1,594 @@
-# 🎬 Hướng Dẫn Đóng Góp - RoPhim
+# Hướng dẫn làm việc nhóm — RoPhim
 
-Cảm ơn bạn đã quan tâm đến việc đóng góp cho dự án **RoPhim**! Chúng tôi rất vui mừng được đón nhận sự đóng góp từ cộng đồng. Tài liệu này sẽ hướng dẫn bạn quy trình đóng góp một cách hiệu quả.
+> Viết cho **người mới**, kể cả khi bạn chưa từng làm Git theo nhóm.
+> Đọc từ trên xuống một lần (~20 phút). Sau đó chỉ cần mở [§3 — Quy trình một task](#3-quy-trình-một-task-từng-bước) mỗi khi làm việc.
+>
+> Luật code (được viết gì, không được viết gì) nằm ở [AGENTS.md](AGENTS.md). File này nói về **cách làm việc cùng nhau bằng Git + GitHub**.
 
-## 📋 Mục Lục
+## Mục lục
 
-- [Code of Conduct](#code-of-conduct)
-- [Bắt Đầu Nhanh](#bat-dau-nhanh)
-- [Git Flow Workflow](#git-flow-workflow)
-- [Quy Trình Đóng Góp](#quy-trinh-dong-gop)
-- [Tiêu Chuẩn Code](#tieu-chuan-code)
-- [Commit Message Guidelines](#commit-message-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Câu Hỏi Thường Gặp](#cau-hoi-thuong-gap)
+0. [Tóm tắt 1 phút](#0-tóm-tắt-1-phút)
+1. [Hiểu Git flow của nhóm (bằng hình)](#1-hiểu-git-flow-của-nhóm)
+2. [Cài đặt lần đầu (làm 1 lần)](#2-cài-đặt-lần-đầu-làm-1-lần)
+3. [Quy trình một task, từng bước](#3-quy-trình-một-task-từng-bước)
+4. [Đặt tên nhánh và viết commit](#4-đặt-tên-nhánh-và-viết-commit)
+5. [Pull Request và review](#5-pull-request-và-review)
+6. [Làm việc cùng nhau mà không giẫm chân nhau](#6-làm-việc-cùng-nhau-mà-không-giẫm-chân-nhau)
+7. [Xử lý conflict](#7-xử-lý-conflict)
+8. [Lỡ tay thì cứu thế nào](#8-lỡ-tay-thì-cứu-thế-nào)
+9. [Release và hotfix (trưởng nhóm làm)](#9-release-và-hotfix)
+10. [Checklist trước khi tạo PR](#10-checklist-trước-khi-tạo-pr)
+11. [Từ điển thuật ngữ](#11-từ-điển-thuật-ngữ)
 
-## 📜 Code of Conduct
+---
 
-Dự án này tuân thủ các nguyên tắc:
+## 0. Tóm tắt 1 phút
 
-- **Tôn trọng**: Đối xử tôn trọng với tất cả các thành viên trong cộng đồng
-- **Xây dựng**: Đưa ra phản hồi mang tính xây dựng và tiếp nhận phản hồi một cách cởi mở
-- **Hợp tác**: Làm việc cùng nhau để tạo ra sản phẩm tốt nhất
-- **Chuyên nghiệp**: Duy trì thái độ chuyên nghiệp trong mọi tương tác
-
-<a id="bat-dau-nhanh"></a>
-
-## 🚀 Bắt Đầu Nhanh
-
-### ⚡ Quick Start Checklist
-
-**Làm theo thứ tự để tránh lỗi phổ biến:**
-
-#### ✅ Bước 1: Clone và Setup Git
-
-```bash
-# 1. Fork repository về GitHub của bạn (trên web)
-
-# 2. Clone repository đã fork
-git clone https://github.com/YOUR_USERNAME/BTL-WEB-PRIVATE-2025.git
-cd BTL-WEB-PRIVATE-2025
-
-# 3. Thêm upstream remote
-git remote add upstream https://github.com/ORIGINAL_OWNER/BTL-WEB-PRIVATE-2025.git
-
-# 4. QUAN TRỌNG: Verify .gitignore đang hoạt động
-git status
-# → Không thấy node_modules/, .DS_Store, .vscode/settings.json = ✅ OK
+```
+1. Không bao giờ code thẳng trên develop hoặc main.
+2. Mỗi người MỘT nhánh mang tên mình (vd: nguyenvana), tạo 1 lần từ develop, làm mọi task trên đó.
+3. Mỗi task (mỗi mã US) = một hoặc vài commit nhỏ, tiếng Anh, có mã US:   feat(login): add login form (US-18)
+4. Xong việc trong ngày → push → mở Pull Request vào develop → trưởng nhóm duyệt → merge (merge commit, không squash).
+5. Mỗi sáng trước khi code: git pull origin develop (trộn develop mới nhất vào nhánh của mình).
+6. Sắp sửa file CORE (js/utils.js, js/main.js, header...) → báo nhóm TRƯỚC.
+7. Bối rối → DỪNG, đừng gõ lệnh lạ trên mạng, hỏi nhóm.
 ```
 
-#### ✅ Bước 2: Cài Extensions (VS Code)
+---
+
+## 1. Hiểu Git flow của nhóm
+
+### 1.1 Ba loại nhánh
+
+Hình dung dự án là một **cuốn sách đang viết chung**:
+
+| Nhánh | Giống như | Ai được ghi vào | Ghi chú |
+|---|---|---|---|
+| `main` | Bản **đã in ra phát hành** | Chỉ trưởng nhóm, khi release | Bản người dùng thật thấy. Có tag `v1.0.0`, `v2.0.0` |
+| `develop` | **Bản thảo chung** của cả nhóm | Không ai push thẳng — chỉ vào qua **Pull Request** | Luôn phải chạy được |
+| `<ten-cua-ban>` (vd `nguyenvana`) | **Nháp riêng** của từng người, **mỗi người đúng 1 nhánh** | Chỉ bạn | Làm mọi task của bạn ở đây. Viết thoải mái, hỏng cũng không ảnh hưởng ai |
+
+```
+main        ●─────────────────────────────────────●  v2.0.0    ← bản phát hành
+             \                                   /
+develop       ●────●─────────●──────●─────────●─●              ← bản chung, vào qua PR
+               \    \       / \    / \       /
+nguyenvana      \    ●──●──●───●──●───●──●──●                  ← nhánh của bạn A (dùng suốt dự án)
+                 \                 /
+tranthib          ●──●──●─────────●                            ← nhánh của bạn B
+```
+
+Quy tắc vàng: **nhánh của bạn tạo ra từ `develop` một lần duy nhất, mỗi sáng lấy `develop` mới về, và đưa việc đã xong về `develop` bằng Pull Request.**
+Sau khi PR được merge, bạn **giữ nguyên nhánh** và làm tiếp task sau trên đó.
+
+> Vì sao 1 người 1 nhánh: nhóm còn mới, ít nhánh thì ít nhầm lẫn "đang ở nhánh nào", không phải nhớ tạo/xóa nhánh cho từng task.
+> Đổi lại, phải giữ kỷ luật: **chỉ sửa file của mình** (§6.1), **trộn `develop` mỗi sáng**, **mở PR mỗi ngày** để nhánh không lệch xa `develop`.
+
+### 1.2 Repo nằm ở đâu
+
+- Repo frontend (repo này): `https://github.com/itzzchann/PTDA_CNTT` — làm việc trực tiếp trên repo này, **không cần fork**.
+  Trưởng nhóm sẽ mời bạn làm collaborator; nhận lời mời qua email/GitHub trước khi clone.
+- Repo backend: `rophim-api` (Node.js + Express + PostgreSQL) — cùng quy trình Git y hệt file này,
+  chuẩn code riêng xem [08_backend_node_skill.md](docs/skills/08_backend_node_skill.md).
+- Mọi PR đều cần **chủ repo duyệt** (xem [.github/CODEOWNERS](.github/CODEOWNERS)) thì mới merge được.
+
+---
+
+## 2. Cài đặt lần đầu (làm 1 lần)
+
+### Bước 1 — Cài công cụ
+
+- [Git](https://git-scm.com/downloads) (Windows: chọn mặc định hết khi cài).
+- [VS Code](https://code.visualstudio.com/).
+- Tài khoản GitHub, đã nhận lời mời collaborator.
+
+### Bước 2 — Khai báo bạn là ai với Git
+
+Mở Terminal (Windows: **Git Bash**), gõ — thay tên và email **trùng với tài khoản GitHub**:
 
 ```bash
-# Mở project trong VS Code
+git config --global user.name "Ten Cua Ban"
+git config --global user.email "email-github-cua-ban@example.com"
+git config --global init.defaultBranch main
+git config --global pull.rebase false     # git pull = trộn (merge), dễ hiểu hơn cho người mới
+
+# Chỉ trên Windows: tránh việc cả file bị coi là "đã sửa" do khác kiểu xuống dòng
+git config --global core.autocrlf true
+```
+
+### Bước 3 — Tải code về máy (clone)
+
+```bash
+git clone https://github.com/itzzchann/PTDA_CNTT.git
+cd PTDA_CNTT
+git checkout develop          # chuyển sang nhánh chung
+git status                    # phải thấy: "On branch develop ... nothing to commit, working tree clean"
+```
+
+> Lần đầu push, GitHub sẽ hỏi đăng nhập. Trên Windows sẽ hiện cửa sổ đăng nhập trình duyệt.
+> Trên Linux/macOS, nếu bị hỏi mật khẩu: GitHub **không nhận mật khẩu tài khoản** — tạo
+> [Personal Access Token](https://github.com/settings/tokens) và dán vào chỗ mật khẩu, hoặc cài [GitHub CLI](https://cli.github.com/) rồi chạy `gh auth login`.
+
+### Bước 4 — Mở bằng VS Code và cài extension
+
+```bash
 code .
-
-# Popup sẽ xuất hiện: "This workspace has extension recommendations"
-# → Click "Install All"
-# → Reload window khi được yêu cầu
 ```
+Góc phải dưới hiện "This workspace has extension recommendations" → **Install All**
+(Live Server, Prettier, GitLens, Auto Rename Tag, Material Icon Theme — danh sách ở `.vscode/extensions.json`).
 
-**Extensions sẽ được cài:**
+### Bước 5 — Cấu hình Prettier ⚠️ đọc kỹ
 
-- Live Server, Prettier, GitLens, Auto Rename Tag, Material Icon Theme
+Nhiều file cũ **chưa được format** theo Prettier. Nếu bật format cả file khi lưu, chỉ một Ctrl+S là cả file đổi →
+PR của bạn có hàng trăm dòng thay đổi vô nghĩa và **người khác bị conflict khắp nơi**.
 
-#### ✅ Bước 3: Config Prettier (Sau khi cài extensions)
+Vì vậy chỉ format **những dòng bạn sửa**:
 
-```
-File → Preferences → Settings
-→ Search "Format On Save" → BẬT ✅
-→ Search "Default Formatter" → Chọn "Prettier"
-```
+`File → Preferences → Settings`, tìm và đặt:
 
-#### ✅ Bước 4: Kiểm Tra Trước Khi Code
+| Setting | Giá trị |
+|---|---|
+| `Editor: Default Formatter` | **Prettier - Code formatter** |
+| `Editor: Format On Save` | ✅ bật |
+| `Editor: Format On Save Mode` | **`modifications`** (chỉ những dòng đã sửa) |
 
-```bash
-# Check Git status (không có file lạ)
-git status
-# → Output: "nothing to commit, working tree clean" ✅
+Tự kiểm tra: sửa 1 dòng trong `js/homepage.js` → Ctrl+S → `git diff` chỉ được thấy dòng đó. Sau đó `git checkout -- js/homepage.js` để trả lại.
 
-# Test Live Server
-# Click chuột phải vào index.html → "Open with Live Server"
-# → Browser mở http://localhost:5500 ✅
+### Bước 6 — Chạy thử web
 
-# Test Prettier
-# Mở file .js → Sửa code → Ctrl+S
-# → Code tự động format ✅
-```
+Chuột phải `index.html` → **Open with Live Server** → mở `http://127.0.0.1:5500/index.html`.
+Phải thấy header, phim, footer. Không chạy được → [03_chay_du_an.md §5](docs/guides/03_chay_du_an.md#5-lỗi-hay-gặp).
 
-#### 🚫 Tránh 3 Lỗi Phổ Biến:
+### Bước 7 — Đọc tài liệu (theo đúng thứ tự)
 
-| Lỗi                                 | Nguyên Nhân               | Cách Tránh                                |
-| ----------------------------------- | ------------------------- | ----------------------------------------- |
-| **1. Files cá nhân bị commit nhầm** | Không check `git status`  | Luôn chạy `git status` trước `git commit` |
-| **2. .gitignore không hoạt động**   | File đã được commit trước | Xem [Git Ignore Guide](#git-ignore-guide) |
-| **3. Code không được format**       | Chưa config Prettier      | Follow Bước 3 ở trên                      |
+1. [AGENTS.md](AGENTS.md) — luật cứng, 5 phút.
+2. [docs/guides/07_lo_trinh_va_backlog.md](docs/guides/07_lo_trinh_va_backlog.md) — bạn được giao US nào, hạn khi nào.
+3. [docs/guides/02_kien_truc.md](docs/guides/02_kien_truc.md) — kiến trúc, **quan trọng nhất để không phá code người khác**.
+4. [docs/specs/core_registry.md](docs/specs/core_registry.md) — lướt để biết "đã có hàm gì".
+5. File `product_backlog.xlsx` (tiêu chí chấp nhận của từng US) **không nằm trong repo** — xin trưởng nhóm.
 
-#### 🎯 Checklist Hoàn Tất
-
-- [ ] Clone repo và add upstream remote
-- [ ] Verify `.gitignore` hoạt động (`git status` sạch)
-- [ ] Cài đặt 5 VS Code extensions
-- [ ] Config Prettier format-on-save
-- [ ] Test Live Server chạy OK
-- [ ] Đọc [Git Flow Workflow](#git-flow-workflow)
+✅ Xong phần cài đặt khi: clone được, đang ở `develop`, Live Server chạy, Prettier chỉ format dòng đã sửa.
 
 ---
 
-<a id="git-flow-workflow"></a>
+## 3. Quy trình một task, từng bước
 
-## 🔄 Git Flow Workflow
+Ví dụ: bạn được giao **US-18 — Đăng ký / đăng nhập**.
 
-Dự án này sử dụng workflow đơn giản với 2 branches chính.
+### Bước 1 — Đọc yêu cầu trước khi code
 
-### Cấu Trúc Branches
+- Mở `product_backlog.xlsx` → đọc User Story (Bảng 2) + **Acceptance Criteria & Testing** (Bảng 3) của US-18.
+  Tiêu chí chấp nhận = định nghĩa "xong".
+- Tự hỏi: tạo file mới hay sửa file cũ? Có đụng **file CORE** không ([AGENTS.md §3](AGENTS.md#3-bản-đồ-file-core-vs-page))?
+  Có → [§6.2](#62-trước-khi-sửa-file-core).
 
-```
-main (production)     ← Code đã release, stable, được gắn tags
-  ↑
-develop (integration) ← Branch chính để phát triển
-  ↑
-feat/...             ← Tính năng mới
-fix/...              ← Sửa bug
-ref/...              ← Cải thiện code
-```
+### Bước 2 — Có nhánh của mình chưa?
 
-### Branch Types
-
-| Branch Type | Tạo từ    | Merge vào          | Naming                  |
-| ----------- | --------- | ------------------ | ----------------------- |
-| `main`      | -         | -                  | `main`                  |
-| `develop`   | `main`    | `main` (với tags)  | `develop`               |
-| `feat/*`    | `develop` | `develop`          | `feat/add-favorites`    |
-| `fix/*`     | `develop` | `develop`          | `fix/player-bug`        |
-| `hotfix/*`  | `main`    | `main` + `develop` | `hotfix/critical-error` |
-
-### Quy Trình Release
-
-Team nhỏ của chúng ta sử dụng quy trình đơn giản:
-
-1. Develop trên branch `develop`
-2. Khi sẵn sàng release, merge `develop` → `main`
-3. Gắn tag cho version trên `main` (ví dụ: `v1.0.0`, `v1.1.0`)
-4. Deploy từ `main`
-
+**Chưa có (chỉ làm 1 lần trong cả dự án):**
 ```bash
-# Khi sẵn sàng release
-git checkout main
-git pull origin main
-git merge develop
-git tag -a v1.0.0 -m "Release version 1.0.0"
-git push origin main --tags
-```
-
-<a id="quy-trinh-dong-gop"></a>
-
-## 🔄 Quy Trình Đóng Góp
-
-### 1. Sync Develop Branch
-
-Luôn đảm bảo bạn có code mới nhất từ `develop`:
-
-```bash
-# Thêm upstream nếu chưa có
-git remote add upstream https://github.com/Gina126/BTL-WEB-PRIVATE-2025.git
-
-# Fetch tất cả branches từ upstream
-git fetch upstream
-
-# Checkout develop và cập nhật
 git checkout develop
-git pull upstream develop
+git pull origin develop
+git checkout -b nguyenvana          # tên của bạn, cách đặt: §4.1
+git push -u origin nguyenvana       # đưa nhánh lên GitHub ngay, từ giờ chỉ cần "git push"
+```
+`-b` = tạo nhánh mới và chuyển sang luôn.
 
-# Push develop về fork của bạn
-git push origin develop
+**Đã có rồi (mọi lần sau):** chỉ cần chuyển sang nhánh của mình và lấy code mới của nhóm:
+```bash
+git checkout nguyenvana
+git pull origin develop             # trộn develop mới nhất vào nhánh của bạn (= Bước 7)
 ```
 
-### 2. Tạo Feature/Fix Branch
+### Bước 3 — Kiểm tra đang đứng đúng nhánh
 
-Tạo branch mới từ `develop` (KHÔNG phải từ `main`):
+Trước khi gõ code, luôn chắc chắn mình đang ở **nhánh tên mình**, không phải `develop`:
+```bash
+git branch        # nhánh có dấu * là nhánh hiện tại
+git status        # cũng ghi "On branch ..." ở dòng đầu
+```
+
+### Bước 4 — Code
+
+- Tra [core_registry.md](docs/specs/core_registry.md) trước: đã có `createMovieCard`, `renderEmptyState`, `showToast`, `fetchBackend`... thì **dùng lại**.
+- Làm theo công thức trong [docs/skills/](docs/README.md#skills--công-thức-làm-việc) (vd thêm trang mới → skill 01).
+- Chạy Live Server, mở DevTools (F12) → tab Console luôn mở.
+
+### Bước 5 — Commit (lưu một mốc)
+
+Làm xong **một phần nhỏ có ý nghĩa** (vd xong form, xong gọi API) thì commit một lần:
 
 ```bash
-# Đảm bảo đang ở develop và đã updated
-git checkout develop
-git pull upstream develop
-
-# Tạo feature branch (dùng viết tắt feat)
-git checkout -b feat/user-authentication
-
-# Hoặc fix branch
-git checkout -b fix/video-playback-issue
-
-# Hoặc refactor branch
-git checkout -b ref/api-module
+git status                          # 1. Xem đã sửa những file nào
+git diff                            # 2. Đọc lại thay đổi — có file lạ, console.log, dòng thừa không?
+git add login.html js/login.js css/login.css   # 3. Chọn file muốn commit (nên ghi rõ tên file)
+git commit -m "feat(login): add login and register form (US-18)"   # 4. Lưu mốc
 ```
 
-### 3. Branch Naming Convention
+> Tránh `git add .` khi chưa xem `git status` — rất dễ commit nhầm file rác hoặc file CORE mà bạn chỉ sửa thử.
 
-**Format**: `<type>/<short-description>`
+### Bước 6 — Push lên GitHub (sao lưu + cho người khác thấy)
 
-**⚠️ Quan trọng**: Dùng **viết tắt** như commit convention (feat, fix, ref,...)
-
-**Branch Types:**
-
-- ✨ `feat/`: Tính năng mới (feature)
-  - `feat/add-favorite-movies`
-  - `feat/user-profile-page`
-  - `feat/video-recommendations`
-
-- 🐛 `fix/`: Sửa bug trong develop
-  - `fix/video-player-autoplay`
-  - `fix/search-results-pagination`
-  - `fix/mobile-menu-overlay`
-
-- 🚨 `hotfix/`: Sửa lỗi KHẨN CẤP trong production (từ `main`)
-  - `hotfix/critical-security-patch`
-  - `hotfix/server-crash-fix`
-
-- ♻️ `ref/`: Refactor code (không thêm feature, không fix bug)
-  - `ref/api-module-structure`
-  - `ref/css-variables`
-  - `ref/utils-functions`
-
-- 📝 `docs/`: Cập nhật documentation
-  - `docs/update-readme`
-  - `docs/api-documentation`
-
-- 💄 `style/`: Thay đổi UI/CSS
-  - `style/movie-card-design`
-  - `style/responsive-header`
-
-- ⚡ `perf/`: Cải thiện performance
-  - `perf/lazy-loading`
-  - `perf/image-optimization`
-
-- ✅ `test/`: Thêm hoặc sửa tests
-  - `test/api-module`
-  - `test/user-authentication`
-
-- 🔧 `build/`: Build system, dependencies
-  - `build/webpack-config`
-  - `build/package-updates`
-
-- 🔨 `chore/`: Maintenance, misc tasks
-  - `chore/update-deps`
-  - `chore/cleanup-code`
-
-**Quy tắc đặt tên:**
-
-- Dùng **viết tắt** (`feat/`, `ref/`, `perf/`,...)
-- Lowercase, dùng dấu gạch ngang `-`
-- Mô tả ngắn gọn, rõ ràng
-- Bằng tiếng Anh
-- Không quá 50 ký tự
-- Nhất quán với commit message type
-
-### 4. Thực Hiện Thay Đổi
-
-#### ⚠️ Phân biệt CORE vs PAGE files
-
-**🔴 CORE Files** (Ảnh hưởng TOÀN BỘ dự án - Cẩn thận!):
-
+```bash
+git push        # nhánh đã được đưa lên GitHub ở Bước 2 nên chỉ cần thế này
 ```
-components/, css/, js/{components,config,utils,api,main}.js
+Nên push **ít nhất cuối mỗi ngày** — máy hỏng cũng không mất code.
+
+### Bước 7 — Cập nhật nhánh với `develop` (mỗi sáng + trước khi tạo PR)
+
+Trong lúc bạn code, người khác đã merge thứ mới vào `develop`. Kéo về và trộn vào nhánh của bạn:
+
+```bash
+git checkout nguyenvana           # chắc chắn đang ở nhánh của mình
+git pull origin develop           # tải develop mới từ GitHub và trộn vào nhánh của bạn
 ```
+(Cách viết dài tương đương: `git fetch origin` rồi `git merge origin/develop`.)
 
-- **BẮT BUỘC:** Thông báo team trước khi sửa
-- **BẮT BUỘC:** Test nhiều trang sau khi sửa
-- Ví dụ: Đổi tên function trong `utils.js` → tất cả trang bị lỗi!
+- Không có conflict → mở web kiểm lại nhanh → `git push`.
+- Có conflict → [§7](#7-xử-lý-conflict).
 
-**✅ PAGE Files** (An toàn, chỉ ảnh hưởng 1 trang):
+> Nhóm dùng **merge**, không dùng rebase, để không bao giờ phải `push --force`.
 
+### Bước 8 — Tự kiểm thử
+
+Dự án không có test tự động → bạn là người kiểm:
+- Chạy **từng Scenario** trong tiêu chí chấp nhận của US, ghi Pass/Fail.
+- Chạy checklist [06_kiem_thu_thu_cong_skill.md](docs/skills/06_kiem_thu_thu_cong_skill.md) (console sạch, responsive 375/768/≥1200px...).
+- Đụng CORE → test **ít nhất 3 trang**: `index`, `detail`, `watch` + trang bị ảnh hưởng.
+
+### Bước 9 — Tạo Pull Request
+
+Xem [§5](#5-pull-request-và-review).
+
+### Bước 10 — Sau khi PR được merge
+
+```bash
+git checkout nguyenvana
+git pull origin develop             # lấy bản develop vừa có code của bạn + của người khác
 ```
-index.html, detail.html, watch.html, js/{homepage,detail,watch,...}.js
-```
+- ⚠️ **Không xóa nhánh** — kể cả khi GitHub hiện nút **Delete branch** trên trang PR, **đừng bấm**. Đây là nhánh dùng suốt dự án.
+- Task tiếp theo → quay lại Bước 1, vẫn làm trên nhánh `nguyenvana`.
+- Nếu bạn đã push thêm commit **trong lúc PR chưa merge**: các commit đó tự nằm trong PR đang mở, không sao. Commit đến **sau** khi merge thì sẽ vào PR mới (mở như Bước 9).
 
-- Tự do sửa, không ảnh hưởng trang khác
-- Naming: Prefix biến theo trang (`homeMovies`, `detailMovie`)
+### Bảng lệnh hằng ngày (in ra dán cạnh màn hình)
+
+| Muốn... | Lệnh |
+|---|---|
+| Xem đang ở nhánh nào, sửa file gì | `git status` |
+| Xem chi tiết đã sửa gì | `git diff` (đã `add` rồi: `git diff --staged`) |
+| Bắt đầu ngày làm việc / task mới | `git checkout <ten-cua-ban>` → `git pull origin develop` |
+| Lưu mốc | `git add <file>` → `git commit -m "..."` |
+| Đẩy lên GitHub | `git push` (chỉ lần tạo nhánh mới cần `git push -u origin <ten-cua-ban>`) |
+| Lấy code mới của nhóm vào nhánh mình | `git pull origin develop` |
+| Xem lịch sử commit | `git log --oneline -10` |
+| Xem thử nhánh của bạn cùng nhóm | `git checkout <ten-ban-kia>` (commit hoặc stash trước — xem §8), xem xong `git checkout <ten-cua-ban>` |
 
 ---
 
-#### 🛡️ Quy trình sửa CORE files an toàn
+## 4. Đặt tên nhánh và viết commit
 
-**1. Thông báo trước** (Slack/Discord):
+### 4.1 Tên nhánh
+
+Mỗi người **đúng một nhánh**, đặt bằng **họ tên không dấu, chữ thường, viết liền** (trùng tên thì thêm số hoặc chữ cái đầu tên đệm):
+
+| Họ tên | Tên nhánh |
+|---|---|
+| Nguyễn Văn A | `nguyenvana` |
+| Trần Thị B | `tranthib` |
+
+- Repo backend `rophim-api` dùng **cùng tên nhánh** đó.
+- **Không** tạo thêm `feat/...`, `fix/...`, `docs/...` cho từng task. Loại việc (tính năng, sửa lỗi, tài liệu) đã thể hiện ở **commit message** (§4.2).
+- Ngoại lệ duy nhất: `hotfix/<mô-tả>` cho lỗi khẩn trên `main` — **chỉ trưởng nhóm** tạo ([§9.2](#92-hotfix-lỗi-nghiêm-trọng-trên-bản-đã-phát-hành)).
+
+### 4.2 Commit message
+
+Mẫu (Conventional Commits, **tiếng Anh**): **`<type>(<phạm vi>): <làm gì> (US-xx)`**
 
 ```
-"@team Sẽ sửa utils.js - thêm formatCurrency()
-Ai đang làm việc với file này không?
-Plan merge: 10h sáng mai"
+feat(login): add login and register tabs (US-18)
+fix(watch): stop comment counter going negative (US-55)
+refactor(utils): add optional variant param to renderSkeleton
+docs(contract): add rating endpoints
 ```
 
-**2. Backward compatible** - Quy tắc SỬA an toàn:
+| `type` | Dùng khi |
+|---|---|
+| `feat` | Thêm tính năng |
+| `fix` | Sửa lỗi |
+| `refactor` | Sửa cấu trúc code, hành vi giữ nguyên |
+| `style` | Chỉ đổi CSS / giao diện |
+| `docs` | Chỉ đổi tài liệu |
+| `chore` | Việc lặt vặt: `.gitignore`, cấu hình, CODEOWNERS |
 
-**✅ Case 1: THÊM function mới** (An toàn)
+- **Phạm vi** = tên trang hoặc file: `login`, `watch`, `detail`, `admin`, `utils`, `api`, `header`, `config`...
+- **Làm gì**: động từ thì hiện tại, chữ thường, không dấu chấm cuối, ≤ 72 ký tự: `add`, `fix`, `remove`, `show`, `update`.
+- **Mỗi commit một việc.** Sửa CORE → commit **riêng** trước, rồi mới đến commit trang dùng nó:
+  ```
+  feat(api): add buildBackendPath helper          ← commit 1: chỉ CORE
+  feat(login): call auth endpoints (US-18)        ← commit 2: trang
+  ```
+- Cần giải thích thêm → để trống 1 dòng rồi viết phần thân:
+  ```bash
+  git commit -m "refactor(utils): add optional variant param to renderSkeleton" \
+             -m "Default \"card\" keeps existing behavior. Tested: index, movies, detail, watch."
+  ```
 
-```javascript
-function formatCurrency(amount) { ... }  // Không ảnh hưởng code cũ
-```
-
-**⚠️ Case 2: SỬA function hiện có** (NGUY HIỂM - Làm theo 4 bước!)
-
-**Bước 1:** Tìm TẤT CẢ nơi dùng function:
-
-```bash
-# Search trong dự án (VS Code: Ctrl+Shift+F)
-grep -r "formatDate" js/ *.html
-```
-
-**Bước 2:** Sửa KHÔNG thay đổi signature:
-
-```javascript
-// ❌ ĐỪNG thay đổi params
-function formatDate(dateString) { ... }  // Cũ
-function formatDate(dateString, format) { ... }  // Mới → LỖI!
-
-// ✅ Dùng default params
-function formatDate(dateString, format = 'DD/MM/YYYY') { ... }
-// → Code cũ: formatDate(date) vẫn OK
-// → Code mới: formatDate(date, 'YYYY-MM-DD') cũng OK
-```
-
-**Bước 3:** Test TẤT CẢ nơi tìm được ở Bước 1
-
-**Bước 4:** Commit ghi rõ:
-
-```bash
-git commit -m "refactor(utils): improve formatDate with format option
-
-- Add optional format parameter (default: DD/MM/YYYY)
-- Backward compatible - existing code still works
-- Tested: homepage.js, detail.js, watch.js"
-```
-
-**⛔ KHI NÀO TUYỆT ĐỐI KHÔNG sửa:**
-
-```javascript
-// ❌ Đổi return type
-return [];  →  return { data: [], total: 0 }
-
-// ❌ Đổi tên function
-formatDate()  →  formatDateString()
-
-// → Giải pháp: TẠO function MỚI thay vì sửa function cũ!
-```
-
-**3. Test kỹ:**
-
-- [ ] Test ít nhất **3 trang khác nhau**
-- [ ] Check header/footer hiển thị OK
-- [ ] Check console không có lỗi
-- [ ] Test cả Desktop & Mobile
-
-**4. Commit rõ ràng:**
-
-```bash
-git commit -m "feat(utils): add formatCurrency function
-
-- Add new helper for currency formatting
-- Does NOT affect existing functions
-- Tested on: home, detail, watch pages"
-```
-
-**5. Merge vào giờ team online** → Debug nhanh nếu có lỗi
+❌ Tránh: `update`, `fix bug`, `WIP`, `sua loi`, `Added login.`
 
 ---
 
-#### Khi code:
+## 5. Pull Request và review
 
-- Commit thường xuyên với messages rõ ràng
-- Đảm bảo không làm hỏng tính năng hiện có
-- Test trước khi commit!
+**Pull Request (PR)** = "Mình làm xong mấy việc này trên nhánh của mình rồi, mời nhóm xem và cho trộn vào `develop`."
 
-### 5. Commit Changes
+### 5.1 Tạo PR
 
-Sử dụng **Conventional Commits** (tiếng Anh):
+**Khi nào mở:** cuối mỗi ngày có ít nhất một task xong (đạt Scenario). Không đợi xong hết mọi việc mới mở — PR càng to càng khó duyệt, nhánh càng lệch `develop`.
+Mỗi lúc chỉ có **một PR đang mở** từ nhánh của bạn; push thêm commit thì chúng tự vào PR đó.
 
-```bash
-# Stage changes
-git add .
+1. Đã làm [Bước 7](#bước-7--cập-nhật-nhánh-với-develop-mỗi-sáng--trước-khi-tạo-pr) (trộn `develop` mới nhất) và [checklist §10](#10-checklist-trước-khi-tạo-pr).
+2. `git push` → lên GitHub, bấm **Compare & pull request** (hoặc tab *Pull requests* → *New pull request*).
+3. ⚠️ **base: `develop`** ← **compare: nhánh tên bạn**. Mặc định GitHub có thể chọn `main` — **đổi lại**.
+4. Tiêu đề = tên bạn + các US trong PR: `nguyenvana: detail page fixes (US-34, US-36, US-37)`.
+5. Dán mẫu mô tả dưới đây, điền vào — **mỗi US một mục** nếu PR có nhiều US.
+6. Reviewer: trưởng nhóm được gán tự động (CODEOWNERS). Muốn bạn cùng nhóm xem → thêm ở mục *Reviewers*.
 
-# Commit với message theo chuẩn
-git commit -m "feat: add favorite movies functionality"
-git commit -m "fix: resolve video player autoplay issue"
-git commit -m "docs: update installation guide"
+Chưa xong nhưng muốn hỏi ý kiến sớm → chọn **Create draft pull request**.
+
+> **Trưởng nhóm merge bằng "Create a merge commit"**, không dùng *Squash and merge* hay *Rebase and merge*.
+> Squash gộp commit thành một commit mới trên `develop`, nhánh của bạn vẫn giữ commit cũ → lần trộn sau Git tưởng là
+> hai bản khác nhau và **conflict ở chính code của bạn**. (Repo đã tắt sẵn 2 kiểu kia trong Settings → General → Pull Requests.)
+
+### 5.2 Mẫu mô tả PR
+
+```markdown
+## US
+- US-18 — Đăng ký / đăng nhập
+- (PR có nhiều US thì liệt kê đủ, phần Kiểm thử bên dưới ghi theo từng US)
+
+## Đã làm
+- Thêm login.html, js/login.js, css/login.css (2 tab đăng nhập / đăng ký)
+- ...
+
+## Sửa CORE: Có / Không
+- (nếu Có) js/api.js: thêm hàm buildBackendPath() — chỉ THÊM, không đổi hàm cũ
+
+## Kiểm thử
+- [x] Scenario 1: ... — Pass
+- [x] Scenario 2: ... — Pass
+- [ ] Scenario 3: ... — chưa kiểm (cần backend)
+- [x] Console không lỗi đỏ
+- [x] Responsive 375px / 768px / ≥1200px
+- Trang đã test (nếu đụng CORE): index, detail, watch, ...
+
+## Ảnh chụp
+(bắt buộc nếu đổi giao diện)
 ```
 
-**⚠️ Quan trọng**: Commit messages PHẢI bằng **tiếng Anh**
+Ghi **thật**: chưa kiểm thì ghi "chưa kiểm", đừng tick cho đẹp.
 
-Xem chi tiết tại [Commit Message Guidelines](#commit-message-guidelines)
+### 5.3 Khi được review
 
-### 6. Keep Your Branch Updated
+- Reviewer comment yêu cầu sửa → sửa **trên nhánh tên bạn**, commit mới, `git push`. PR tự cập nhật, **không cần tạo PR mới**.
+- Sửa xong mỗi comment → trả lời ngắn ("Đã sửa ở commit abc123") → bấm **Resolve conversation**.
+- Không đồng ý → trả lời lý do, thảo luận. Review là xem **code**, không phải đánh giá **người**.
+- Xong hết → bấm 🔄 *Re-request review*.
+- **Ai merge?** Trưởng nhóm, sau khi Approve. Bạn không tự merge PR của mình.
 
-Thường xuyên sync với `develop` để code của bạn luôn mới nhất và tránh conflicts lớn.
+### 5.4 Khi bạn review PR của người khác
 
-#### Cách Sync với Develop
-
+Dùng [checklist review trong 04_quy_trinh_lam_viec.md §5](docs/guides/04_quy_trinh_lam_viec.md#5-review-checklist).
+Kéo nhánh về chạy thử:
 ```bash
-# Fetch changes mới nhất
-git fetch upstream
-
-# Merge develop vào branch của bạn
-git checkout your-branch
-git merge upstream/develop
-
-# Nếu không có conflicts
-git push origin your-branch
-
-# Nếu có conflicts, đọc phần dưới để resolve
+git fetch origin
+git checkout tranthib                   # tên nhánh của người mở PR (đã commit/stash việc dở của bạn trước)
+git pull                                # lấy commit mới nhất của PR
+# mở Live Server kiểm tra, xong thì: git checkout <ten-cua-ban>
+# KHÔNG commit gì trên nhánh của người khác — góp ý bằng comment trong PR
 ```
 
-**� Tip**: Sync mỗi ngày hoặc trước khi bắt đầu code để tránh conflicts lớn.
+---
 
-#### Khi Có Conflicts
+## 6. Làm việc cùng nhau mà không giẫm chân nhau
 
-Nếu xuất hiện thông báo conflict:
+### 6.1 Ai sở hữu gì (V2)
 
-```bash
-# 1. Xem file nào bị conflict
-git status
+Phân công chi tiết: [07_lo_trinh_va_backlog.md §3](docs/guides/07_lo_trinh_va_backlog.md#3-kế-hoạch-v2--phân-công-3-người). Nguyên tắc:
 
-# 2. Mở file trong VS Code
-# VS Code sẽ highlight conflicts với các nút:
-# - Accept Current Change (code của bạn)
-# - Accept Incoming Change (code từ develop)
-# - Accept Both Changes (kết hợp cả 2)
+| File | Mức rủi ro conflict | Cách làm |
+|---|---|---|
+| File trang **của bạn** (`login.html`, `js/login.js`, `css/login.css`...) | 🟢 Thấp | Tự do |
+| `js/config.js`, `js/api.js`, `js/catalog.js` | 🟡 Vừa | Chỉ **thêm vào cuối nhóm liên quan**, báo nhóm |
+| `js/utils.js`, `js/main.js`, `js/components.js`, `css/style.css`, `css/components.css`, `components/header.html` | 🔴 Cao | **Một người một lúc**, phải báo trước. Trong V2 chỉ **Lead** sửa CORE frontend (header, `main.js`, `api.js`...) |
+| `docs/specs/backend_api_contract.md` | 🔴 | Hợp đồng giữa FE và BE — đổi phải **PR riêng**, cả hai bên duyệt |
 
-# 3. Sau khi sửa xong
-git add .
-git commit -m "merge: resolve conflicts with develop"
-git push origin your-branch
+### 6.2 Trước khi sửa file CORE
+
+Nhắn nhóm **trước khi code**, theo mẫu:
+
+```
+[CORE] Mình sẽ sửa js/utils.js — THÊM hàm formatRelativeTime() (không đổi hàm cũ).
+Lý do: US-54 cần hiển thị "5 phút trước".
+Có ai đang sửa utils.js không? Dự kiến mở PR: chiều 26/10.
 ```
 
-**Ví dụ conflict trong file:**
+Đợi xác nhận không ai đang sửa, rồi làm theo [core_files_rules.md](docs/constraints/core_files_rules.md).
+Không được đổi tên / đổi tham số bắt buộc / đổi kiểu trả về của hàm CORE — cần khác thì **thêm tham số tùy chọn** hoặc **hàm mới**.
 
-```javascript
-<<<<<<< HEAD (code của bạn)
-  const url = `${API_URL}/movies`;
+### 6.3 Thói quen giúp nhóm chạy êm
+
+- **PR nhỏ, mở mỗi ngày**: nhánh dùng lâu dài nên phải đưa việc về `develop` thường xuyên. Nhánh lệch `develop` càng lâu, conflict càng to.
+- **Trộn `develop` vào nhánh mỗi sáng** (Bước 7).
+- **Chỉ sửa file mình sở hữu** (§6.1). Cả nhóm ai cũng làm trên nhánh riêng lâu dài, nên hai người cùng sửa một file là cách nhanh nhất để conflict.
+- **Không format lại / đổi tên / "tiện tay dọn"** code không liên quan đến task. Thấy lỗi khác → ghi lại, báo người sở hữu file đó.
+- **Sửa code thì sửa doc liên quan trong cùng PR** (bảng cuối [docs/README.md](docs/README.md#cập-nhật-tài-liệu)). Kết quả Pass/Fail của US ghi trong mô tả PR; **bảng trạng thái trong `07_lo_trinh_va_backlog.md` chỉ trưởng nhóm cập nhật** (tránh 3 người cùng sửa một bảng).
+- **Không commit bí mật**: mật khẩu, token, file `.env`, URL backend local (`localhost`) trong `js/config.js`.
+- **Đồng bộ 10 phút mỗi tối**: đã xong gì, mai làm gì, đang chờ ai.
+- Bị kẹt quá **30 phút** → hỏi. Hỏi sớm rẻ hơn sửa muộn.
+
+### 6.4 Dùng AI (Claude Code, Cursor, Copilot...)
+
+Được dùng, nhưng **bạn chịu trách nhiệm** với code AI viết:
+- Giao việc theo mẫu prompt trong [docs/README.md](docs/README.md#dùng-tài-liệu-này-để-vibe-code) (đính kèm mã US + tiêu chí chấp nhận + file được sửa).
+- Trước khi commit: `git diff --stat` — có file CORE nào bạn không cho phép → bắt AI giải thích hoặc trả lại.
+- Tự chạy Scenario trên trình duyệt; AI nói "đã test" chưa chắc đã test.
+
+---
+
+## 7. Xử lý conflict
+
+### 7.1 Conflict là gì
+
+Bạn và một người khác **sửa cùng một chỗ** trong cùng file. Git không biết giữ bản nào nên dừng lại hỏi bạn.
+Conflict **không phải lỗi**, không mất code của ai — chỉ cần chọn đúng.
+
+### 7.2 Nhận biết
+
+Khi `git merge origin/develop` mà thấy:
+```
+CONFLICT (content): Merge conflict in js/api.js
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+### 7.3 Gỡ từng bước
+
+```bash
+git status            # file "both modified" là file bị conflict
+```
+
+Mở file trong VS Code, sẽ thấy:
+```js
+<<<<<<< HEAD
+async function getMyComments() { ... }          ← code CỦA BẠN
 =======
-  const endpoint = API_CONFIG.MOVIES_LIST; (code từ develop)
->>>>>>> upstream/develop
+async function getMovieRatings(slug) { ... }    ← code MỚI từ develop
+>>>>>>> origin/develop
 ```
 
-**Sau khi resolve, file sẽ như:**
+VS Code hiện các nút phía trên:
+- **Accept Current Change** — giữ của bạn
+- **Accept Incoming Change** — giữ của develop
+- **Accept Both Changes** — giữ cả hai ← **hay dùng nhất**, vì thường hai người cùng *thêm* hàm mới ở cùng chỗ
 
-```javascript
-const endpoint = API_CONFIG.MOVIES_LIST;
-const url = `${endpoint}/movies`;
-```
+Nguyên tắc chọn:
+- Hai người cùng **thêm** thứ khác nhau (hàm, dòng `module.exports`, hằng) → **giữ cả hai**.
+- Hai người cùng **sửa** một dòng → đọc hiểu cả hai, viết lại bản đúng; không chắc → **hỏi người kia** (xem ai viết: GitLens hoặc `git log -p origin/develop -- <file>`).
+- Xóa hết các dòng `<<<<<<<`, `=======`, `>>>>>>>`.
 
-#### Tips Tránh Conflicts
-
-- ✅ Sync với develop thường xuyên (mỗi ngày)
-- ✅ Commit nhỏ, thường xuyên
-- ✅ Thông báo team trước khi sửa file quan trọng
-- ✅ Dùng VS Code để resolve conflicts (dễ hơn command line)
-
-### 7. Push và Tạo Pull Request
-
+Xong thì:
 ```bash
-# Push lần đầu
-git push origin your-branch-name
-
-# Nếu đã rebase, cần force push (cẩn thận!)
-git push origin your-branch-name --force-with-lease
+git add js/api.js                 # đánh dấu đã gỡ xong file này
+git commit                        # Git tự điền message "Merge remote-tracking branch..." → lưu và đóng editor
+# Mở web kiểm tra lại các Scenario — gỡ conflict sai rất hay làm hỏng trang
+git push
 ```
 
-**Tạo Pull Request:**
-
-1. Vào GitHub repository
-2. Click **"Compare & pull request"**
-3. **Base branch**: `develop` (KHÔNG phải `main`)
-4. **Compare branch**: `feature/your-branch`
-5. Điền thông tin theo [PR Template](#pull-request-process)
-6. Submit PR
-
-### 8. Hotfix Workflow (Khẩn Cấp)
-
-Nếu phát hiện bug nghiêm trọng trên production:
-
+Rối quá, muốn **hủy merge, quay về như trước khi merge**:
 ```bash
-# Tạo hotfix từ main
-git checkout main
-git pull upstream main
-git checkout -b hotfix/critical-bug-description
-
-# Fix bug và commit
-git commit -m "hotfix: fix critical security vulnerability"
-
-# Push và tạo PR vào MAIN
-git push origin hotfix/critical-bug-description
+git merge --abort
 ```
-
-**Sau khi hotfix được merge vào `main`:**
-
-- Maintainer sẽ merge `main` → `develop`
-- Hoặc bạn tạo thêm PR từ `hotfix` → `develop`
-
-<a id="tieu-chuan-code"></a>
-
-## 💻 Tiêu Chuẩn Code
-
-### Cấu Trúc Thư Mục
-
-```
-BTL-WEB-PRIVATE-2025/
-├── assets/           # Tài nguyên tĩnh
-│   ├── icons/       # Icon files
-│   └── images/      # Hình ảnh
-├── css/             # Stylesheets
-│   ├── variables.css    # CSS variables (colors, spacing, etc.)
-│   ├── style.css        # Global styles
-│   └── components.css   # Component-specific styles
-├── js/              # JavaScript files
-│   ├── config.js    # Configuration constants
-│   ├── utils.js     # Utility functions
-│   ├── api.js       # API calls and data fetching
-│   ├── main.js      # Main application logic
-│   ├── homepage.js  # Home page specific logic
-│   └── detail.js    # Detail page specific logic
-└── index.html       # Main HTML file
-```
-
-### HTML Guidelines
-
-```html
-<!-- ✅ TỐT: Semantic HTML, indent đúng -->
-<section class="movie-section">
-  <h2 class="section-title">Phim Đề Xuất</h2>
-  <div class="movie-grid">
-    <article class="movie-card">
-      <!-- Content -->
-    </article>
-  </div>
-</section>
-
-<!-- ❌ TRÁNH: Không semantic, indent sai -->
-<div class="section">
-  <div class="title">Phim Đề Xuất</div>
-  <div class="grid">
-    <div class="card">
-      <!-- Content -->
-    </div>
-  </div>
-</div>
-```
-
-**Quy tắc:**
-
-- Sử dụng semantic HTML5 tags (`<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<footer>`)
-- Indent: 2 spaces
-- Luôn đóng tag
-- Sử dụng alt text cho images
-- Thêm ARIA labels khi cần thiết cho accessibility
-
-### CSS Guidelines
-
-```css
-/* ✅ TỐT: Sử dụng CSS variables, tổ chức rõ ràng */
-.movie-card {
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-md);
-  transition: transform 0.3s ease;
-}
-
-.movie-card:hover {
-  transform: translateY(-5px);
-}
-
-/* ❌ TRÁNH: Hard-coded values, không consistent */
-.movie-card {
-  background-color: #1a1a1a;
-  border-radius: 8px;
-  padding: 16px;
-}
-```
-
-**Quy tắc:**
-
-- Sử dụng CSS variables từ `variables.css` cho colors, spacing, font sizes
-- Đặt tên class theo BEM convention hoặc semantic naming
-- Mobile-first approach với media queries
-- Tránh `!important` trừ khi thực sự cần thiết
-- Group related properties (positioning, box model, typography, visual)
-
-### JavaScript Guidelines
-
-```javascript
-// ✅ TỐT: Modern ES6+, clear naming, comments
-/**
- * Lấy danh sách phim từ API
- * @param {string} category - Thể loại phim
- * @param {number} page - Số trang
- * @returns {Promise<Array>} Danh sách phim
- */
-async function fetchMovies(category, page = 1) {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/movies?category=${category}&page=${page}`,
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.movies;
-  } catch (error) {
-    console.error("Error fetching movies:", error);
-    return [];
-  }
-}
-
-// ❌ TRÁNH: Callback hell, var, no error handling
-function getMovies(cat, p, callback) {
-  var url = API_BASE_URL + "/movies?category=" + cat + "&page=" + p;
-  fetch(url).then(function (res) {
-    res.json().then(function (data) {
-      callback(data.movies);
-    });
-  });
-}
-```
-
-**Quy tắc:**
-
-- Sử dụng `const` và `let`, tránh `var`
-- Arrow functions cho callbacks ngắn
-- Async/await thay vì promise chains
-- Tên biến/hàm rõ ràng, mô tả (camelCase)
-- JSDoc comments cho functions quan trọng
-- Error handling với try/catch
-- Tránh global variables
-
-### File Organization
-
-**CSS Files:**
-
-- `variables.css`: CSS custom properties (màu sắc, spacing, fonts)
-- `style.css`: Global styles, resets, utilities
-- `components.css`: Component-specific styles
-
-**JS Files:**
-
-- `config.js`: Constants, API endpoints, configuration
-- `components.js`: Load header/footer từ file riêng
-- `utils.js`: Helper functions, formatters
-- `api.js`: API calls, data fetching logic
-- `main.js`: Global initialization, event listeners
-- `homepage.js`: Home page specific functionality
-- `detail.js`: Detail page specific functionality
-
-<a id="commit-message-guidelines"></a>
-
-## 📝 Commit Message Guidelines
-
-Dự án này sử dụng **Conventional Commits** với **tiếng Anh**.
-
-### Format Chuẩn
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Bắt buộc**: `<type>: <subject>`  
-**Tùy chọn**: `(<scope>)`, `<body>`, `<footer>`
-
-### Commit Types
-
-| Type       | Emoji | Mô Tả          | Ví Dụ                                     |
-| ---------- | ----- | -------------- | ----------------------------------------- |
-| `feat`     | ✨    | Tính năng mới  | `feat: add user favorites system`         |
-| `fix`      | 🐛    | Sửa bug        | `fix: resolve video autoplay issue`       |
-| `docs`     | 📝    | Cập nhật docs  | `docs: update README installation steps`  |
-| `style`    | 💄    | UI/CSS changes | `style: improve movie card hover effect`  |
-| `refactor` | ♻️    | Refactor code  | `refactor: restructure API module`        |
-| `perf`     | ⚡    | Performance    | `perf: implement lazy loading for images` |
-| `test`     | ✅    | Tests          | `test: add unit tests for fetchMovies`    |
-| `build`    | 🔧    | Build system   | `build: update webpack config`            |
-| `ci`       | 👷    | CI/CD          | `ci: add GitHub Actions workflow`         |
-| `chore`    | 🔨    | Maintenance    | `chore: update dependencies`              |
-| `revert`   | ⏪    | Revert commit  | `revert: revert feat: add user system`    |
-
-### Subject Guidelines
-
-✅ **DO:**
-
-- Bắt đầu bằng động từ: `add`, `fix`, `update`, `remove`, `refactor`
-- Viết thường (lowercase)
-- Không kết thúc bằng dấu chấm
-- Giới hạn 50 ký tự
-- Mô tả ngắn gọn, súc tích
-- Dùng thì hiện tại: `add` không phải `added`
-
-❌ **DON'T:**
-
-- ~~`Add feature`~~ → `add feature` (lowercase)
-- ~~`added user login`~~ → `add user login` (present tense)
-- ~~`fix bug.`~~ → `fix authentication bug` (no period, be specific)
-- ~~`update`~~ → `update README with API docs` (be descriptive)
-
-### Examples
-
-#### ✅ Good Commits
-
-```bash
-# Feature
-git commit -m "feat: add movie favorites functionality"
-git commit -m "feat(player): implement video quality selector"
-git commit -m "feat(search): add autocomplete suggestions"
-
-# Bug Fixes
-git commit -m "fix: resolve video player autoplay issue"
-git commit -m "fix(api): handle null response from server"
-git commit -m "fix(mobile): correct menu overlay z-index"
-
-# Documentation
-git commit -m "docs: update CONTRIBUTING with Git Flow"
-git commit -m "docs(readme): add deployment instructions"
-
-# Styling
-git commit -m "style: improve movie card responsive design"
-git commit -m "style(header): adjust mobile navigation layout"
-
-# Refactoring
-git commit -m "refactor: simplify fetchMovies function"
-git commit -m "refactor(api): extract error handling logic"
-
-# Performance
-git commit -m "perf: implement image lazy loading"
-git commit -m "perf(home): optimize movie list rendering"
-```
-
-#### ❌ Bad Commits
-
-```bash
-# Tránh các commit như sau:
-git commit -m "update"              # Quá chung chung
-git commit -m "fixed bugs"          # Không specific
-git commit -m "new stuff"           # Không mô tả gì
-git commit -m "WIP"                 # Work in progress - commit sau
-git commit -m "asdfgh"              # Meaningless
-git commit -m "Thêm tính năng"      # Phải dùng tiếng Anh
-git commit -m "Fix bug."            # Không nên có dấu chấm
-git commit -m "Added login page"   # Dùng 'add', không phải 'added'
-```
-
-### Detailed Commit (With Body & Footer)
-
-Đối với commits phức tạp, thêm body và footer:
-
-```bash
-git commit -m "feat: add user authentication system
-
-Implement complete authentication flow including:
-- User registration with email validation
-- Login with JWT tokens
-- Password reset functionality
-- Session management
-- Protected routes
-
-Breaking Change: Requires new ENV variables:
-- JWT_SECRET
-- JWT_EXPIRATION
-
-Adds dependencies:
-- jsonwebtoken@9.0.0
-- bcryptjs@2.4.3"
-```
-
-### Scope (Optional)
-
-Scope chỉ module/component bị ảnh hưởng:
-
-```bash
-feat(player): add fullscreen mode
-fix(api): handle timeout errors
-style(card): improve hover animation
-refactor(utils): simplify date formatter
-docs(setup): update local development guide
-```
-
-**Common Scopes:**
-
-- `player` - Video player
-- `api` - API calls
-- `auth` - Authentication
-- `search` - Search functionality
-- `home` - Home page
-- `detail` - Detail page
-- `card` - Movie card component
-- `header` - Header component
-- `footer` - Footer component
-
-### Breaking Changes
-
-Nếu commit có breaking changes, thêm `BREAKING CHANGE:` hoặc `!`:
-
-```bash
-# Cách 1: Dùng !
-git commit -m "feat!: redesign API response structure"
-
-# Cách 2: Dùng footer
-git commit -m "feat: update authentication flow
-
-BREAKING CHANGE: JWT tokens now expire after 1 hour instead of 24 hours.
-Users will need to re-login more frequently."
-```
-
-### Multiple Changes
-
-Nếu một commit có nhiều thay đổi, dùng body để liệt kê:
-
-```bash
-git commit -m "feat: enhance movie detail page
-
-- Add cast and crew information
-- Display user ratings and reviews
-- Show similar movie recommendations
-- Implement share functionality"
-```
-
-### Commit Message Template
-
-Bạn có thể tạo template cho git:
-
-```bash
-# Tạo file template
-cat > ~/.gitmessage << EOF
-# <type>(<scope>): <subject>
-#
-# <body>
-#
-# Type: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
-# Scope: player, api, auth, search, home, detail, card, header, footer
-# Subject: Start with verb, lowercase, no period, max 50 chars
-# Body: Explain what and why (not how), wrap at 72 chars
-EOF
-
-# Áp dụng template
-git config --global commit.template ~/.gitmessage
-```
-
-Sau đó khi commit, chỉ cần:
-
-```bash
-git commit
-# Editor sẽ mở với template sẵn
-```
-
-<a id="pull-request-process"></a>
-
-## 🔀 Pull Request Process
-
-### Checklist Trước Khi Submit PR
-
-- [ ] Code đã được test trên nhiều trình duyệt (Chrome, Firefox, Safari/Edge)
-- [ ] Code đã được test trên mobile (responsive)
-- [ ] Không có lỗi console
-- [ ] Code tuân thủ [Tiêu Chuẩn Code](#tiêu-chuẩn-code)
-- [ ] Commit messages rõ ràng và có ý nghĩa
-- [ ] Đã cập nhật documentation nếu cần
-- [ ] Đã rebase với main branch mới nhất
-
-### Tạo Pull Request
-
-1. **Tên PR rõ ràng và mô tả**
-
-   ```
-   ✅ TỐT: feat: Thêm chức năng lọc phim theo quốc gia
-   ❌ TRÁNH: update code
-   ```
-
-2. **Mô tả chi tiết**
-
-   ```markdown
-   ## Mô Tả
-
-   Thêm dropdown quốc gia vào header để người dùng có thể lọc phim.
-
-   ## Thay Đổi
-
-   - Thêm component dropdown quốc gia vào header
-   - Tích hợp API endpoint `/movies/filter` với parameter `country`
-   - Cập nhật UI để hiển thị kết quả filter
-   - Thêm animation cho dropdown
-
-   ## Screenshots
-
-   [Đính kèm ảnh nếu có thay đổi UI]
-
-   ## Kiểm Tra
-
-   - [x] Test trên Chrome
-   - [x] Test trên Firefox
-   - [x] Test responsive mobile
-   - [x] Không có lỗi console
-   ```
-
-### Code Review
-
-- Sẵn sàng nhận feedback và thảo luận
-- Phản hồi tất cả review comments
-- Push thêm commits để sửa theo feedback (không force push)
-- Request re-review sau khi sửa xong
-
-### Merge
-
-- PR cần **ít nhất 1 approval** từ maintainer
-- Tất cả conversations phải được resolve
-- CI checks (nếu có) phải pass
-- Conflicts phải được resolve
-- Maintainer sẽ merge PR vào `develop`
-
-### Sau Khi Merge
-
-```bash
-# Xóa local branch
-git checkout develop
-git branch -D feat/your-feature
-
-# Xóa remote branch (GitHub tự động xóa nếu bạn chọn)
-git push origin --delete feat/your-feature
-
-# Cập nhật develop
-git pull upstream develop
-git push origin develop
-```
-
-<a id="cau-hoi-thuong-gap"></a>
-
-## ❓ Câu Hỏi Thường Gặp
-
-### Q: Tôi mới học lập trình, có thể đóng góp không?
-
-**A:** Hoàn toàn có thể! Chúng tôi rất hoan nghênh contributors ở mọi cấp độ. Bạn có thể bắt đầu với:
-
-- Sửa typos trong documentation
-- Cải thiện CSS/UI cho một component nhỏ
-- Thêm comments cho code
-- Tìm và báo cáo bugs
-
-### Q: Làm sao để setup development environment?
-
-**A:** Xem [Bắt Đầu Nhanh](#bat-dau-nhanh) ở trên và [docs/guides/03_chay_du_an.md](docs/guides/03_chay_du_an.md).
-
-### Q: PR của tôi bị reject, làm gì bây giờ?
-
-**A:**
-
-- Đọc kỹ feedback từ reviewer
-- Hỏi rõ hơn nếu không hiểu
-- Sửa theo feedback và push thêm commits
-- Request re-review
-
-### Q: Làm sao để sync fork của tôi với repo gốc?
-
-**A:**
-
-```bash
-# Fetch changes từ upstream
-git fetch upstream
-
-# Checkout main branch
-git checkout main
-
-# Merge changes từ upstream/main
-git merge upstream/main
-
-# Push lên fork của bạn
-git push origin main
-```
-
-### Q: Tôi cần test trên browser nào?
-
-**A:** Ít nhất test trên:
-
-- **Desktop**: Chrome (hoặc Edge), Firefox
-- **Mobile**: Chrome Mobile (Android) hoặc Safari (iOS)
-
-### Q: Làm sao để test responsive?
-
-**A:**
-
-- Sử dụng DevTools (F12) → Toggle Device Toolbar (Ctrl+Shift+M)
-- Test các breakpoints: Mobile (375px), Tablet (768px), Desktop (1024px+)
-- Test cả portrait và landscape orientation
-
-## 📞 Liên Hệ
-
-Nếu có câu hỏi hoặc cần hỗ trợ, hãy liên hệ trực tiếp với team lead hoặc thảo luận trong nhóm.
-
-## 🙏 Lời Cảm Ơn
-
-Cảm ơn bạn đã dành thời gian đọc hướng dẫn này và đóng góp cho RoPhim! Mỗi đóng góp, dù lớn hay nhỏ, đều giúp dự án ngày càng tốt hơn.
-
-Happy Coding! 🎬🍿
+Rồi nhờ người cùng sửa file đó ngồi gỡ cùng.
 
 ---
 
-**Lưu ý**: Tài liệu này có thể được cập nhật theo thời gian. Hãy kiểm tra phiên bản mới nhất trước khi đóng góp.
+## 8. Lỡ tay thì cứu thế nào
+
+> ⛔ **Không bao giờ** chạy trên `develop`/`main`: `git push --force`, `git push -f`.
+> ⛔ Đừng dùng `git reset --hard`, `git clean -fd` khi chưa hiểu — chúng **xóa vĩnh viễn** code chưa commit.
+> Không chắc → chụp màn hình `git status` gửi nhóm trước khi làm gì tiếp.
+
+| Tình huống | Cách cứu |
+|---|---|
+| **Sửa file rồi muốn bỏ hết thay đổi của file đó** (chưa commit) | `git checkout -- <file>` (mất thay đổi của file đó) |
+| **Lỡ `git add` file không muốn commit** | `git restore --staged <file>` (file vẫn giữ nguyên nội dung) |
+| **Commit message viết sai** (chưa push) | `git commit --amend -m "message đúng"` |
+| **Quên thêm 1 file vào commit vừa rồi** (chưa push) | `git add <file>` → `git commit --amend --no-edit` |
+| **Commit lỡ code thẳng vào `develop` ở máy** (chưa push) | Gửi `git status` + `git log --oneline -5` cho trưởng nhóm, nhờ chuyển giúp sang nhánh tên bạn. Đừng tự `reset` |
+| **Code dở trên `develop` chưa commit** | `git stash` → `git checkout <ten-cua-ban>` → `git stash pop` — thay đổi chuyển sang nhánh của bạn, rồi commit bình thường. Có conflict khi `pop` → dừng, hỏi nhóm (stash vẫn còn, không mất) |
+| **Lỡ bấm "Delete branch" trên GitHub sau khi PR merge** | Không mất gì: nhánh ở máy bạn vẫn còn. Chạy `git push -u origin <ten-cua-ban>` để đưa lại lên |
+| **Đang code dở, cần chuyển nhánh gấp** | `git stash` (cất tạm) → chuyển nhánh làm việc khác → quay lại → `git stash pop` |
+| **Commit đã push mà sai, cần bỏ** | `git revert <mã-commit>` — tạo commit mới đảo ngược, an toàn với người khác. **Không** sửa lịch sử đã push |
+| **`git push` bị từ chối** (`rejected ... fetch first`) | Có commit mới trên GitHub mà máy bạn chưa có: `git pull` → (gỡ conflict nếu có) → `git push`. **Không** dùng `--force` |
+| **PR hiện hàng trăm dòng thay đổi lạ** | Thường do Prettier format cả file hoặc kiểu xuống dòng. Xem lại [§2 Bước 5](#bước-5--cấu-hình-prettier-️-đọc-kỹ); nhờ nhóm giúp trả các dòng thừa |
+| **PR nhắm nhầm vào `main`** | Trên trang PR, bấm **Edit** cạnh tiêu đề → đổi base thành `develop` |
+| **Commit nhầm mật khẩu / token** | Báo trưởng nhóm **ngay**, đổi mật khẩu/token đó. Xóa khỏi code thôi là chưa đủ: nó vẫn nằm trong lịch sử |
+
+Xem mã commit: `git log --oneline -10` (dãy 7 ký tự đầu mỗi dòng).
+
+---
+
+## 9. Release và hotfix
+
+> Phần này **trưởng nhóm** làm. Thành viên chỉ cần biết để hiểu `main` và tag từ đâu ra.
+
+### 9.1 Release (vd V2 ngày 30/10/2026)
+
+1. Cả nhóm chạy lại toàn bộ Scenario của release trên bản preview của `develop`.
+2. Đi qua checklist [06_trien_khai.md §5](docs/guides/06_trien_khai.md#5-checklist-trước-khi-release-merge-develop--main).
+3. Mở PR **`develop` → `main`**, merge.
+4. Gắn tag:
+   ```bash
+   git checkout main && git pull origin main
+   git tag -a v2.0.0 -m "Release V2"
+   git push origin v2.0.0
+   ```
+
+### 9.2 Hotfix (lỗi nghiêm trọng trên bản đã phát hành)
+
+```bash
+git checkout main && git pull origin main
+git checkout -b hotfix/player-crash
+# sửa, commit: fix(watch): ...
+git push -u origin hotfix/player-crash
+```
+Mở PR vào **`main`**. Merge xong, mở thêm PR `main` → `develop` để `develop` cũng có bản sửa.
+Bạn thấy lỗi khẩn trên bản thật → **báo trưởng nhóm**, đừng tự tạo hotfix.
+
+---
+
+## 10. Checklist trước khi tạo PR
+
+Đầy đủ: [Definition of Done trong AGENTS.md §5](AGENTS.md#5-definition-of-done). Bản rút gọn:
+
+- [ ] Đang ở nhánh tên mình, đã `git pull origin develop` mới nhất, mở web vẫn chạy.
+- [ ] Đạt đủ các Scenario trong tiêu chí chấp nhận của US (chưa kiểm được cái nào → ghi rõ trong PR).
+- [ ] Console không có lỗi đỏ; header, footer, tìm kiếm, nút ♥, menu mobile vẫn chạy.
+- [ ] Responsive 375px / 768px / ≥1200px, không cuộn ngang.
+- [ ] Không `console.log` debug, không `fetch(` trong file trang, không màu/URL hardcode, không `style="..."` mới.
+- [ ] Dữ liệu ngoài đưa vào `innerHTML` đã qua `escapeHtml()`.
+- [ ] Không bí mật (mật khẩu, token, `.env`), `js/config.js` không còn `localhost`.
+- [ ] `git diff origin/develop --stat` chỉ có file bạn sở hữu / liên quan đến các US trong PR; không có file bị format lại toàn bộ.
+- [ ] Đụng CORE: đã báo nhóm, commit CORE tách riêng, đã test ≥ 3 trang, đã cập nhật [core_registry.md](docs/specs/core_registry.md).
+- [ ] Commit tiếng Anh, có mã US. PR base = `develop`, mô tả theo mẫu [§5.2](#52-mẫu-mô-tả-pr).
+
+---
+
+## 11. Từ điển thuật ngữ
+
+| Từ | Nghĩa |
+|---|---|
+| **Repository (repo)** | Thư mục dự án có lịch sử Git |
+| **Clone** | Tải repo từ GitHub về máy lần đầu |
+| **Branch (nhánh)** | Một dòng phát triển riêng; sửa trên nhánh này không ảnh hưởng nhánh khác |
+| **Commit** | Một mốc lưu thay đổi, có message mô tả |
+| **Stage / `git add`** | Chọn thay đổi nào sẽ vào commit kế tiếp |
+| **Push** | Đẩy commit từ máy lên GitHub |
+| **Fetch** | Tải thông tin mới từ GitHub về, **chưa** trộn vào code của bạn |
+| **Pull** | Fetch + merge: tải về **và** trộn vào nhánh hiện tại |
+| **Merge** | Trộn thay đổi của nhánh này vào nhánh kia |
+| **Conflict** | Hai bên sửa cùng chỗ, Git cần bạn chọn |
+| **Pull Request (PR)** | Đề nghị trộn nhánh của bạn vào `develop`, kèm review |
+| **Review / Approve** | Người khác đọc code, góp ý / đồng ý cho merge |
+| **`origin`** | Tên mặc định của repo trên GitHub mà bạn clone về |
+| **`origin/develop`** | Bản `develop` trên GitHub mà máy bạn biết ở lần `fetch` gần nhất |
+| **HEAD** | Vị trí bạn đang đứng (nhánh/commit hiện tại) |
+| **Stash** | Cất tạm thay đổi chưa commit để chuyển nhánh |
+| **Revert** | Tạo commit mới đảo ngược một commit cũ |
+| **Tag** | Nhãn đánh dấu một phiên bản, vd `v2.0.0` |
+| **Hotfix** | Sửa gấp lỗi trên bản đã phát hành (`main`) |
+| **CODEOWNERS** | File chỉ định ai bắt buộc phải duyệt PR |
+| **US-xx** | Mã User Story trong backlog — mỗi task gắn với một mã |
+| **CORE / PAGE** | File dùng chung cho mọi trang / file riêng của một trang ([AGENTS.md §3](AGENTS.md#3-bản-đồ-file-core-vs-page)) |
+
+---
+
+Có gì trong file này chưa rõ hoặc sai với thực tế → sửa nó trên nhánh của bạn và mở PR (commit `docs(contributing): ...`). Đó cũng là cách tốt để tập quy trình lần đầu. 🎬

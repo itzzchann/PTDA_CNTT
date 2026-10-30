@@ -8,13 +8,13 @@
 ```
 1. Nhận US    → mở product_backlog.xlsx: đọc User Story (Bảng 2) + Acceptance Criteria & Testing (Bảng 3)
 2. Phân loại  → tạo file mới hay sửa file cũ? Đụng CORE? Cần backend? (AGENTS.md §3)
-3. Sync       → git checkout develop && git pull upstream develop
-4. Branch     → git checkout -b feat/us-26-category-page
+3. Branch     → git checkout <ten-cua-ban>   (mỗi người 1 nhánh dùng suốt dự án — CONTRIBUTING §4.1)
+4. Sync       → git pull origin develop
 5. Tra cứu    → core_registry.md: liệt kê hàm/class dùng lại
 6. Code       → theo skill trong docs/skills/
 7. Kiểm       → chạy từng Scenario của US + 06_kiem_thu_thu_cong_skill.md
 8. Commit     → feat(category): add category listing page (US-26)
-9. Sync lại   → git fetch upstream && git merge upstream/develop  (giải conflict, kiểm lại bước 7)
+9. Sync lại   → git fetch origin && git merge origin/develop  (giải conflict, kiểm lại bước 7)
 10. PR        → base: develop. Mô tả: US, Scenario đã pass, "Sửa CORE: Có/Không — file nào"
 11. Doc       → cập nhật docs/ liên quan + bảng trạng thái trong 07_lo_trinh_va_backlog.md
 ```
