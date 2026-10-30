@@ -61,7 +61,8 @@ Route không viết SQL; service không đụng `req`/`res`.
 | `express` | HTTP server |
 | `pg` | Kết nối PostgreSQL (dùng **query có tham số** `$1, $2` — không ghép chuỗi SQL) |
 | `node-pg-migrate` | Migration CSDL |
-| `bcrypt` | Băm mật khẩu (cost 10–12) |
+| `bcryptjs` | Băm mật khẩu bằng thuật toán bcrypt (cost 10–12). Bản thuần JS — không cần biên dịch native nên cài được trên mọi máy (Windows không cần build tools) |
+| `google-auth-library` | Xác minh `credential` của đăng nhập Google (`verifyIdToken`) |
 | `jsonwebtoken` | Ký / kiểm JWT |
 | `zod` | Validate body/query |
 | `cors`, `helmet` | CORS theo `CORS_ORIGINS`, header bảo mật |
@@ -181,6 +182,7 @@ const { rows } = await db.query(
 # PostgreSQL bằng Docker
 docker run -d --name rophim-db -e POSTGRES_USER=rophim -e POSTGRES_PASSWORD=rophim -e POSTGRES_DB=rophim -p 5432:5432 postgres:16
 
+cd server                     # mọi lệnh npm chạy trong thư mục server/
 cp .env.example .env
 npm install
 npm run migrate up
