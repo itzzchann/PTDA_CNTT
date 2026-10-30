@@ -61,9 +61,9 @@ server/
     ├── config.js         đọc + kiểm tra biến môi trường (thiếu → dừng ngay)
     ├── db.js             Pool PostgreSQL dùng chung, query($1, $2...)
     ├── errors.js         AppError(status, code, message, fields?)
-    ├── middlewares/      error-handler, validate (zod) — auth, maintenance: sắp có
+    ├── middlewares/      auth (requireAuth / optionalAuth / requireRole), rate-limit, validate (zod), error-handler — maintenance: sắp có
     ├── routes/           1 file / nhóm endpoint, MỖI FILE MỘT NGƯỜI SỞ HỮU (ghi ở đầu file)
-    ├── services/         logic + SQL (tạo khi cần)
+    ├── services/         logic + SQL — auth.service.js (toPublicUser, findUserById dùng chung)
     └── scripts/          seed-admin.js
 ```
 
@@ -76,9 +76,32 @@ server/
 `ratings` (1 người 1 điểm / phim) · `favorites` · `watch_history` (giây đang xem `progress`) · `view_events` · `settings` (JSONB).
 Chi tiết: `migrations/*_init-schema.js`. Tên cột `snake_case` → SQL trả về phải `AS "camelCase"` đúng hợp đồng (skill 08 §4).
 
+## Dùng xác thực trong route của bạn
+
+```js
+const { requireAuth, optionalAuth, requireRole } = require("../middlewares/auth");
+
+router.post("/movies/:slug/comments", requireAuth, handler);                       // req.user = bản ghi users
+router.get("/movies/:slug/ratings", optionalAuth, handler);                        // req.user hoặc null (khách)
+router.get("/admin/stats", requireAuth, requireRole("admin", "super_admin"), handler);
+```
+- `req.user` đọc lại từ CSDL mỗi request → bị khóa là chặn ngay (`403 ACCOUNT_BANNED`). Không tin `role`/`userId` từ body.
+- Trả user ra ngoài **luôn** qua `toPublicUser(row)` (`services/auth.service.js`) — không lộ `password_hash`, `google_id`;
+  `email` chỉ khi `toPublicUser(row, { includeEmail: true })` cho chính chủ / admin.
+- Cần giới hạn tốc độ (vd gửi bình luận): `createLimiter({ windowMs, limit, message })` trong `middlewares/rate-limit.js`.
+
 ## Thử nhanh bằng curl
 
 ```bash
 curl -s localhost:3000/api/health              # {"status":"ok"}
 curl -s localhost:3000/api/khong-co            # 404 NOT_FOUND
+
+curl -s -X POST localhost:3000/api/auth/register -H "Content-Type: application/json" \
+  -d '{"username":"tester","email":"t@example.com","password":"12345678"}'          # 201 { data: { token, user } }
+TOKEN=$(curl -s -X POST localhost:3000/api/auth/login -H "Content-Type: application/json" \
+  -d '{"login":"tester","password":"12345678"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).data.token')
+curl -s localhost:3000/api/auth/me -H "Authorization: Bearer $TOKEN"               # 200 { data: { user } }
+curl -s -X POST localhost:3000/api/auth/login -H "Content-Type: application/json" \
+  -d '{"login":"tester","password":"sai"}'                                           # 401 INVALID_CREDENTIALS
 ```
+Đăng nhập Google: chỉ thử được bằng trình duyệt qua `login.html` (cần `GOOGLE_CLIENT_ID` ở cả `.env` lẫn `js/config.js`).

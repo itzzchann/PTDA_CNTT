@@ -43,6 +43,7 @@ Trong frontend: `const res = await fetchBackend(...)` → payload ở **`res.dat
 | 404 | `NOT_FOUND`, `MOVIE_NOT_FOUND` | Không có tài nguyên / slug phim không tồn tại trên phimapi (US-60 Scenario 2) |
 | 409 | `CONFLICT` | Trùng username/email |
 | 429 | `RATE_LIMITED` | Gửi quá nhanh (đăng nhập, bình luận) |
+| 503 | `GOOGLE_LOGIN_DISABLED` | Server chưa cấu hình `GOOGLE_CLIENT_ID` — frontend ẩn / tắt nút Google |
 | 503 | `MAINTENANCE` | Đang bảo trì — mọi request ghi của non-admin (US-62) |
 
 ---
