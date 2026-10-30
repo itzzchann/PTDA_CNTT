@@ -20,6 +20,7 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `API_CONFIG.TIMEOUT_MS` | `15000` | api `fetchAPI` |
 | `BACKEND_CONFIG.BASE_URL` | `""` = chưa có backend; production `"/api"` — [06_trien_khai.md](../guides/06_trien_khai.md) | api `fetchBackend` |
 | `BACKEND_CONFIG.ENDPOINTS.*` | Endpoint backend, placeholder `[slug]`, `[id]` — [backend_api_contract.md](backend_api_contract.md) | (V2) |
+| `BACKEND_CONFIG.GOOGLE_CLIENT_ID` | Client ID OAuth của Google (công khai, không phải bí mật). `""` = chưa cấu hình → ẩn nút Google. Endpoint đi kèm: `ENDPOINTS.GOOGLE_LOGIN` = `/auth/google` (US-18) | (V2) login |
 | `BACKEND_CONFIG.TIMEOUT_MS` | `60000` — dài vì Render free cần 30–60s để "thức dậy" | api `fetchBackend` |
 | `APP_CONFIG.APP_NAME` | `"RoPhim"` | catalog, detail, search, watch (title) |
 | `APP_CONFIG.ITEMS_PER_PAGE` | `24` (= số phim/trang của phimapi) | — |

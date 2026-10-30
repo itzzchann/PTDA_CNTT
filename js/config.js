@@ -42,6 +42,7 @@ const BACKEND_CONFIG = {
   ENDPOINTS: {
     REGISTER: "/auth/register",
     LOGIN: "/auth/login",
+    GOOGLE_LOGIN: "/auth/google",
     LOGOUT: "/auth/logout",
     ME: "/auth/me",
 
@@ -63,6 +64,10 @@ const BACKEND_CONFIG = {
     ADMIN_COMMENTS: "/admin/comments",
     ADMIN_COMMENT: "/admin/comments/[id]",
   },
+
+  // Client ID của Google là thông tin công khai (Google thiết kế để nằm trong trang web), không phải bí mật.
+  // Rỗng = chưa cấu hình: login.html tự ẩn nút "Đăng nhập bằng Google". KHÔNG dán Client secret vào đây.
+  GOOGLE_CLIENT_ID: "",
 
   // Render gói free "ngủ" khi không có request — lần gọi đầu có thể mất 30–60 giây.
   TIMEOUT_MS: 60000,
