@@ -129,9 +129,20 @@
     );
   }
 
+  const SEASON_PATTERN = /(?:Phần|Mùa|Season)\s*(\d+)/i;
+
   function getSeasonNumber(name) {
-    const match = String(name).match(/Phần (\d+)/i);
+    const match = String(name).match(SEASON_PATTERN);
     return match ? parseInt(match[1], 10) : 1;
+  }
+
+  // "Nhiệm Vụ: Gia Đình Yozakura (Phần 2) (Yozakura-san…)" → "Nhiệm Vụ: Gia Đình Yozakura"
+  function getSeriesBaseName(name) {
+    return String(name)
+      .replace(new RegExp(SEASON_PATTERN.source, "gi"), "")
+      .split("(")[0]
+      .replace(/[\s:\u2013-]+$/, "")
+      .trim();
   }
 
   // ===== Thông tin phim =====
@@ -575,27 +586,45 @@
   async function renderSeasons() {
     const seasonList = document.getElementById("season-list");
     const currentSeasonText = document.getElementById("current-season-text");
+    const seasonSelector = document.querySelector(".season-selector");
+    const dividerVertical = seasonSelector
+      ? seasonSelector.nextElementSibling
+      : null;
     if (!seasonList) return;
 
     const movieName = state.movie.name;
     const currentSeasonNum = getSeasonNumber(movieName);
     if (currentSeasonText) currentSeasonText.textContent = `Phần ${currentSeasonNum}`;
-    seasonList.innerHTML = `<a href="#" class="season-item active">Phần ${currentSeasonNum}</a>`;
 
-    const baseName = movieName.replace(/[([-]?\s*Phần \d+\s*[)\]]?/gi, "").trim();
+    const baseName = getSeriesBaseName(movieName);
     const res = await searchMovies(baseName);
     if (!res.success) return;
 
     const seasons = new Map();
+    // Phim đang xem phải luôn có trong danh sách
+    seasons.set(currentSeasonNum, state.movie.slug);
+
     extractMovieItems(res)
-      .filter((m) => m.name.toLowerCase().includes(baseName.toLowerCase()))
+      .filter((m) => getSeriesBaseName(m.name).toLowerCase() === baseName.toLowerCase())
       .forEach((m) => {
-        const hasSeason = /Phần \d+/i.test(m.name);
-        if (!hasSeason && m.name.length >= baseName.length + 5) return;
         const num = getSeasonNumber(m.name);
         if (!seasons.has(num)) seasons.set(num, m.slug);
       });
-    if (seasons.size === 0) return;
+
+    // Chỉ hiện mục chọn phần khi có từ 2 phần trở lên (US-48 Sc1)
+    if (seasons.size < 2) {
+      if (seasonSelector) seasonSelector.hidden = true;
+      if (dividerVertical && dividerVertical.classList.contains("divider-vertical")) {
+        dividerVertical.hidden = true;
+      }
+      return;
+    }
+
+    // Có nhiều phần → hiện selector
+    if (seasonSelector) seasonSelector.hidden = false;
+    if (dividerVertical && dividerVertical.classList.contains("divider-vertical")) {
+      dividerVertical.hidden = false;
+    }
 
     seasonList.innerHTML = [...seasons.entries()]
       .sort((a, b) => a[0] - b[0])
