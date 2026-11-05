@@ -8,6 +8,15 @@
   const NON_LATIN_PATTERN = /[぀-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ]/;
   const CAST_COLORS = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#34495e"];
 
+  // Cài đặt trình phát được lưu bền vững (US-19 Sc2: giữ âm lượng, tắt đèn, tự chuyển tập)
+  const DEFAULT_PREFS = { volume: 1, lightsOff: false, autoNext: true };
+  function getUserPrefs() {
+    return { ...DEFAULT_PREFS, ...getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {}) };
+  }
+  function setUserPref(name, value) {
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...getUserPrefs(), [name]: value });
+  }
+
   const state = {
     movie: null,
     episode: "1",
@@ -32,6 +41,7 @@
     setupEpisodeControls();
     setupPlayerShortcuts();
     setupCommentSection();
+    applyUserPreferences();
 
     // Ghi lại tiến độ xem định kỳ (5s) và khi tạm dừng hoặc rời trang (US-52 Sc1)
     const video = document.getElementById("hls-player");
@@ -49,6 +59,24 @@
     }
 
     loadMovie(slug);
+  }
+
+  function applyUserPreferences() {
+    const prefs = getUserPrefs();
+
+    // 1. Tự chuyển tập
+    const autoNextToggle = document.getElementById("auto-next-toggle");
+    if (autoNextToggle) {
+      autoNextToggle.checked = Boolean(prefs.autoNext);
+    }
+
+    // 2. Chế độ tắt đèn
+    if (prefs.lightsOff) {
+      document.body.classList.add("lights-off");
+      const lightsBtn = document.getElementById("lights-btn");
+      const label = lightsBtn?.querySelector("span");
+      if (label) label.textContent = "Bật đèn";
+    }
   }
 
   async function loadMovie(slug) {
@@ -439,7 +467,12 @@
       video.volume = Math.min(1, Math.max(0, value));
       volumeSlider.value = video.volume;
       updateVolumeIcon();
+      setUserPref("volume", video.volume);
     };
+
+    // Khôi phục mức âm lượng đã lưu (US-19 Sc2)
+    const savedPrefs = getUserPrefs();
+    setVolume(typeof savedPrefs.volume === "number" ? savedPrefs.volume : 1);
 
     video.onplay = () => setPlayIcon("pause");
     video.onpause = () => setPlayIcon("play");
@@ -797,6 +830,12 @@
       const isOff = document.body.classList.toggle("lights-off");
       const label = lightsBtn.querySelector("span");
       if (label) label.textContent = isOff ? "Bật đèn" : "Tắt đèn";
+      setUserPref("lightsOff", isOff);
+    });
+
+    // Lưu tùy chọn tự động chuyển tập khi người dùng thay đổi (US-19 Sc2)
+    document.getElementById("auto-next-toggle")?.addEventListener("change", (e) => {
+      setUserPref("autoNext", e.target.checked);
     });
 
     document.getElementById("favorite-btn")?.addEventListener("click", () => {
