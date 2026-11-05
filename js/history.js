@@ -81,9 +81,20 @@
 
     const watchedInfo = document.createElement("div");
     watchedInfo.className = "movie-added-at";
-    watchedInfo.textContent = `Đang xem: ${formatEpisodeName(episode)} · ${formatDate(movie.watchedAt)}`;
+    const progressText = movie.progress > 0 ? ` · ${formatProgressTime(movie.progress)}` : "";
+    watchedInfo.textContent = `Đang xem: ${formatEpisodeName(episode)}${progressText} · ${formatDate(movie.watchedAt)}`;
     card.querySelector(".movie-info")?.appendChild(watchedInfo);
 
     return card;
+  }
+
+  // Định dạng giây thành mm:ss hoặc hh:mm:ss cho trang lịch sử (US-53)
+  function formatProgressTime(seconds) {
+    const total = Math.floor(Number(seconds) || 0);
+    if (total <= 0) return "";
+    const h = Math.floor(total / 3600);
+    const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+    const s = String(total % 60).padStart(2, "0");
+    return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
   }
 })();
