@@ -16,6 +16,7 @@
     hls: null,
     player: null,
     commentTab: "comments",
+    resumeAt: 0,
   };
 
   document.addEventListener("DOMContentLoaded", initWatchPage);
@@ -31,6 +32,16 @@
     setupEpisodeControls();
     setupPlayerShortcuts();
     setupCommentSection();
+
+    // Ghi lại tiến độ xem định kỳ (5s) và khi tạm dừng hoặc rời trang (US-52 Sc1)
+    const video = document.getElementById("hls-player");
+    const saveProgress = () => {
+      if (!state.movie || !video || !video.duration) return;
+      saveWatchHistory(state.movie, state.episode, Math.floor(video.currentTime));
+    };
+    video?.addEventListener("timeupdate", throttle(saveProgress, 5000));
+    video?.addEventListener("pause", saveProgress);
+    window.addEventListener("pagehide", saveProgress);
 
     if (!slug) {
       showLoadFailure("Không tìm thấy phim. Đường dẫn thiếu mã phim.");
@@ -76,7 +87,11 @@
     loadRecommendations();
     renderComments();
 
-    saveWatchHistory(movie, state.episode, 0);
+    // Đọc vị trí xem trước đó TRƯỚC khi ghi đè (US-52, US-53)
+    const previous = getStoredList(STORAGE_KEYS.WATCH_HISTORY).find((h) => h.slug === movie.slug);
+    state.resumeAt =
+      previous && String(previous.episode) === String(state.episode) ? Number(previous.progress) || 0 : 0;
+    saveWatchHistory(movie, state.episode, state.resumeAt);
   }
 
   // Không tải được phim: báo ngay trong khung video, ẩn các khu vực phụ thuộc dữ liệu phim.
@@ -231,6 +246,16 @@
     if (qualitySelector) qualitySelector.hidden = true;
 
     const canUseHls = ep.link_m3u8 && ep.link_m3u8.includes(".m3u8") && video;
+
+    // Phát tiếp đúng giây sau khi tải metadata (US-53 Sc1)
+    const onResumeMetadata = () => {
+      if (state.resumeAt > 5 && video.duration && video.duration - state.resumeAt > 10) {
+        video.currentTime = state.resumeAt;
+        showToast(`Tiếp tục xem từ ${formatTime(state.resumeAt)}`);
+      }
+      state.resumeAt = 0;
+    };
+    video?.addEventListener("loadedmetadata", onResumeMetadata, { once: true });
 
     if (canUseHls && window.Hls && Hls.isSupported()) {
       showVideoElement(video, iframe);
@@ -592,6 +617,7 @@
     state.episode = episodeName;
     state.server = serverIdx;
     state.selectedServer = serverIdx;
+    state.resumeAt = 0; // Đổi tập mới -> bắt đầu từ 0 (US-52, US-53)
     renderVideo();
     renderServerTabs();
     renderEpisodes();
