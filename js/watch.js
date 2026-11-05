@@ -238,6 +238,14 @@
     } else if (canUseHls && video.canPlayType("application/vnd.apple.mpegurl")) {
       showVideoElement(video, iframe);
       video.src = ep.link_m3u8;
+      video.addEventListener(
+        "error",
+        () => {
+          console.warn("Lỗi video native, chuyển sang iframe dự phòng");
+          showEmbedPlayer(ep.link_embed);
+        },
+        { once: true },
+      );
       video.addEventListener("loadedmetadata", () => video.play().catch(() => {}), { once: true });
       initCustomControls(video);
     } else {
@@ -320,12 +328,29 @@
     const label = document.getElementById("current-quality-label");
     if (!selector || !currentBtn || !menu) return;
 
-    const levels = hls.levels;
-    selector.hidden = levels.length <= 1;
-    if (levels.length <= 1) return;
+    const levels = Array.isArray(hls.levels) ? hls.levels : [];
+    const uniqueHeights = new Set(
+      levels
+        .map((level) => level.height)
+        .filter((h) => typeof h === "number" && h > 0),
+    );
 
+    // US-43 Sc3: Phim chỉ có 1 mức chất lượng (hoặc không có mức rõ ràng) -> ẩn nút chọn chất lượng.
+    if (levels.length <= 1 || uniqueHeights.size <= 1) {
+      selector.hidden = true;
+      return;
+    }
+    selector.hidden = false;
+
+    // Lọc các mức duy nhất theo độ phân giải, sắp xếp từ cao xuống thấp
+    const seenHeights = new Set();
     const sortedLevels = levels
       .map((level, index) => ({ height: level.height, index }))
+      .filter((level) => {
+        if (!level.height || seenHeights.has(level.height)) return false;
+        seenHeights.add(level.height);
+        return true;
+      })
       .sort((a, b) => b.height - a.height);
 
     menu.innerHTML =
