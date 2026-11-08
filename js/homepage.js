@@ -16,10 +16,15 @@
   async function loadHomeSection(section) {
     renderSkeleton(section.gridId, ITEMS_PER_SECTION);
 
+    // US-60: admin ghim phim nổi bật (pinnedHeroSlug) → hero hiện phim đó thay vì phim mới nhất.
+    if (section.isHeroSource && !pinnedHeroLoaded) {
+      loadPinnedHeroThen(section);
+    }
+
     const res = await section.fetchList();
     const items = extractMovieItems(res);
 
-    if (section.isHeroSource) {
+    if (section.isHeroSource && !pinnedHeroLoaded) {
       if (items.length > 0) loadHero(items[0].slug);
       else showHeroFallback();
     }
@@ -42,6 +47,18 @@
       .slice(0, ITEMS_PER_SECTION)
       .map(createMovieCard)
       .join("");
+  }
+
+  // Ghim hero: đọc settings 1 lần. Có pinnedHeroSlug → hero theo phim ghim (kể cả khi lỗi phimapi,
+  // grid phim mới vẫn render riêng); slug rỗng/null → hero theo phim mới nhất như mặc định.
+  let pinnedHeroLoaded = false;
+
+  async function loadPinnedHeroThen(section) {
+    pinnedHeroLoaded = true;
+    const res = await getSiteSettings();
+    const pinned = res.success ? res.data?.data?.pinnedHeroSlug : null;
+    if (pinned) loadHero(pinned);
+    // pinned rỗng/lỗi settings → bỏ qua, loadHomeSection vẫn tự chạy nhánh phim mới nhất
   }
 
   async function loadHero(slug) {

@@ -36,6 +36,18 @@ async function fetchAPI(url, options = {}) {
   }
 }
 
+// Nguồn phim hiện hành: admin có thể đổi sang máy chủ dự phòng qua settings (US-62 Sc1).
+// getSiteSettings() xong sẽ ghi đè; mọi wrapper phimapi đọc biến này khi gọi.
+let movieApiBaseUrl = API_CONFIG.BASE_URL;
+
+function getMovieApiBaseUrl() {
+  return movieApiBaseUrl;
+}
+
+function setMovieApiBaseUrl(url) {
+  movieApiBaseUrl = url || API_CONFIG.BASE_URL;
+}
+
 /**
  * Gọi backend riêng của RoPhim (tài khoản, bình luận, admin). Tự gắn token đăng nhập.
  * Trả về cùng dạng với fetchAPI: { success, status, data | error }.
@@ -73,17 +85,17 @@ async function fetchBackend(path, options = {}) {
 }
 
 async function getNewMovies(page = 1) {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MOVIES_LIST}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${API_CONFIG.ENDPOINTS.MOVIES_LIST}?page=${page}`;
   return await fetchAPI(url);
 }
 
 async function getCategoriesList() {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORIES_LIST}`;
+  const url = `${getMovieApiBaseUrl()}${API_CONFIG.ENDPOINTS.CATEGORIES_LIST}`;
   return await fetchAPI(url);
 }
 
 async function getCountriesList() {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COUNTRIES_LIST}`;
+  const url = `${getMovieApiBaseUrl()}${API_CONFIG.ENDPOINTS.COUNTRIES_LIST}`;
   return await fetchAPI(url);
 }
 
@@ -92,7 +104,7 @@ async function getMovieDetail(slug) {
     "[slug]",
     encodeURIComponent(slug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}`;
   return await fetchAPI(url);
 }
 
@@ -101,7 +113,7 @@ async function searchMovies(keyword, page = 1) {
     "[keyword]",
     encodeURIComponent(keyword),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}&page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}&page=${page}`;
   return await fetchAPI(url);
 }
 
@@ -110,7 +122,7 @@ async function getMoviesByCategory(categorySlug, page = 1) {
     "[slug]",
     encodeURIComponent(categorySlug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}?page=${page}`;
   return await fetchAPI(url);
 }
 
@@ -119,17 +131,17 @@ async function getMoviesByCountry(countrySlug, page = 1) {
     "[slug]",
     encodeURIComponent(countrySlug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}?page=${page}`;
   return await fetchAPI(url);
 }
 
 async function getSingleMovies(page = 1) {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SINGLE_MOVIES}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${API_CONFIG.ENDPOINTS.SINGLE_MOVIES}?page=${page}`;
   return await fetchAPI(url);
 }
 
 async function getSeriesMovies(page = 1) {
-  const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SERIES_MOVIES}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${API_CONFIG.ENDPOINTS.SERIES_MOVIES}?page=${page}`;
   return await fetchAPI(url);
 }
 
@@ -196,7 +208,7 @@ async function getMovieImages(slug) {
     "[slug]",
     encodeURIComponent(slug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}`;
   return await fetchAPI(url);
 }
 
@@ -227,7 +239,7 @@ async function getMoviePeoples(slug) {
     "[slug]",
     encodeURIComponent(slug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}`;
   return await fetchAPI(url);
 }
 
@@ -236,7 +248,7 @@ async function getMovieKeywords(slug) {
     "[slug]",
     encodeURIComponent(slug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}`;
   return await fetchAPI(url);
 }
 
@@ -245,7 +257,7 @@ async function getMoviesByListSlug(listSlug, page = 1) {
     "[slug]",
     encodeURIComponent(listSlug),
   );
-  const url = `${API_CONFIG.BASE_URL}${endpoint}?page=${page}`;
+  const url = `${getMovieApiBaseUrl()}${endpoint}?page=${page}`;
   return await fetchAPI(url);
 }
 
@@ -474,5 +486,7 @@ if (typeof module !== "undefined" && module.exports) {
     getAdminComments,
     flagCommentSpoiler,
     deleteAdminComment,
+    getMovieApiBaseUrl,
+    setMovieApiBaseUrl,
   };
 }
