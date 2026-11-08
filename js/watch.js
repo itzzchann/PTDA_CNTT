@@ -8,6 +8,15 @@
   const NON_LATIN_PATTERN = /[぀-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ]/;
   const CAST_COLORS = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#34495e"];
 
+  // Cài đặt trình phát được lưu bền vững (US-19 Sc2: giữ âm lượng, tắt đèn, tự chuyển tập)
+  const DEFAULT_PREFS = { volume: 1, lightsOff: false, autoNext: true };
+  function getUserPrefs() {
+    return { ...DEFAULT_PREFS, ...getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {}) };
+  }
+  function setUserPref(name, value) {
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...getUserPrefs(), [name]: value });
+  }
+
   const state = {
     movie: null,
     episode: "1",
@@ -16,6 +25,7 @@
     hls: null,
     player: null,
     commentTab: "comments",
+    resumeAt: 0,
   };
 
   document.addEventListener("DOMContentLoaded", initWatchPage);
@@ -31,6 +41,17 @@
     setupEpisodeControls();
     setupPlayerShortcuts();
     setupCommentSection();
+    applyUserPreferences();
+
+    // Ghi lại tiến độ xem định kỳ (5s) và khi tạm dừng hoặc rời trang (US-52 Sc1)
+    const video = document.getElementById("hls-player");
+    const saveProgress = () => {
+      if (!state.movie || !video || !video.duration) return;
+      saveWatchHistory(state.movie, state.episode, Math.floor(video.currentTime));
+    };
+    video?.addEventListener("timeupdate", throttle(saveProgress, 5000));
+    video?.addEventListener("pause", saveProgress);
+    window.addEventListener("pagehide", saveProgress);
 
     if (!slug) {
       showLoadFailure("Không tìm thấy phim. Đường dẫn thiếu mã phim.");
@@ -38,6 +59,24 @@
     }
 
     loadMovie(slug);
+  }
+
+  function applyUserPreferences() {
+    const prefs = getUserPrefs();
+
+    // 1. Tự chuyển tập
+    const autoNextToggle = document.getElementById("auto-next-toggle");
+    if (autoNextToggle) {
+      autoNextToggle.checked = Boolean(prefs.autoNext);
+    }
+
+    // 2. Chế độ tắt đèn
+    if (prefs.lightsOff) {
+      document.body.classList.add("lights-off");
+      const lightsBtn = document.getElementById("lights-btn");
+      const label = lightsBtn?.querySelector("span");
+      if (label) label.textContent = "Bật đèn";
+    }
   }
 
   async function loadMovie(slug) {
@@ -76,7 +115,11 @@
     loadRecommendations();
     renderComments();
 
-    saveWatchHistory(movie, state.episode, 0);
+    // Đọc vị trí xem trước đó TRƯỚC khi ghi đè (US-52, US-53)
+    const previous = getStoredList(STORAGE_KEYS.WATCH_HISTORY).find((h) => h.slug === movie.slug);
+    state.resumeAt =
+      previous && String(previous.episode) === String(state.episode) ? Number(previous.progress) || 0 : 0;
+    saveWatchHistory(movie, state.episode, state.resumeAt);
   }
 
   // Không tải được phim: báo ngay trong khung video, ẩn các khu vực phụ thuộc dữ liệu phim.
@@ -129,9 +172,20 @@
     );
   }
 
+  const SEASON_PATTERN = /(?:Phần|Mùa|Season)\s*(\d+)/i;
+
   function getSeasonNumber(name) {
-    const match = String(name).match(/Phần (\d+)/i);
+    const match = String(name).match(SEASON_PATTERN);
     return match ? parseInt(match[1], 10) : 1;
+  }
+
+  // "Nhiệm Vụ: Gia Đình Yozakura (Phần 2) (Yozakura-san…)" → "Nhiệm Vụ: Gia Đình Yozakura"
+  function getSeriesBaseName(name) {
+    return String(name)
+      .replace(new RegExp(SEASON_PATTERN.source, "gi"), "")
+      .split("(")[0]
+      .replace(/[\s:\u2013-]+$/, "")
+      .trim();
   }
 
   // ===== Thông tin phim =====
@@ -221,12 +275,30 @@
 
     const canUseHls = ep.link_m3u8 && ep.link_m3u8.includes(".m3u8") && video;
 
+    // Phát tiếp đúng giây sau khi tải metadata (US-53 Sc1)
+    const onResumeMetadata = () => {
+      if (state.resumeAt > 5 && video.duration && video.duration - state.resumeAt > 10) {
+        video.currentTime = state.resumeAt;
+        showToast(`Tiếp tục xem từ ${formatTime(state.resumeAt)}`);
+      }
+      state.resumeAt = 0;
+    };
+    video?.addEventListener("loadedmetadata", onResumeMetadata, { once: true });
+
     if (canUseHls && window.Hls && Hls.isSupported()) {
       showVideoElement(video, iframe);
       playWithHlsJs(video, ep);
     } else if (canUseHls && video.canPlayType("application/vnd.apple.mpegurl")) {
       showVideoElement(video, iframe);
       video.src = ep.link_m3u8;
+      video.addEventListener(
+        "error",
+        () => {
+          console.warn("Lỗi video native, chuyển sang iframe dự phòng");
+          showEmbedPlayer(ep.link_embed);
+        },
+        { once: true },
+      );
       video.addEventListener("loadedmetadata", () => video.play().catch(() => {}), { once: true });
       initCustomControls(video);
     } else {
@@ -309,12 +381,29 @@
     const label = document.getElementById("current-quality-label");
     if (!selector || !currentBtn || !menu) return;
 
-    const levels = hls.levels;
-    selector.hidden = levels.length <= 1;
-    if (levels.length <= 1) return;
+    const levels = Array.isArray(hls.levels) ? hls.levels : [];
+    const uniqueHeights = new Set(
+      levels
+        .map((level) => level.height)
+        .filter((h) => typeof h === "number" && h > 0),
+    );
 
+    // US-43 Sc3: Phim chỉ có 1 mức chất lượng (hoặc không có mức rõ ràng) -> ẩn nút chọn chất lượng.
+    if (levels.length <= 1 || uniqueHeights.size <= 1) {
+      selector.hidden = true;
+      return;
+    }
+    selector.hidden = false;
+
+    // Lọc các mức duy nhất theo độ phân giải, sắp xếp từ cao xuống thấp
+    const seenHeights = new Set();
     const sortedLevels = levels
       .map((level, index) => ({ height: level.height, index }))
+      .filter((level) => {
+        if (!level.height || seenHeights.has(level.height)) return false;
+        seenHeights.add(level.height);
+        return true;
+      })
       .sort((a, b) => b.height - a.height);
 
     menu.innerHTML =
@@ -378,7 +467,12 @@
       video.volume = Math.min(1, Math.max(0, value));
       volumeSlider.value = video.volume;
       updateVolumeIcon();
+      setUserPref("volume", video.volume);
     };
+
+    // Khôi phục mức âm lượng đã lưu (US-19 Sc2)
+    const savedPrefs = getUserPrefs();
+    setVolume(typeof savedPrefs.volume === "number" ? savedPrefs.volume : 1);
 
     video.onplay = () => setPlayIcon("pause");
     video.onpause = () => setPlayIcon("play");
@@ -556,6 +650,7 @@
     state.episode = episodeName;
     state.server = serverIdx;
     state.selectedServer = serverIdx;
+    state.resumeAt = 0; // Đổi tập mới -> bắt đầu từ 0 (US-52, US-53)
     renderVideo();
     renderServerTabs();
     renderEpisodes();
@@ -575,27 +670,45 @@
   async function renderSeasons() {
     const seasonList = document.getElementById("season-list");
     const currentSeasonText = document.getElementById("current-season-text");
+    const seasonSelector = document.querySelector(".season-selector");
+    const dividerVertical = seasonSelector
+      ? seasonSelector.nextElementSibling
+      : null;
     if (!seasonList) return;
 
     const movieName = state.movie.name;
     const currentSeasonNum = getSeasonNumber(movieName);
     if (currentSeasonText) currentSeasonText.textContent = `Phần ${currentSeasonNum}`;
-    seasonList.innerHTML = `<a href="#" class="season-item active">Phần ${currentSeasonNum}</a>`;
 
-    const baseName = movieName.replace(/[([-]?\s*Phần \d+\s*[)\]]?/gi, "").trim();
+    const baseName = getSeriesBaseName(movieName);
     const res = await searchMovies(baseName);
     if (!res.success) return;
 
     const seasons = new Map();
+    // Phim đang xem phải luôn có trong danh sách
+    seasons.set(currentSeasonNum, state.movie.slug);
+
     extractMovieItems(res)
-      .filter((m) => m.name.toLowerCase().includes(baseName.toLowerCase()))
+      .filter((m) => getSeriesBaseName(m.name).toLowerCase() === baseName.toLowerCase())
       .forEach((m) => {
-        const hasSeason = /Phần \d+/i.test(m.name);
-        if (!hasSeason && m.name.length >= baseName.length + 5) return;
         const num = getSeasonNumber(m.name);
         if (!seasons.has(num)) seasons.set(num, m.slug);
       });
-    if (seasons.size === 0) return;
+
+    // Chỉ hiện mục chọn phần khi có từ 2 phần trở lên (US-48 Sc1)
+    if (seasons.size < 2) {
+      if (seasonSelector) seasonSelector.hidden = true;
+      if (dividerVertical && dividerVertical.classList.contains("divider-vertical")) {
+        dividerVertical.hidden = true;
+      }
+      return;
+    }
+
+    // Có nhiều phần → hiện selector
+    if (seasonSelector) seasonSelector.hidden = false;
+    if (dividerVertical && dividerVertical.classList.contains("divider-vertical")) {
+      dividerVertical.hidden = false;
+    }
 
     seasonList.innerHTML = [...seasons.entries()]
       .sort((a, b) => a[0] - b[0])
@@ -717,6 +830,12 @@
       const isOff = document.body.classList.toggle("lights-off");
       const label = lightsBtn.querySelector("span");
       if (label) label.textContent = isOff ? "Bật đèn" : "Tắt đèn";
+      setUserPref("lightsOff", isOff);
+    });
+
+    // Lưu tùy chọn tự động chuyển tập khi người dùng thay đổi (US-19 Sc2)
+    document.getElementById("auto-next-toggle")?.addEventListener("change", (e) => {
+      setUserPref("autoNext", e.target.checked);
     });
 
     document.getElementById("favorite-btn")?.addEventListener("click", () => {
