@@ -712,3 +712,37 @@
   filter: blur(6px);
   transform: scale(1.08);
 }
+
+/* Màn hình bảo trì trọn trang — do showMaintenanceScreen() tạo (US-62). */
+.maintenance-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  padding: 20px;
+}
+
+.maintenance-box {
+  max-width: 480px;
+  text-align: center;
+}
+
+.maintenance-icon {
+  font-size: 48px;
+  color: var(--primary-color);
+  margin-bottom: 16px;
+}
+
+.maintenance-title {
+  margin-bottom: 12px;
+  font-size: 24px;
+  color: var(--text-light);
+}
+
+.maintenance-message {
+  color: var(--text-base);
+  line-height: 1.6;
+}
