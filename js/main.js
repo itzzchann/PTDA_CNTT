@@ -4,15 +4,117 @@ function initializeApp() {
   setupScrollEffects();
   renderMenuDropdowns();
   setupGlobalFavoriteHandler();
+  setupAuthHeader();
+}
+
+/**
+ * Header theo trạng thái đăng nhập — US-18 Sc2, US-19 Sc1/Sc3, US-18 Sc4.
+ * Chưa đăng nhập: giữ nút "Thành viên". Đã đăng nhập: avatar + tên + menu cá nhân
+ * (link Admin nếu role admin, Đăng xuất). Xử lý `auth:expired` không dừng video.
+ */
+function setupAuthHeader() {
+  renderAuthHeader();
+
+  document.addEventListener("auth:expired", () => {
+    renderAuthHeader();
+    showToast("Phiên đăng nhập đã hết hạn", "warning");
+  });
+}
+
+function renderAuthHeader() {
+  const loginBtn = document.querySelector("#main_user .button-login");
+  const userMenu = document.getElementById("user-menu");
+  if (!loginBtn || !userMenu) return;
+
+  const session = getAuthSession();
+  if (!session?.user) {
+    loginBtn.hidden = false;
+    userMenu.hidden = true;
+    userMenu.innerHTML = "";
+    return;
+  }
+
+  loginBtn.hidden = true;
+  userMenu.hidden = false;
+
+  const username = escapeHtml(session.user.username);
+  const avatar = escapeHtml(session.user.avatarUrl || APP_CONFIG.DEFAULT_AVATAR);
+  const isAdmin = session.user.role === "admin" || session.user.role === "super_admin";
+
+  userMenu.innerHTML = `
+    <button type="button" class="button-user button-user-active" aria-haspopup="true" aria-expanded="false">
+      <img class="user-avatar" src="${avatar}" alt="">
+      <span>${username}</span>
+      <i class="fa-solid fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content dropdown-narrow user-menu-content">
+      <div class="dropdown-grid dropdown-grid-single">
+        ${isAdmin ? `<a href="admin.html" class="dropdown-item"><i class="fa-solid fa-sliders me-2"></i> Quản trị</a>` : ""}
+        <button type="button" class="dropdown-item user-menu-logout"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất</button>
+      </div>
+    </div>
+  `;
+
+  const trigger = userMenu.querySelector(".button-user-active");
+  const content = userMenu.querySelector(".user-menu-content");
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = userMenu.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", String(open));
+  });
+
+  userMenu.querySelector(".user-menu-logout").addEventListener("click", logout);
+
+  // Gắn 1 lần duy nhất: renderAuthHeader chạy lại mỗi khi phiên đổi (login/logout/401)
+  if (!renderAuthHeader._outsideClickBound) {
+    renderAuthHeader._outsideClickBound = true;
+    document.addEventListener("click", (e) => {
+      const menu = document.getElementById("user-menu");
+      if (menu?.classList.contains("open") && !menu.contains(e.target)) {
+        menu.classList.remove("open");
+        menu.querySelector(".button-user-active")?.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
+}
+
+async function logout() {
+  await logoutUser(); // lỗi cũng kệ — đăng xuất cục bộ vẫn phải chạy
+  clearAuthSession(); // KHÔNG xóa USER_PREFERENCES (US-19 Sc2)
+  renderAuthHeader();
+  showToast("Đã đăng xuất", "success");
+}
+
+/**
+ * Khách bấm ♥ khi backend đã có (US-18 Sc4): hộp thoại mời đăng nhập thay vì lưu localStorage.
+ * Backend chưa cấu hình → giữ hành vi V1 (lưu localStorage).
+ */
+async function confirmLoginRequired() {
+  if (BACKEND_CONFIG.BASE_URL && !isLoggedIn()) {
+    const ok = await showConfirmDialog({
+      title: "Yêu cầu đăng nhập",
+      message:
+        "Đăng nhập để lưu phim yêu thích và đồng bộ trên mọi thiết bị của bạn.",
+      confirmText: "Đăng nhập",
+      cancelText: "Để sau",
+    });
+    if (ok) {
+      window.location.href = `login.html?next=${encodeURIComponent(location.pathname + location.search)}`;
+    }
+    return true; // đã xử lý (đăng nhập hoặc bỏ qua) — trang gọi không cần làm gì thêm
+  }
+  return false;
 }
 
 function setupGlobalFavoriteHandler() {
-  document.addEventListener("click", function (e) {
+  document.addEventListener("click", async function (e) {
     const btn = e.target.closest(".btn-favorite[data-movie]");
     if (!btn) return;
 
     e.preventDefault();
     e.stopPropagation();
+
+    if (await confirmLoginRequired()) return; // US-18 Sc4: khách + đã có backend → mời đăng nhập
 
     try {
       const movieData = JSON.parse(btn.getAttribute("data-movie"));
@@ -455,6 +557,10 @@ function toggleFavorite(movie) {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     initializeApp,
+    setupAuthHeader,
+    renderAuthHeader,
+    logout,
+    confirmLoginRequired,
     showToast,
     showConfirmDialog,
     showMovieBackdrop,
