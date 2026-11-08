@@ -9,7 +9,7 @@
 
 | Thành phần | Bản chất | Gợi ý nơi host (có gói miễn phí) |
 |---|---|---|
-| **Frontend** (repo này) | File tĩnh, không build | **Netlify** hoặc **Vercel** (cùng có proxy `/api`) · GitHub Pages (có hạn chế, §3.3) |
+| **Frontend** (repo này) | File tĩnh, không build | **Vercel** (đang dùng) hoặc **Netlify** (cùng có proxy `/api`) · GitHub Pages (có hạn chế, §3.3) |
 | **Backend** (thư mục `server/` trong repo này) | Node.js 20 + Express, REST theo [backend_api_contract.md](../specs/backend_api_contract.md) | **Render** (Web Service, gói free) |
 | **CSDL** | PostgreSQL 16 (users, comments, ratings, favorites, watch_history, view_events, settings) | **Neon** (PostgreSQL managed, gói free) |
 | **Dữ liệu phim** | phimapi.com | Bên thứ ba — không host |
@@ -24,7 +24,7 @@ Lưu ý gói free của Render: server "ngủ" sau ~15 phút không có request,
 | Môi trường | Nhánh | URL (ví dụ) | Dùng để |
 |---|---|---|---|
 | Local | nhánh tên mình | `http://127.0.0.1:5500` | Code, test tay |
-| Preview / Staging | `develop` + mỗi PR | `https://develop--rophim.netlify.app` | Cả nhóm + giảng viên xem trước, test theo Scenario |
+| Preview / Staging | `develop` + mỗi PR | `https://rophim-ten.vercel.app` (bản `develop`), mỗi PR có preview riêng | Cả nhóm + giảng viên xem trước, test theo Scenario |
 | Production | `main` (gắn tag `v1.x`, `v2.0`) | `https://rophim.<ten-mien>` | Bản release chính thức |
 
 Quy tắc: **chỉ merge vào `main` qua PR từ `develop`** sau khi preview đã test; bật **Branch protection** cho `main`
@@ -32,35 +32,36 @@ trên GitHub (Settings → Branches) — đây cũng là Scenario 2 của US-01.
 
 ## 3. Deploy frontend
 
-### 3.1 Netlify / Vercel (khuyên dùng)
+### 3.1 Vercel (đang dùng cho repo này)
 
-1. Đăng nhập bằng GitHub → **Import project** → chọn repo.
+1. Đăng nhập bằng GitHub → **Add New → Project** → chọn repo.
 2. Cấu hình build:
+   - Framework Preset: **Other** (đừng để Vercel tự nhận `Express` chỉ vì thấy `server/package.json`)
    - Build command: **để trống** (không có bước build)
-   - Publish / Output directory: **`.`** (thư mục gốc)
-   - Production branch: **`main`**
-   - **Chặn thư mục `server/`** (bắt buộc, xem §3.4) trước lần deploy đầu tiên.
+   - Output directory: **`.`** — **Root Directory: gốc repo**, KHÔNG chọn `server`
+   - **Chặn thư mục `server/`** (bắt buộc, xem §3.4) trước lần deploy đầu tiên — đã có `.vercelignore`.
 3. Bật **Deploy Previews** cho PR và **Branch deploy** cho `develop`.
 4. Gắn tên miền (nếu có) → HTTPS tự cấp.
 
-`404.html` ở gốc được cả hai host tự dùng cho đường dẫn sai.
+`404.html` ở gốc được Vercel tự dùng cho đường dẫn sai. Đổi sang Netlify cũng được — khi đó thay `.vercelignore`
+bằng `netlify.toml` (§3.4) và `vercel.json` bằng `[[redirects]]` (§3.2).
 
 ### 3.2 Gọi backend: dùng proxy `/api` (khuyên dùng)
 
 Thay vì để trình duyệt gọi thẳng `https://<ten-service>.onrender.com`, cho host tĩnh **chuyển tiếp** `/api/*` sang backend.
 Lợi ích: frontend và API **cùng origin** → không cần CORS, `BACKEND_CONFIG.BASE_URL` chỉ là `"/api"` cho mọi môi trường deploy.
 
-Netlify — tạo `netlify.toml` ở gốc khi đã có backend:
+Vercel — `vercel.json` ở gốc (file này đã có trong repo, chỉ cần thay host khi backend đổi):
+```json
+{ "rewrites": [{ "source": "/api/:path*", "destination": "https://<backend-host>/api/:path*" }] }
+```
+Netlify — `netlify.toml` ở gốc khi đã có backend:
 ```toml
 [[redirects]]
   from = "/api/*"
   to = "https://<backend-host>/api/:splat"
   status = 200
   force = true
-```
-Vercel — `vercel.json`:
-```json
-{ "rewrites": [{ "source": "/api/:path*", "destination": "https://<backend-host>/api/:path*" }] }
 ```
 Rồi trong `js/config.js`:
 ```js
@@ -85,7 +86,7 @@ Host tĩnh phục vụ **mọi file trong repo**: `docs/`, `AGENTS.md`, `README.
 | Host | Cách chặn | Kiểm tra sau deploy |
 |---|---|---|
 | Netlify | `netlify.toml` ở gốc: `[[redirects]]` `from = "/server/*"`, `to = "/404.html"`, `status = 404`, `force = true` (`force` để chặn cả file có thật) | Mở `https://<site>/server/package.json` → phải ra trang 404 |
-| Vercel | File `.vercelignore` ở gốc có dòng `server/` → thư mục không được upload | Như trên |
+| Vercel | File `.vercelignore` ở gốc có dòng `server/` → thư mục không được upload (đã có trong repo) | Mở `https://<site>/server/package.json` → phải ra 404 |
 | GitHub Pages | Không chặn được → **không dùng** | — |
 
 ### 3.5 Cache
@@ -96,6 +97,15 @@ Tên file JS/CSS không có hash → nếu cache lâu, người dùng giữ bả
 
 ### 3.6 Header bảo mật (khuyến nghị)
 
+Vercel (`vercel.json`, thêm khoá `headers` cạnh `rewrites`):
+```json
+{ "headers": [{ "source": "/(.*)", "headers": [
+  { "key": "X-Content-Type-Options", "value": "nosniff" },
+  { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+  { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+  { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+]}]}
+```
 Netlify (`netlify.toml`):
 ```toml
 [[headers]]
@@ -114,7 +124,7 @@ của nguồn phim → CSP chặt sẽ làm hỏng trang. Chỉ bật CSP sau kh
 Chỉ cần khi frontend gọi backend **khác origin** (không dùng proxy §3.2, hoặc lúc dev local).
 Backend chỉ cho phép đúng các origin của RoPhim — **không dùng `*`** khi có xác thực:
 ```
-CORS_ORIGINS=https://rophim.<ten-mien>,https://develop--rophim.netlify.app,http://127.0.0.1:5500,http://localhost:5500
+CORS_ORIGINS=https://rophim.<ten-mien>,https://rophim-ten.vercel.app,http://127.0.0.1:5500,http://localhost:5500
 ```
 Cho phép header `Authorization`, `Content-Type`; method `GET, POST, PATCH, DELETE`.
 
