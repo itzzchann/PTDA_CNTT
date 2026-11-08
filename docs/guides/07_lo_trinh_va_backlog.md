@@ -33,8 +33,8 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 |---|---|---|---|---|---|---|
 | 1 | US-23 | Xem toàn bộ phim của danh mục | Must | ✅ | | |
 | 1 | US-22 | Nhóm phim mới trên trang chủ | Must | ✅ | | |
-| 1 | US-14 | Thông tin liên hệ, mạng xã hội | Must | 🔍 | 30/10: icon mạng xã hội trỏ trang chủ từng mạng, mở thẻ mới; thêm link Phim Lẻ / Phim Bộ / Yêu thích / Lịch sử; bỏ link `#` và tên web khác. Cần kiểm trên trình duyệt | Lead |
-| 1 | US-17 | Thẻ phim trong danh sách | Must | 🔍 | 30/10: nhóm Phim mới dùng endpoint `-v3`; phim lẻ hiện chất lượng thay vì "Full". phimapi không trả tổng số tập nên hiện "Tập 7" / "Hoàn Tất (8/8)". Cần kiểm trên trình duyệt | Lead |
+| 1 | US-14 | Thông tin liên hệ, mạng xã hội | Must | ✅ | L2 doc 08 xong: icon mạng xã hội mở thẻ mới, thay link `#` bằng link danh mục | Lead |
+| 1 | US-17 | Thẻ phim trong danh sách | Must | ✅ | L1 doc 08 xong: nhóm Phim mới dùng endpoint `-v3`; phim lẻ hiện chất lượng, phim bộ hiện "Tập 7" / "Hoàn Tất (8/8)". phimapi không trả tổng số tập (giới hạn nguồn dữ liệu) | Lead |
 | 1 | US-13 | Header dính + lên đầu trang | Must | ✅ | | |
 | 1 | US-21 | Phim nổi bật trang chủ | Must | ✅ | | |
 | 1 | US-24 | Danh sách phim lẻ | Must | ✅ | | |
@@ -46,7 +46,7 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 | 2 | US-35 | Nội dung tóm tắt | Must | ✅ | | |
 | 2 | US-36 | Diễn viên, đạo diễn | Must | ✅ | | |
 | 2 | US-26 | Lọc theo thể loại | Must | ✅ | | |
-| 2 | US-33 | Tên + ảnh đầu trang chi tiết | Must | 🔍 | Tiêu chí mới chỉ cần tên, ảnh bìa, ảnh nền, báo không tìm thấy, mở lại bằng link | DEV-2 |
+| 2 | US-33 | Tên + ảnh đầu trang chi tiết | Must | ✅ | Kiểm trên trình duyệt: tên + ảnh bìa + ảnh nền, slug sai báo không tìm thấy | DEV-2 |
 | 2 | US-34 | Năm, thời lượng, chất lượng | Must | ✅ | | |
 | 2 | US-31 | Gợi ý khi gõ tìm kiếm | Should | ✅ | | |
 | 2 | US-32 | Trang kết quả tìm kiếm | Should | ✅ | | |
@@ -57,16 +57,16 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 | 3 | US-40 | Tự đổi nguồn khi lỗi | Must | ✅ | HLS → iframe | |
 | 3 | US-41 | Dừng/phát/âm lượng | Must | ✅ | | |
 | 3 | US-45 | Toàn màn hình | Must | ✅ | | |
-| 3 | US-48 | Chuyển giữa các phần | Must | 🟡🔍 | Dò phần theo tên phim, có thể sót; kiểm 3 Scenario | DEV-2 |
+| 3 | US-48 | Chuyển giữa các phần | Must | ✅ | Dò phần theo tên gốc (so khớp bằng, nhận "Mùa/Season"), ẩn selector khi < 2 phần. Đã kiểm thuật toán với dữ liệu thật | DEV-2 |
 | 3 | US-44 | Phím tắt | Must | ✅ | | |
 | 3 | US-46 | Tự chuyển tập (tắt được) | Must | ✅ | `#auto-next-toggle` | |
 | 4 | US-15 | Thông báo sau thao tác (toast) | Must | ✅ | | |
-| 4 | US-18 | Đăng ký / đăng nhập | Must | 🔒❌ | Có nền FE: `fetchBackend`, phiên. **Scenario 4 mới:** khách bấm ♥ → yêu cầu đăng nhập | Lead + DEV-2 |
-| 4 | US-52 | Ghi nhớ tập **và thời điểm** | Must | 🟡 | Chỉ lưu tập, `progress` luôn = 0 | DEV-2 |
-| 4 | US-19 | Đăng xuất | Must | 🔒❌ | Scenario 2: âm lượng + tắt đèn phải giữ sau đăng xuất — hiện chưa lưu | Lead + DEV-2 |
+| 4 | US-18 | Đăng ký / đăng nhập | Must | 🔒🟡 | FE xong: `login.html` + form + Google, báo lỗi đúng, xử lý `BACKEND_NOT_CONFIGURED` (DEV-1). BE xong: `/auth/*` + Google + middleware (Lead). Còn: Scenario 4 (khách bấm ♥ → yêu cầu đăng nhập) | Lead + DEV-2 |
+| 4 | US-52 | Ghi nhớ tập **và thời điểm** | Must | ✅ | Lưu giây qua `saveWatchHistory(progress)`, throttle 5s + pause + pagehide (thuần localStorage, Sc1; Sc2–3 cần kiểm lại khi có đồng bộ) | DEV-2 |
+| 4 | US-19 | Đăng xuất | Must | 🔒🟡 | Sc2 xong: âm lượng + tắt đèn + auto-next lưu `USER_PREFERENCES`, đăng xuất không mất. Sc1, 3 cần backend chạy thật | Lead + DEV-2 |
 | 4 | US-50 | Lưu phim yêu thích | Must | ✅ | localStorage; V2 thêm đồng bộ máy chủ cho thành viên | DEV-2 (đồng bộ) |
 | 4 | US-51 | Quản lý danh sách yêu thích | Must | ✅ | như trên | DEV-2 (đồng bộ) |
-| 4 | US-53 | Xem tiếp phim đang dở | Must | 🟡 | Tiếp tục đúng tập, chưa đúng thời điểm (phụ thuộc US-52) | DEV-2 |
+| 4 | US-53 | Xem tiếp phim đang dở | Must | ✅ | Đọc tiến độ trước khi ghi đè, phát tiếp đúng giây; lịch sử hiện `· 10:05`; iframe dự phòng không đọc được giây (giới hạn đã ghi trong mô tả PR) | DEV-2 |
 | 4 | US-12 | Mở yêu thích / lịch sử từ menu | Must | ✅ | Menu "Thêm" | |
 | 5 | US-58 | Lượt xem + top 10 phim | Must | 🔒❌ | | DEV-1 (+ Lead: chặn quyền) |
 | 5 | US-63 | Khóa / mở khóa thành viên | Must | 🔒❌ | | DEV-2 |
@@ -77,14 +77,14 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 | 6 | US-42 | Thời gian + tua | Should | ✅ | Có dạng `h:mm:ss` | |
 | 6 | US-55 | Viết bình luận + đánh dấu spoil | Should | 🔒🟡 | Bộ đếm, giới hạn 1000, chặn rỗng đã có; gửi + che spoil cần backend | DEV-1 |
 | 6 | US-61 | Kiểm duyệt bình luận | Should | 🔒❌ | | DEV-1 |
-| 6 | US-43 | Chọn chất lượng | Should | ✅🔍 | Kiểm Scenario 3 (chỉ 1 mức → ẩn) | |
+| 6 | US-43 | Chọn chất lượng | Should | ✅ | ẩn khi chỉ 1 mức (đếm độ phân giải duy nhất); đã kiểm | DEV-2 |
 | 6 | US-56 | Chấm điểm 1–10 + điểm chung | Should | 🔒🟡 | Tab có, dữ liệu giả; chưa có ô chấm điểm | DEV-1 |
 | 6 | US-57 | Bộ ảnh phim | Should | ✅ | | |
 | 6 | US-20 | Báo tính năng chưa sẵn sàng | Could | 🚫 Bỏ | 30/10 PO quyết định xóa "Rổ Bóng" và "Tải ứng dụng" (không có thật) → US này không còn đối tượng áp dụng | |
 | 6 | US-49 | Tắt đèn + chia sẻ | Could | ✅ | | |
-| 6 | US-11 | Xem nhanh thể loại/quốc gia | Could | ✅🔍 | Kiểm Scenario 3 (mất mạng vẫn có danh sách — đã có `fallbackData`) | |
+| 6 | US-11 | Xem nhanh thể loại/quốc gia | Could | ✅ | mất mạng vẫn có danh sách (`fallbackData`) — đã kiểm | |
 
-**Tổng (52 US):** ✅ 36 (2 mục cần kiểm lại) · 🔍 1 · 🟡 7 · ❌ 8. Bản backlog 28/10 đã bỏ US-01…09, US-16, US-29 và gộp US-64 vào US-63.
+**Tổng (52 US):** ✅ 40 · 🟡 5 · ❌ 6; trong đó 🔒 10 US còn phụ thuộc backend (trạng thái 🔒 được ghi chồng lên trạng thái chính). Khung `server/` đã chạy, `/auth/*` xong (Lead), `login.html` (DEV-1), US-52/53/19-Sc2 (DEV-2) đã merge vào `develop` ngày 08/11.
 
 ---
 
