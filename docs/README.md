@@ -19,7 +19,8 @@ docs/
 │   ├── 04_quy_trinh_lam_viec.md      Quy trình 1 task (gắn US) → PR, chia việc tránh conflict
 │   ├── 05_no_ky_thuat.md             Đã sửa gì (10/2026) + nợ kỹ thuật còn lại
 │   ├── 06_trien_khai.md              ⭐ Deploy frontend + backend lên Internet
-│   └── 07_lo_trinh_va_backlog.md     ⭐ Lộ trình V1/V2, trạng thái 64 user story, chia việc V2
+│   ├── 07_lo_trinh_va_backlog.md     ⭐ Lộ trình V1/V2, trạng thái 64 user story, chia việc V2
+│   └── 09_ke_hoach_tuan_cuoi_v2.md   ⭐ Kế hoạch thực tế còn lại tới V2 (09→12/11)
 ├── specs/                        ← THAM CHIẾU khi code
 │   ├── core_registry.md              ⭐ Danh mục hàm/hằng/CSS/ID dùng chung
 │   ├── api_spec.md                   phimapi.com + hàm wrapper
