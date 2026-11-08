@@ -145,10 +145,9 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | `showConfirmDialog({ title, message, confirmText, cancelText, danger })` → `Promise<boolean>` | ⭐ Hộp thoại xác nhận (thay `confirm()`); Esc / bấm nền = hủy. `danger: true` → nút đỏ | 🟢 favorites (V2: xóa bình luận, khóa thành viên) |
 | `showMovieBackdrop(container, movie)` | ⭐ **Banner ngang của phim** — ưu tiên ảnh TMDB → `thumb_url` → `poster_url`. Đừng đặt `poster_url` (ảnh dọc) làm nền banner: bị cắt và phóng to nên vỡ | 🟡 homepage, detail |
 | `toggleFavorite(movie)` → `boolean` | Trạng thái **sau** khi bấm; tự toast (cả khi lỗi bộ nhớ). `movie` cần `{ slug, name, poster_url }` | 🟡 main, watch |
-| `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `setupMemberButton`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
+| `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
 
-Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-movie]` → toggle ♥ · click `.button-login` → toast đăng nhập
-(V2: thay bằng menu tài khoản) · Esc đóng menu mobile / dropdown tìm kiếm.
+Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-movie]` → toggle ♥ · `.button-login` là link tĩnh tới `login.html` (US-18) · Esc đóng menu mobile / dropdown tìm kiếm.
 
 ## 5. Sự kiện tùy chỉnh (bắn trên `document`)
 

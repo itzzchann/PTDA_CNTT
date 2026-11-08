@@ -4,7 +4,6 @@ function initializeApp() {
   setupScrollEffects();
   renderMenuDropdowns();
   setupGlobalFavoriteHandler();
-  setupMemberButton();
 }
 
 function setupGlobalFavoriteHandler() {
@@ -451,17 +450,7 @@ function toggleFavorite(movie) {
   return isInFavorites(movie.slug);
 }
 
-// Chưa có trang đăng nhập (US-18): nút "Thành viên" chỉ báo bằng toast.
-function setupMemberButton() {
-  document.addEventListener("click", (e) => {
-    const memberBtn = e.target.closest(".button-login");
-    if (memberBtn) {
-      e.preventDefault();
-      e.stopPropagation();
-      showToast("Vui lòng đăng nhập để sử dụng tính năng này", "info");
-    }
-  });
-}
+// Trang login.html đã có (US-18): nút "Thành viên" là link tĩnh — không cần handler.
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
