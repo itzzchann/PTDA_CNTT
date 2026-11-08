@@ -34,10 +34,11 @@ const API_CONFIG = {
 };
 
 // Backend riêng của RoPhim (tài khoản, bình luận, đánh giá, admin) — xem docs/specs/backend_api_contract.md.
-// BASE_URL rỗng = chưa có backend: fetchBackend() trả lỗi BACKEND_NOT_CONFIGURED thay vì gọi mạng.
-// Ví dụ: "http://localhost:3000/api" (dev) hoặc "https://api.<ten-mien>/api" (production).
+// BASE_URL "/api" = qua proxy cùng origin do Vercel cấu hình (vercel.json) — không cần CORS.
+// Ví dụ khác: "" (chưa có backend → fetchBackend trả BACKEND_NOT_CONFIGURED, trang vẫn chạy)
+// hoặc "http://localhost:3000/api" khi dev local bằng Live Server (KHÔNG commit giá trị này).
 const BACKEND_CONFIG = {
-  BASE_URL: "",
+  BASE_URL: "/api",
 
   ENDPOINTS: {
     REGISTER: "/auth/register",

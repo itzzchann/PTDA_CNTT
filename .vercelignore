@@ -1,0 +1,6 @@
+# Thư mục backend Node.js — không bao giờ phát ra web (docs/06_trien_khai.md §3.4).
+# Chặn cả: mã nguồn server, migration CSDL, file cấu hình deploy; file .xlsx của nhóm.
+server/
+docs/
+.github/
+*.xlsx
