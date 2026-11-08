@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản trị | RoPhim</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="./css/variables.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/admin.css" />
+
+    <script src="./js/components.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/admin.js" defer></script>
+  </head>
+
+  <body class="admin-page">
+    <div id="header-placeholder"></div>
+
+    <main class="page-container admin-container">
+      <section class="mt-3 mb-4">
+        <h1 class="section-title"><i class="fa-solid fa-sliders"></i> Quản trị</h1>
+
+        <div class="admin-tabs" role="tablist" aria-label="Khu vực quản trị">
+          <button type="button" class="admin-tab active" data-tab="dashboard" role="tab" aria-selected="true">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+          </button>
+          <button type="button" class="admin-tab" data-tab="comments" role="tab" aria-selected="false">
+            <i class="fa-solid fa-comments"></i> Bình luận
+          </button>
+          <button type="button" class="admin-tab" data-tab="users" role="tab" aria-selected="false">
+            <i class="fa-solid fa-users"></i> Thành viên
+          </button>
+          <button type="button" class="admin-tab" data-tab="system" role="tab" aria-selected="false">
+            <i class="fa-solid fa-gear"></i> Hệ thống
+          </button>
+          <button type="button" class="admin-tab" data-tab="storage" role="tab" aria-selected="false">
+            <i class="fa-solid fa-database"></i> Bộ nhớ
+          </button>
+        </div>
+
+        <div class="admin-tab-panel" id="admin-tab-panel">
+          <!-- Nội dung tab do hàm initXxxTab render -->
+        </div>
+      </section>
+    </main>
+
+    <div id="footer-placeholder"></div>
+  </body>
+</html>

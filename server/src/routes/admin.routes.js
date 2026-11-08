@@ -6,6 +6,36 @@ const router = express.Router();
 
 // ===== Khối Lead — US-60, US-62 =====
 //   PATCH /admin/settings
+const { z } = require("zod");
+const settingsService = require("../services/settings.service");
+const validate = require("../middlewares/validate");
+const { requireAuth, requireRole } = require("../middlewares/auth");
+const { invalidateMaintenanceCache } = require("../middlewares/maintenance");
+
+const patchSchema = z
+  .object({
+    maintenanceMode: z.boolean().optional(),
+    maintenanceMessage: z.string().max(500, "Lời nhắn tối đa 500 ký tự").optional(),
+    pinnedHeroSlug: z.string().max(255).nullable().optional(),
+    movieApiBaseUrl: z.string().max(255).nullable().optional(),
+  })
+  .strict();
+
+router.patch(
+  "/admin/settings",
+  requireAuth,
+  requireRole("admin", "super_admin"),
+  validate({ body: patchSchema }),
+  async (req, res, next) => {
+    try {
+      const settings = await settingsService.updateSettings(req.body);
+      invalidateMaintenanceCache();
+      res.json({ data: settings });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ===== Khối DEV-1 — US-58, US-61 =====
 //   GET    /admin/stats

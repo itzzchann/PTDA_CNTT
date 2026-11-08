@@ -5,6 +5,48 @@ function initializeApp() {
   renderMenuDropdowns();
   setupGlobalFavoriteHandler();
   setupAuthHeader();
+  applySiteSettings(); // US-60/US-62: bảo trì + nguồn phim — lỗi backend thì trang vẫn chạy như V1
+}
+
+/**
+ * Đọc cấu hình công khai từ backend (US-62): bảo trì + nguồn phim dự phòng.
+ * Bảo trì bật → khách (kể cả chưa đăng nhập) chỉ thấy màn hình bảo trì; admin vẫn dùng bình thường.
+ * settings.movieApiBaseUrl có giá trị → các wrapper phimapi chuyển sang nguồn đó (US-62 Sc1).
+ */
+async function applySiteSettings() {
+  const res = await getSiteSettings();
+  if (!res.success) return; // BACKEND_NOT_CONFIGURED / lỗi mạng / Render đang ngủ → bỏ qua, dùng mặc định
+
+  const settings = res.data?.data || {};
+
+  if (settings.movieApiBaseUrl) {
+    setMovieApiBaseUrl(settings.movieApiBaseUrl);
+  }
+
+  if (settings.maintenanceMode) {
+    const session = getAuthSession();
+    const isAdmin = session?.user?.role === "admin" || session?.user?.role === "super_admin";
+    if (!isAdmin) showMaintenanceScreen(settings.maintenanceMessage || "");
+  }
+}
+
+/** Màn hình bảo trì trọn trang (US-62 Sc2) — không xóa nội dung để admin quay lại được khi tắt bảo trì. */
+function showMaintenanceScreen(message) {
+  if (document.getElementById("maintenance-screen")) return;
+
+  const screen = document.createElement("div");
+  screen.id = "maintenance-screen";
+  screen.className = "maintenance-screen";
+  screen.innerHTML = `
+    <div class="maintenance-box">
+      <i class="fa-solid fa-screwdriver-wrench maintenance-icon"></i>
+      <h1 class="maintenance-title">RoPhim đang bảo trì</h1>
+      <p class="maintenance-message"></p>
+    </div>
+  `;
+  screen.querySelector(".maintenance-message").textContent = message || "Chúng tôi đang nâng cấp hệ thống. Vui lòng quay lại sau ít phút.";
+
+  document.body.appendChild(screen);
 }
 
 /**
@@ -565,5 +607,7 @@ if (typeof module !== "undefined" && module.exports) {
     showConfirmDialog,
     showMovieBackdrop,
     toggleFavorite,
+    applySiteSettings,
+    showMaintenanceScreen,
   };
 }

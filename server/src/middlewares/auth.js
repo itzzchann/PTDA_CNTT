@@ -61,4 +61,4 @@ const requireRole =
       ? next()
       : next(new AppError(403, "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này"));
 
-module.exports = { requireAuth, optionalAuth, requireRole };
+module.exports = { requireAuth, optionalAuth, requireRole, resolveUser };

@@ -29,6 +29,9 @@ app.get("/api/health", (req, res) => {
 // Mỗi file route do MỘT người sở hữu (docs/guides/07_lo_trinh_va_backlog.md §3.1).
 // Đã đăng ký sẵn hết → không ai cần sửa app.js khi thêm endpoint.
 app.use("/api", require("./routes/auth.routes")); //       Lead  — /auth/*
+// Bảo trì (US-62): sau auth (đăng nhập vẫn vào được), trước các route ghi khác — request ghi của non-admin → 503.
+const { maintenance } = require("./middlewares/maintenance");
+app.use("/api", maintenance);
 app.use("/api", require("./routes/settings.routes")); //   Lead  — /settings
 app.use("/api", require("./routes/me.routes")); //         DEV-2 — /me/*
 app.use("/api", require("./routes/movies.routes")); //     DEV-1 — /movies/:slug/comments|ratings|views
