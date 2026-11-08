@@ -1,0 +1,231 @@
+/* Trang đăng nhập / đăng ký (US-18) — mọi selector scope .login-page, chỉ dùng token variables.css. */
+
+.login-page .login-bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(rgba(25, 27, 36, 0.92), rgba(25, 27, 36, 0.97)),
+    url("../assets/images/banners/home-background.jpg") center / cover no-repeat;
+}
+
+.login-page .login-wrapper {
+  width: 100%;
+  max-width: 440px;
+  padding: 20px;
+}
+
+.login-page .login-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+}
+
+.login-page .login-brand-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-page .login-brand-link {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.login-page .login-brand-logo {
+  height: 40px;
+}
+
+.login-page .login-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.login-page .login-subtitle {
+  font-size: 13px;
+  color: var(--text-base);
+}
+
+.login-page .google-auth-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.login-page .google-auth-box[hidden] {
+  display: none;
+}
+
+.login-page .google-btn-container {
+  min-height: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-page .login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 20px;
+  color: var(--text-base);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.login-page .login-divider::before,
+.login-page .login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+
+.login-page .auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.login-page .auth-tab-btn {
+  flex: 1;
+  padding: 10px 8px;
+  background: var(--bg-3);
+  color: var(--text-base);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-page .auth-tab-btn:hover {
+  color: var(--text-light);
+}
+
+.login-page .auth-tab-btn.active {
+  background: var(--bg-color);
+  color: var(--primary-text);
+  border-color: var(--primary-color);
+}
+
+.login-page .auth-alert {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid var(--error-color);
+  border-radius: var(--radius-md);
+  color: var(--error-color);
+  font-size: 13px;
+}
+
+.login-page .auth-form[hidden] {
+  display: none;
+}
+
+.login-page .form-group {
+  margin-bottom: 16px;
+}
+
+.login-page .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.login-page .input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-page .input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-base);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.login-page .input-with-icon input {
+  width: 100%;
+  padding: 11px 40px 11px 36px;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-light);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.login-page .input-with-icon input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.login-page .input-with-icon input[aria-invalid="true"] {
+  border-color: var(--error-color);
+}
+
+.login-page .btn-toggle-password {
+  position: absolute;
+  right: 8px;
+  padding: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-base);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.login-page .btn-toggle-password:hover {
+  color: var(--text-light);
+}
+
+.login-page .field-error {
+  display: block;
+  min-height: 18px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--error-color);
+}
+
+.login-page .auth-submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: var(--bg-color);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login-page .auth-submit-btn:hover {
+  background: var(--primary-color-hover);
+}
+
+.login-page .auth-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 375px) {
+  .login-page .login-card {
+    padding: 24px 16px;
+  }
+
+  .login-page .login-title {
+    font-size: 19px;
+  }
+
+  .login-page .auth-tabs {
+    flex-direction: column;
+  }
+}
