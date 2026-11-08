@@ -117,6 +117,19 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 |---|---|---|
 | `fetchAPI(url, options = {})` | `Promise<{ success: true, status, data } \| { success: false, status, error, data? }>` | **Không bao giờ throw.** `options`: như `fetch` + `timeout` (ms). `status = 0` khi mất mạng/timeout. `Content-Type: application/json` chỉ gửi khi có `body`. Lỗi HTTP: `error` lấy từ `data.error.message` nếu backend trả |
 | `fetchBackend(path, { method, body, headers })` | như trên | Gọi backend RoPhim: ghép `BACKEND_CONFIG.BASE_URL`, tự `JSON.stringify(body)`, gắn `Authorization: Bearer`. `401` khi đang có phiên → xóa phiên + bắn `auth:expired`. `BASE_URL` rỗng → `{ success:false, status:0, error:"BACKEND_NOT_CONFIGURED" }` |
+| `buildBackendPath(template, params = {})` | `string` | ⭐ Thay placeholder `[slug]`/`[id]` trong `BACKEND_CONFIG.ENDPOINTS.*` bằng giá trị đã `encodeURIComponent`. Mọi path có tham số phải đi qua đây | 🔴 api (V2: login, watch, admin) |
+
+### 3.1.1 Wrapper backend (V2) — hợp đồng ở [backend_api_contract.md](backend_api_contract.md)
+
+Tất cả trả `{ success, status, data, error }` như `fetchBackend`. Payload thành công nằm ở `res.data.data`.
+
+| Nhóm | Chữ ký |
+|---|---|
+| Tài khoản | `registerUser({ username, email, password })`, `loginUser({ login, password })`, `logoutUser()`, `getCurrentUser()` |
+| Cá nhân | `getMyFavorites(page = 1, limit)`, `addMyFavorite(movie)` (movie cần `{ slug, name, poster }`), `removeMyFavorite(slug)`, `getMyHistory(page = 1, limit)`, `saveMyHistory(entry)` (entry cần `{ slug, name, poster, episode, progress }`) |
+| Cộng đồng | `getMovieComments(slug, page = 1)`, `postMovieComment(slug, { content, isSpoiler, episode })`, `deleteComment(id)`, `getMovieRatings(slug, page = 1)`, `postMovieRating(slug, { score, content })`, `recordMovieView(slug, episode)` |
+| Cấu hình | `getSiteSettings()` |
+| Quản trị | `getAdminStats(days = 7)`, `updateAdminSettings(patch)`, `getAdminUsers({ q, status, page, limit })`, `setUserStatus(id, status)`, `getAdminComments({ movieSlug, q, page, limit })`, `flagCommentSpoiler(id)`, `deleteAdminComment(id)` |
 
 ### 3.2 phimapi — chi tiết JSON ở [api_spec.md](api_spec.md)
 
@@ -141,13 +154,18 @@ Mức rủi ro khi sửa: 🔴 ≥ 4 file · 🟡 2–3 file · 🟢 chỉ file 
 | Chữ ký | Ghi chú | Dùng ở |
 |---|---|---|
 | `initializeApp()` | Gọi bởi `components.js`. **Không gọi lại từ trang** | components |
+| `setupAuthHeader()` / `renderAuthHeader()` | ⭐ Header theo trạng thái đăng nhập (US-18 Sc2, US-19 Sc1/Sc3): đã đăng nhập → ẩn `.button-login`, hiện avatar + tên + menu (link Quản trị nếu admin, Đăng xuất). Nghe `auth:expired` → về khách + toast. Điền vào `#user-menu` trong `components/header.html` | 🔴 header, mọi trang |
+| `logout()` | `POST /auth/logout` (lỗi cũng bỏ qua) → `clearAuthSession()` (giữ `USER_PREFERENCES` — US-19 Sc2) → render lại header + toast | 🔴 header |
+| `confirmLoginRequired()` → `Promise<boolean>` | US-18 Sc4: khách bấm ♥ khi đã có backend → hộp thoại mời đăng nhập, đồng ý → `login.html?next=…`. `true` = đã xử lý (trang không toggle ♥). Backend chưa cấu hình hoặc đã đăng nhập → `false` (chạy V1 như cũ) | 🟡 main (handler `.btn-favorite`) |
 | `showToast(message, type = "info")` | `type`: `success \| error \| warning \| info`. Nội dung là **text** (an toàn). Tự mất sau 3s | 🔴 main, favorites, watch |
 | `showConfirmDialog({ title, message, confirmText, cancelText, danger })` → `Promise<boolean>` | ⭐ Hộp thoại xác nhận (thay `confirm()`); Esc / bấm nền = hủy. `danger: true` → nút đỏ | 🟢 favorites (V2: xóa bình luận, khóa thành viên) |
 | `showMovieBackdrop(container, movie)` | ⭐ **Banner ngang của phim** — ưu tiên ảnh TMDB → `thumb_url` → `poster_url`. Đừng đặt `poster_url` (ảnh dọc) làm nền banner: bị cắt và phóng to nên vỡ | 🟡 homepage, detail |
 | `toggleFavorite(movie)` → `boolean` | Trạng thái **sau** khi bấm; tự toast (cả khi lỗi bộ nhớ). `movie` cần `{ slug, name, poster_url }` | 🟡 main, watch |
 | `handleSearch`, `showSearchResults`, `hideSearchResults`, `goToSearchPage(keyword)`, `renderMenuDropdowns`, `renderDropdown`, `setupMobileMenu`, `setupSearch`, `setupScrollEffects`, `setupGlobalFavoriteHandler`, `getToastIcon` | Nội bộ header — không gọi từ trang | main |
 
-Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-movie]` → toggle ♥ · `.button-login` là link tĩnh tới `login.html` (US-18) · Esc đóng menu mobile / dropdown tìm kiếm.
+Hành vi toàn cục (đừng gắn lại ở trang): click `.btn-favorite[data-movie]` → `confirmLoginRequired()` rồi toggle ♥ · đã đăng nhập → `.button-login` ẩn, `#user-menu` hiện · chưa đăng nhập → `.button-login` link tới `login.html` · Esc đóng menu mobile / dropdown tìm kiếm.
+
+CSS đi kèm (style.css): `.user-avatar`, `#main_user .user-menu*` — menu cá nhân mở bằng class `.open` trên `#user-menu`.
 
 ## 5. Sự kiện tùy chỉnh (bắn trên `document`)
 
