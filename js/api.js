@@ -249,10 +249,192 @@ async function getMoviesByListSlug(listSlug, page = 1) {
   return await fetchAPI(url);
 }
 
+/**
+ * Thay placeholder [slug] / [id] trong template endpoint của BACKEND_CONFIG.ENDPOINTS.
+ * @param {string} template vd BACKEND_CONFIG.ENDPOINTS.COMMENTS = "/movies/[slug]/comments"
+ * @param {Record<string, string>} params vd { slug: "ten-phim" }
+ */
+function buildBackendPath(template, params = {}) {
+  return Object.entries(params).reduce(
+    (path, [key, value]) => path.replace(`[${key}]`, encodeURIComponent(value)),
+    template,
+  );
+}
+
+/* ===== Wrapper backend — xem docs/guides/07_lo_trinh_va_backlog.md §3.4 ===== */
+
+async function registerUser({ username, email, password }) {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.REGISTER, {
+    method: "POST",
+    body: { username, email, password },
+  });
+}
+
+async function loginUser({ login, password }) {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.LOGIN, {
+    method: "POST",
+    body: { login, password },
+  });
+}
+
+async function logoutUser() {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.LOGOUT, {
+    method: "POST",
+  });
+}
+
+async function getCurrentUser() {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.ME);
+}
+
+async function getMyFavorites(page = 1, limit = APP_CONFIG.ITEMS_PER_PAGE) {
+  return await fetchBackend(
+    `${BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES}?page=${page}&limit=${limit}`,
+  );
+}
+
+async function addMyFavorite(movie) {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES, {
+    method: "POST",
+    body: {
+      movieSlug: movie.slug,
+      name: movie.name,
+      poster: movie.poster || movie.poster_url || movie.thumb_url || "",
+    },
+  });
+}
+
+async function removeMyFavorite(slug) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITE, { slug }),
+    { method: "DELETE" },
+  );
+}
+
+async function getMyHistory(page = 1, limit = APP_CONFIG.ITEMS_PER_PAGE) {
+  return await fetchBackend(
+    `${BACKEND_CONFIG.ENDPOINTS.MY_HISTORY}?page=${page}&limit=${limit}`,
+  );
+}
+
+async function saveMyHistory(entry) {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY, {
+    method: "PUT",
+    body: {
+      movieSlug: entry.slug,
+      name: entry.name,
+      poster: entry.poster || "",
+      episode: entry.episode,
+      progress: entry.progress,
+    },
+  });
+}
+
+async function getMovieComments(slug, page = 1) {
+  return await fetchBackend(
+    `${buildBackendPath(BACKEND_CONFIG.ENDPOINTS.COMMENTS, { slug })}?page=${page}`,
+  );
+}
+
+async function postMovieComment(slug, { content, isSpoiler, episode }) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.COMMENTS, { slug }),
+    { method: "POST", body: { content, isSpoiler, episode } },
+  );
+}
+
+async function deleteComment(id) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.COMMENT, { id }),
+    { method: "DELETE" },
+  );
+}
+
+async function getMovieRatings(slug, page = 1) {
+  return await fetchBackend(
+    `${buildBackendPath(BACKEND_CONFIG.ENDPOINTS.RATINGS, { slug })}?page=${page}`,
+  );
+}
+
+async function postMovieRating(slug, { score, content }) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.RATINGS, { slug }),
+    { method: "POST", body: { score, content } },
+  );
+}
+
+async function recordMovieView(slug, episode) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.VIEWS, { slug }),
+    { method: "POST", body: { episode } },
+  );
+}
+
+async function getSiteSettings() {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.SETTINGS);
+}
+
+async function getAdminStats(days = 7) {
+  return await fetchBackend(`${BACKEND_CONFIG.ENDPOINTS.ADMIN_STATS}?days=${days}`);
+}
+
+async function updateAdminSettings(patch) {
+  return await fetchBackend(BACKEND_CONFIG.ENDPOINTS.ADMIN_SETTINGS, {
+    method: "PATCH",
+    body: patch,
+  });
+}
+
+async function getAdminUsers(query = {}) {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.status) params.set("status", query.status);
+  if (query.page) params.set("page", query.page);
+  if (query.limit) params.set("limit", query.limit);
+  const qs = params.toString();
+  return await fetchBackend(
+    qs ? `${BACKEND_CONFIG.ENDPOINTS.ADMIN_USERS}?${qs}` : BACKEND_CONFIG.ENDPOINTS.ADMIN_USERS,
+  );
+}
+
+async function setUserStatus(id, status) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.ADMIN_USER, { id }),
+    { method: "PATCH", body: { status } },
+  );
+}
+
+async function getAdminComments(query = {}) {
+  const params = new URLSearchParams();
+  if (query.movieSlug) params.set("movieSlug", query.movieSlug);
+  if (query.q) params.set("q", query.q);
+  if (query.page) params.set("page", query.page);
+  if (query.limit) params.set("limit", query.limit);
+  const qs = params.toString();
+  return await fetchBackend(
+    qs ? `${BACKEND_CONFIG.ENDPOINTS.ADMIN_COMMENTS}?${qs}` : BACKEND_CONFIG.ENDPOINTS.ADMIN_COMMENTS,
+  );
+}
+
+async function flagCommentSpoiler(id) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.ADMIN_COMMENT, { id }),
+    { method: "PATCH", body: { isSpoiler: true } },
+  );
+}
+
+async function deleteAdminComment(id) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.ADMIN_COMMENT, { id }),
+    { method: "DELETE" },
+  );
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     fetchAPI,
     fetchBackend,
+    buildBackendPath,
     getNewMovies,
     getCategoriesList,
     getCountriesList,
@@ -269,5 +451,28 @@ if (typeof module !== "undefined" && module.exports) {
     getMoviePeoples,
     getMovieKeywords,
     getMoviesByListSlug,
+    registerUser,
+    loginUser,
+    logoutUser,
+    getCurrentUser,
+    getMyFavorites,
+    addMyFavorite,
+    removeMyFavorite,
+    getMyHistory,
+    saveMyHistory,
+    getMovieComments,
+    postMovieComment,
+    deleteComment,
+    getMovieRatings,
+    postMovieRating,
+    recordMovieView,
+    getSiteSettings,
+    getAdminStats,
+    updateAdminSettings,
+    getAdminUsers,
+    setUserStatus,
+    getAdminComments,
+    flagCommentSpoiler,
+    deleteAdminComment,
   };
 }
