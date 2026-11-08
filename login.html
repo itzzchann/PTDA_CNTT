@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập & Đăng ký | RoPhim</title>
+    <meta
+      name="description"
+      content="Đăng nhập tài khoản RoPhim để lưu phim yêu thích, xem tiếp lịch sử và bình luận phim."
+    />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#191b24" />
+    <link rel="icon" type="image/svg+xml" href="./assets/images/logos/ro-icon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="./css/variables.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/components.css" />
+    <link rel="stylesheet" href="./css/login.css" />
+
+    <script src="./js/components.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="./js/login.js" defer></script>
+  </head>
+
+  <body>
+    <div id="header-placeholder"></div>
+
+    <main class="page-container login-page">
+      <div class="login-bg-overlay"></div>
+
+      <section class="login-wrapper">
+        <div class="login-card">
+          <!-- Logo & Tiêu đề -->
+          <div class="login-brand-header">
+            <a href="index.html" class="login-brand-link" title="Về trang chủ">
+              <img src="./assets/images/logos/logo.svg" alt="RoPhim" class="login-brand-logo" />
+            </a>
+            <h1 class="login-title">Chào mừng trở lại!</h1>
+            <p class="login-subtitle">Đăng nhập để đồng bộ phim yêu thích, lịch sử và bình luận</p>
+          </div>
+
+          <!-- Nút Google chính thức -->
+          <div class="google-auth-box">
+            <div id="googleButton" class="google-btn-container"></div>
+          </div>
+
+          <div class="login-divider">
+            <span>hoặc tiếp tục với tài khoản RoPhim</span>
+          </div>
+
+          <!-- Tabs Đăng nhập / Đăng ký -->
+          <div class="auth-tabs" role="tablist">
+            <button
+              type="button"
+              class="auth-tab-btn active"
+              id="tabLogin"
+              role="tab"
+              aria-selected="true"
+              aria-controls="loginForm"
+            >
+              <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Đăng nhập
+            </button>
+            <button
+              type="button"
+              class="auth-tab-btn"
+              id="tabRegister"
+              role="tab"
+              aria-selected="false"
+              aria-controls="registerForm"
+            >
+              <i class="fa-solid fa-user-plus me-1"></i> Đăng ký
+            </button>
+          </div>
+
+          <!-- Thông báo lỗi chung của form -->
+          <div id="authAlert" class="auth-alert" hidden></div>
+
+          <!-- Form Đăng nhập -->
+          <form id="loginForm" class="auth-form" novalidate>
+            <div class="form-group">
+              <label for="loginIdentifier">Tên đăng nhập hoặc email</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-user input-icon"></i>
+                <input
+                  type="text"
+                  id="loginIdentifier"
+                  name="login"
+                  autocomplete="username"
+                  placeholder="Nhập username hoặc email"
+                  required
+                />
+              </div>
+              <span class="field-error" id="loginIdentifierError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="loginPassword">Mật khẩu</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input
+                  type="password"
+                  id="loginPassword"
+                  name="password"
+                  autocomplete="current-password"
+                  placeholder="Nhập mật khẩu của bạn"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-password"
+                  data-target="loginPassword"
+                  title="Hiện/Ẩn mật khẩu"
+                  aria-label="Hiện/Ẩn mật khẩu"
+                >
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              <span class="field-error" id="loginPasswordError"></span>
+            </div>
+
+            <button type="submit" class="auth-submit-btn" id="loginSubmitBtn">
+              <span>Đăng nhập</span>
+              <i class="fa-solid fa-arrow-right ms-2"></i>
+            </button>
+          </form>
+
+          <!-- Form Đăng ký -->
+          <form id="registerForm" class="auth-form" hidden novalidate>
+            <div class="form-group">
+              <label for="registerUsername">Tên đăng nhập</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-id-badge input-icon"></i>
+                <input
+                  type="text"
+                  id="registerUsername"
+                  name="username"
+                  autocomplete="username"
+                  placeholder="Ít nhất 3 ký tự (chữ, số, _)"
+                  required
+                />
+              </div>
+              <span class="field-error" id="registerUsernameError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="registerEmail">Email</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  id="registerEmail"
+                  name="email"
+                  autocomplete="email"
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+              <span class="field-error" id="registerEmailError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="registerPassword">Mật khẩu</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input
+                  type="password"
+                  id="registerPassword"
+                  name="password"
+                  autocomplete="new-password"
+                  placeholder="Tối thiểu 8 ký tự"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-password"
+                  data-target="registerPassword"
+                  title="Hiện/Ẩn mật khẩu"
+                  aria-label="Hiện/Ẩn mật khẩu"
+                >
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              <span class="field-error" id="registerPasswordError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="registerConfirmPassword">Nhập lại mật khẩu</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-shield-halved input-icon"></i>
+                <input
+                  type="password"
+                  id="registerConfirmPassword"
+                  name="confirmPassword"
+                  autocomplete="new-password"
+                  placeholder="Nhập lại chính xác mật khẩu"
+                  required
+                />
+                <button
+                  type="button"
+                  class="btn-toggle-password"
+                  data-target="registerConfirmPassword"
+                  title="Hiện/Ẩn mật khẩu"
+                  aria-label="Hiện/Ẩn mật khẩu"
+                >
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              <span class="field-error" id="registerConfirmPasswordError"></span>
+            </div>
+
+            <button type="submit" class="auth-submit-btn" id="registerSubmitBtn">
+              <span>Tạo tài khoản RoPhim</span>
+              <i class="fa-solid fa-user-check ms-2"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <div id="footer-placeholder"></div>
+  </body>
+</html>

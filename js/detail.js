@@ -1,5 +1,6 @@
 (() => {
   const RECOMMENDATION_COUNT = 6;
+  const CAST_COUNT = 12;
 
   document.addEventListener("DOMContentLoaded", initDetailPage);
 
@@ -33,6 +34,7 @@
 
     renderMovie(movie, movie.episodes || []);
     loadRecommendations(movie);
+    loadCast(movie);
 
     document.getElementById("loading").hidden = true;
     document.getElementById("content").hidden = false;
@@ -100,7 +102,7 @@
     const chips = [
       formatYear(movie.year),
       formatDuration(movie.time),
-      movie.quality || "HD",
+      movie.quality || "Đang cập nhật",
       movie.lang || "Đang cập nhật",
     ];
     document.getElementById("meta").innerHTML = chips
@@ -113,7 +115,7 @@
     setText("actors", joinPeople(movie.actor));
     setText("directors", joinPeople(movie.director));
 
-    renderEpisodes(movie.slug, episodes);
+    renderEpisodes(movie, episodes);
 
     const watchBtn = document.getElementById("watchBtn");
     if (watchBtn) {
@@ -122,14 +124,16 @@
     }
   }
 
-  function renderEpisodes(slug, episodes) {
+  function renderEpisodes(movie, episodes) {
     const container = document.getElementById("episodeList");
     if (!container) return;
 
     const servers = episodes.filter((server) => server.server_data?.length > 0);
 
-    if (servers.length === 0) {
-      container.innerHTML = `<a class="episode-btn" href="${buildWatchUrl(slug, "1")}">Xem phim</a>`;
+    // Phim lẻ hoặc chưa có tập: một nút "Xem phim" duy nhất (US-37 Sc3, US-38 Sc3); đổi máy chủ ở trang xem.
+    if (servers.length === 0 || movie.type === "single") {
+      const firstEp = servers[0]?.server_data?.[0];
+      container.innerHTML = `<a class="episode-btn" href="${buildWatchUrl(movie.slug, firstEp ? firstEp.name : "1")}">Xem phim</a>`;
       return;
     }
 
@@ -138,7 +142,7 @@
         const buttons = server.server_data
           .map(
             (ep) =>
-              `<a class="episode-btn" href="${buildWatchUrl(slug, ep.name, serverIdx)}">${
+              `<a class="episode-btn" href="${buildWatchUrl(movie.slug, ep.name, serverIdx)}">${
                 servers.length === 1 && server.server_data.length === 1
                   ? "Xem phim"
                   : escapeHtml(formatEpisodeName(ep.name))
@@ -148,6 +152,33 @@
         return `<div class="server-name">${escapeHtml(server.server_name)}</div>${buttons}`;
       })
       .join("");
+  }
+
+  // Ảnh + tên + vai diễn (US-36 Sc2). Không có ảnh → giữ dòng chữ "Diễn viên: ..." / "Đang cập nhật" (Sc1, Sc3).
+  async function loadCast(movie) {
+    const section = document.getElementById("castSection");
+    const grid = document.getElementById("castGrid");
+    if (!section || !grid) return;
+
+    const res = await getMoviePeoples(movie.slug);
+    const people = (res.data?.data?.peoples || [])
+      .filter((person) => person.profile_path)
+      .slice(0, CAST_COUNT);
+    if (people.length === 0) return;
+
+    grid.innerHTML = people
+      .map(
+        (person) => `
+          <div class="detail-cast-item">
+            <img src="${escapeHtml(`${API_CONFIG.TMDB_IMAGE_HOST}/w185${person.profile_path}`)}"
+                 alt="${escapeHtml(person.name)}" loading="lazy"
+                 onerror="this.onerror=null;this.src='${APP_CONFIG.DEFAULT_AVATAR}'">
+            <span class="detail-cast-name">${escapeHtml(person.name)}</span>
+            <small class="detail-cast-role">${escapeHtml(person.character || "")}</small>
+          </div>`,
+      )
+      .join("");
+    section.hidden = false;
   }
 
   async function loadRecommendations(movie) {

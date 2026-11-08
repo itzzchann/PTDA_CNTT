@@ -104,6 +104,44 @@
   border-top: 1px solid var(--border-color);
 }
 
+.detail-page .detail-cast {
+  margin-top: 10px;
+}
+
+.detail-page .detail-cast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.detail-page .detail-cast-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.detail-page .detail-cast-item img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--bg-2);
+}
+
+.detail-page .detail-cast-name {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.detail-page .detail-cast-role {
+  color: var(--text-base);
+  font-size: 11px;
+}
+
 .detail-page .server-name {
   margin: 15px 0 8px;
   font-weight: 600;
