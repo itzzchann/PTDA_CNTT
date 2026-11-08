@@ -90,6 +90,9 @@ Lịch V2 được kéo dài: **Release V2 = 12/11/2026** (chi tiết ở [§3](
 
 ## 3. Kế hoạch V2 — phân công 3 người
 
+> **Lưu ý 08/11:** các mốc Chặng 1–3 dưới đây đã trễ. Kế hoạch **thực tế còn lại** (09 → 12/11) nằm ở
+> [09_ke_hoach_tuan_cuoi_v2.md](09_ke_hoach_tuan_cuoi_v2.md) — làm theo đó. Phần §3 bên dưới giữ lại để tham chiếu phân công dài hạn.
+
 **Chốt 29/10/2026.** Hạn **Release V2: Thứ Năm 12/11/2026**, chừa 1 ngày dự phòng (13/11).
 
 ### 3.1 Ai làm gì
