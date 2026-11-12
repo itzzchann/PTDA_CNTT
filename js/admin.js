@@ -59,13 +59,339 @@
   }
 
   /* ===== Tab Dashboard — DEV-1 (US-58) ===== */
-  function initDashboardTab(panel) {
-    renderTabPlaceholder(panel, "Tab Dashboard — DEV-1 đang làm (US-58)");
+  async function initDashboardTab(panel) {
+    panel.innerHTML = '<div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu thống kê...</div>';
+
+    const res = await getAdminStats(7);
+    if (!res.success) {
+      renderEmptyState(panel, {
+        icon: "fa-solid fa-triangle-exclamation",
+        message: res.error === "BACKEND_NOT_CONFIGURED" ? "Chưa kết nối backend." : "Không tải được thống kê.",
+        onRetry: () => initDashboardTab(panel),
+      });
+      return;
+    }
+
+    const stats = res.data?.data || res.data || {};
+    const totals = stats.totals || { users: 0, comments: 0, ratings: 0, views: 0 };
+    const topViewed = stats.topViewed || [];
+    const recentActivity = stats.recentActivity || [];
+
+    panel.innerHTML = `
+      <!-- Thẻ số liệu thống kê (US-58 Sc1) -->
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="admin-stat-info">
+            <span class="admin-stat-value">${formatNumber(totals.users || 0)}</span>
+            <span class="admin-stat-label">Thành viên</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon"><i class="fa-solid fa-eye"></i></div>
+          <div class="admin-stat-info">
+            <span class="admin-stat-value">${formatNumber(totals.views || 0)}</span>
+            <span class="admin-stat-label">Lượt xem (7 ngày)</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon"><i class="fa-solid fa-comments"></i></div>
+          <div class="admin-stat-info">
+            <span class="admin-stat-value">${formatNumber(totals.comments || 0)}</span>
+            <span class="admin-stat-label">Bình luận</span>
+          </div>
+        </div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon"><i class="fa-solid fa-star"></i></div>
+          <div class="admin-stat-info">
+            <span class="admin-stat-value">${formatNumber(totals.ratings || 0)}</span>
+            <span class="admin-stat-label">Đánh giá</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 10 phim xem nhiều nhất (US-58 Sc2) -->
+      <div class="admin-card">
+        <h2 class="admin-card-title"><i class="fa-solid fa-chart-line"></i> Top 10 phim xem nhiều nhất</h2>
+        <p class="admin-card-desc">Thống kê dựa trên lượt truy cập xem phim thực tế từ người dùng.</p>
+        <div class="admin-table-wrapper" id="admin-top-movies-container">
+          <div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải thông tin phim...</div>
+        </div>
+      </div>
+
+      <!-- Hoạt động gần đây -->
+      <div class="admin-card">
+        <h2 class="admin-card-title"><i class="fa-solid fa-clock-rotate-left"></i> Hoạt động gần đây</h2>
+        <p class="admin-card-desc">Các tương tác mới nhất của thành viên trên hệ thống.</p>
+        <div class="admin-activity-list" id="admin-activity-container">
+          ${renderRecentActivity(recentActivity)}
+        </div>
+      </div>
+    `;
+
+    renderTopMoviesTable(panel.querySelector("#admin-top-movies-container"), topViewed);
+  }
+
+  async function renderTopMoviesTable(container, topViewed) {
+    if (!container) return;
+
+    if (!topViewed || topViewed.length === 0) {
+      container.innerHTML = '<p class="admin-card-desc" style="margin: 10px 0;">Chưa có dữ liệu lượt xem phim nào.</p>';
+      return;
+    }
+
+    // Lấy thông tin chi tiết tên/poster từ phimapi cho top 10 phim
+    const movieDetails = await Promise.allSettled(
+      topViewed.slice(0, 10).map((item) => getMovieDetail(item.movieSlug)),
+    );
+
+    const rowsHtml = topViewed.slice(0, 10).map((item, index) => {
+      const res = movieDetails[index];
+      const movie = res.status === "fulfilled" && res.value?.success ? res.value.data?.data?.item : null;
+      const title = movie?.name || movie?.origin_name || item.movieSlug;
+      const poster = movie?.poster_url || movie?.thumb_url || "assets/images/defaults/no-poster.svg";
+
+      return `
+        <tr>
+          <td style="font-weight: 700; width: 40px; text-align: center;">#${index + 1}</td>
+          <td>
+            <div class="admin-movie-cell">
+              <img src="${escapeHtml(poster)}" class="admin-movie-thumb" alt="${escapeHtml(title)}" onerror="this.src='assets/images/defaults/no-poster.svg'">
+              <div>
+                <div style="font-weight: 600; color: #fff;">${escapeHtml(title)}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${escapeHtml(item.movieSlug)}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-weight: 700; color: var(--primary-color);">${formatNumber(item.views || 0)}</td>
+          <td>
+            <a href="watch.html?slug=${encodeURIComponent(item.movieSlug)}" target="_blank" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-play"></i> Xem
+            </a>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    container.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width: 40px; text-align: center;">Hạng</th>
+            <th>Phim</th>
+            <th>Lượt xem</th>
+            <th style="width: 90px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderRecentActivity(activities) {
+    if (!activities || activities.length === 0) {
+      return '<p class="admin-card-desc">Chưa có hoạt động nào gần đây.</p>';
+    }
+
+    return activities.map((act) => {
+      let icon = "fa-solid fa-bell";
+      let desc = "";
+
+      if (act.type === "comment") {
+        icon = "fa-solid fa-comment";
+        desc = `<strong>${escapeHtml(act.username || "Thành viên")}</strong> đã bình luận ở phim <em>${escapeHtml(act.movieSlug || "")}</em>`;
+      } else if (act.type === "rating") {
+        icon = "fa-solid fa-star";
+        desc = `<strong>${escapeHtml(act.username || "Thành viên")}</strong> đã đánh giá phim <em>${escapeHtml(act.movieSlug || "")}</em>`;
+      } else if (act.type === "register") {
+        icon = "fa-solid fa-user-plus";
+        desc = `<strong>${escapeHtml(act.username || "Thành viên")}</strong> đã đăng ký tài khoản mới`;
+      }
+
+      const timeStr = act.createdAt ? formatDate(act.createdAt) : "";
+
+      return `
+        <div class="admin-activity-item">
+          <div class="admin-activity-icon"><i class="${icon}"></i></div>
+          <div class="admin-activity-desc">${desc}</div>
+          <div class="admin-activity-time">${timeStr}</div>
+        </div>
+      `;
+    }).join("");
   }
 
   /* ===== Tab Bình luận — DEV-1 (US-61) ===== */
-  function initCommentsTab(panel) {
-    renderTabPlaceholder(panel, "Tab Bình luận — DEV-1 đang làm (US-61)");
+  let currentCommentsQuery = { page: 1, limit: 20, q: "", movieSlug: "" };
+
+  async function initCommentsTab(panel) {
+    panel.innerHTML = `
+      <div class="admin-card">
+        <h2 class="admin-card-title"><i class="fa-solid fa-comments"></i> Quản lý & kiểm duyệt bình luận</h2>
+        <p class="admin-card-desc">Kiểm duyệt nội dung, gắn cờ tiết lộ cốt truyện (spoiler) hoặc gỡ bỏ bình luận vi phạm (US-61).</p>
+        
+        <div class="admin-field-row" style="margin-bottom: 16px;">
+          <input type="text" class="admin-input" id="admin-cmt-search" placeholder="Tìm theo nội dung hoặc tên người dùng..." value="${escapeHtml(currentCommentsQuery.q)}" />
+          <input type="text" class="admin-input" id="admin-cmt-slug" placeholder="Lọc theo slug phim (VD: muc-than-ky)..." value="${escapeHtml(currentCommentsQuery.movieSlug)}" />
+          <button type="button" class="btn btn-primary" id="admin-cmt-filter-btn"><i class="fa-solid fa-magnifying-glass"></i> Lọc</button>
+          <button type="button" class="btn btn-outline" id="admin-cmt-reset-btn"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+        </div>
+
+        <div id="admin-comments-table-wrapper" class="admin-table-wrapper">
+          <div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách bình luận...</div>
+        </div>
+      </div>
+    `;
+
+    panel.querySelector("#admin-cmt-filter-btn").addEventListener("click", () => {
+      currentCommentsQuery.q = panel.querySelector("#admin-cmt-search").value.trim();
+      currentCommentsQuery.movieSlug = panel.querySelector("#admin-cmt-slug").value.trim();
+      currentCommentsQuery.page = 1;
+      loadAdminCommentsList(panel);
+    });
+
+    panel.querySelector("#admin-cmt-reset-btn").addEventListener("click", () => {
+      panel.querySelector("#admin-cmt-search").value = "";
+      panel.querySelector("#admin-cmt-slug").value = "";
+      currentCommentsQuery.q = "";
+      currentCommentsQuery.movieSlug = "";
+      currentCommentsQuery.page = 1;
+      loadAdminCommentsList(panel);
+    });
+
+    await loadAdminCommentsList(panel);
+  }
+
+  async function loadAdminCommentsList(panel) {
+    const wrapper = panel.querySelector("#admin-comments-table-wrapper");
+    if (!wrapper) return;
+
+    wrapper.innerHTML = '<div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách...</div>';
+
+    const res = await getAdminComments(currentCommentsQuery);
+    if (!res.success) {
+      wrapper.innerHTML = `
+        <div class="admin-loading" style="color: var(--error-color);">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          ${res.error === "BACKEND_NOT_CONFIGURED" ? "Chưa kết nối backend." : "Không tải được danh sách bình luận."}
+        </div>`;
+      return;
+    }
+
+    const dataObj = res.data?.data || res.data || {};
+    const items = dataObj.items || [];
+    const pagination = dataObj.pagination || { total: items.length };
+
+    if (items.length === 0) {
+      wrapper.innerHTML = '<p class="admin-card-desc" style="padding: 20px 0;">Không tìm thấy bình luận nào phù hợp.</p>';
+      return;
+    }
+
+    wrapper.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Người gửi</th>
+            <th>Phim / Tập</th>
+            <th>Nội dung</th>
+            <th>Trạng thái</th>
+            <th>Thời gian</th>
+            <th style="width: 170px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((c) => {
+            const user = c.user || {};
+            const isSpoiler = Boolean(c.isSpoiler);
+            const epText = c.episode ? `(Tập ${escapeHtml(c.episode)})` : "";
+            const timeText = c.createdAt ? formatDate(c.createdAt) : "";
+
+            return `
+              <tr id="admin-cmt-row-${escapeHtml(c.id)}">
+                <td>
+                  <div style="font-weight: 600; color: #fff;">${escapeHtml(user.username || "Khách")}</div>
+                  <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(user.id || "")}</div>
+                </td>
+                <td>
+                  <div style="font-weight: 500;">${escapeHtml(c.movieSlug || "")} ${epText}</div>
+                </td>
+                <td style="max-width: 320px; word-break: break-word;">
+                  ${escapeHtml(c.content || "")}
+                </td>
+                <td>
+                  ${isSpoiler ? '<span class="admin-badge-spoil"><i class="fa-solid fa-eye-slash"></i> Spoil</span>' : '<span class="admin-badge-clean"><i class="fa-solid fa-check"></i> Bình thường</span>'}
+                </td>
+                <td style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">
+                  ${timeText}
+                </td>
+                <td>
+                  <div class="admin-actions-cell">
+                    <button type="button" class="btn btn-outline btn-sm btn-flag-spoil" data-id="${escapeHtml(c.id)}" data-spoil="${isSpoiler}">
+                      <i class="fa-solid fa-mask"></i> ${isSpoiler ? "Bỏ Spoil" : "Gắn Spoil"}
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm btn-del-cmt" data-id="${escapeHtml(c.id)}">
+                      <i class="fa-solid fa-trash"></i> Xóa
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+      <div style="margin-top: 14px; font-size: 13px; color: var(--text-muted);">
+        Tổng số: <strong>${pagination.total || items.length}</strong> bình luận
+      </div>
+    `;
+
+    // Gắn sự kiện gắn cờ spoil
+    wrapper.querySelectorAll(".btn-flag-spoil").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const currentSpoil = btn.dataset.spoil === "true";
+        const newSpoil = !currentSpoil;
+
+        const updateRes = await flagCommentSpoiler(id);
+        if (updateRes.success) {
+          showToast(newSpoil ? "Đã đánh dấu bình luận chứa nội dung Spoil" : "Đã cập nhật trạng thái bình luận", "success");
+          loadAdminCommentsList(panel);
+        } else {
+          showToast(updateRes.error || "Không cập nhật được trạng thái spoil", "error");
+        }
+      });
+    });
+
+    // Gắn sự kiện xóa bình luận (có xác nhận US-61)
+    wrapper.querySelectorAll(".btn-del-cmt").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        if (!id) return;
+
+        const confirmed = typeof showConfirmDialog === "function"
+          ? await showConfirmDialog({
+              title: "Xóa bình luận vi phạm",
+              message: "Bạn có chắc chắn muốn gỡ bỏ bình luận này không? Bình luận sẽ bị ẩn khỏi trang xem phim.",
+              confirmText: "Gỡ bỏ",
+              danger: true,
+            })
+          : confirm("Bạn có chắc chắn muốn gỡ bỏ bình luận này không?");
+
+        if (!confirmed) return;
+
+        const delRes = await deleteAdminComment(id);
+        if (delRes.success) {
+          showToast("Đã xóa bình luận thành công", "success");
+          const row = document.getElementById(`admin-cmt-row-${id}`);
+          if (row) row.remove();
+        } else {
+          showToast(delRes.error || "Không thể xóa bình luận", "error");
+        }
+      });
+    });
   }
 
   /* ===== Tab Thành viên — DEV-2 (US-63) ===== */

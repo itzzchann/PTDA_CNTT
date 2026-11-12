@@ -120,6 +120,9 @@
     state.resumeAt =
       previous && String(previous.episode) === String(state.episode) ? Number(previous.progress) || 0 : 0;
     saveWatchHistory(movie, state.episode, state.resumeAt);
+
+    // Ghi nhận lượt xem cho thống kê (US-58)
+    recordMovieView(movie.slug, state.episode);
   }
 
   // Không tải được phim: báo ngay trong khung video, ẩn các khu vực phụ thuộc dữ liệu phim.
@@ -865,8 +868,8 @@
     }
   }
 
-  // ===== Bình luận & đánh giá =====
-  // DỮ LIỆU DEMO: thay bằng GET /movies/:slug/comments và /ratings khi có backend (US-54, 55, 56).
+  // ===== Bình luận & đánh giá (DEV-1 — US-54, US-55, US-56) =====
+  let currentRatingScore = 10;
 
   const DEMO_COMMENTS = [
     { user: "ngiahan0407", avatar: "assets/images/defaults/default-avatar1.jpg", badges: [{ icon: "fas fa-infinity", tone: "gold" }], sentiment: "Tuyệt vời", time: "42 phút trước", content: "mêeeeee" },
@@ -879,20 +882,41 @@
     { user: "Hải Yến", avatar: "assets/images/defaults/default-avatar5.jpg", badges: [{ icon: "fas fa-venus", tone: "pink" }], rating: 9, time: "5 giờ trước", content: "Cốt truyện hay, nhạc phim xuất sắc." },
   ];
 
+  function formatCommentTime(isoString) {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diffSec < 60) return "vừa xong";
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút trước`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ trước`;
+    if (diffSec < 2592000) return `${Math.floor(diffSec / 86400)} ngày trước`;
+    return formatDate(isoString);
+  }
+
   function setupCommentSection() {
     const pills = document.querySelectorAll(".toggle-pill .pill-btn");
     pills.forEach((btn) => {
       btn.addEventListener("click", () => {
         pills.forEach((b) => b.classList.toggle("active", b === btn));
         state.commentTab = btn.dataset.tab;
+        updateCommentFormUI();
         renderComments();
       });
     });
 
     const scrollToComments = () =>
       document.getElementById("comments-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    document.getElementById("btn-rate-action")?.addEventListener("click", scrollToComments);
-    document.getElementById("btn-comment-scroll")?.addEventListener("click", scrollToComments);
+    document.getElementById("btn-rate-action")?.addEventListener("click", () => {
+      const ratePill = document.querySelector('.toggle-pill .pill-btn[data-tab="ratings"]');
+      if (ratePill) ratePill.click();
+      scrollToComments();
+    });
+    document.getElementById("btn-comment-scroll")?.addEventListener("click", () => {
+      const commentPill = document.querySelector('.toggle-pill .pill-btn[data-tab="comments"]');
+      if (commentPill) commentPill.click();
+      scrollToComments();
+    });
 
     const input = document.getElementById("comment-input");
     const counter = document.getElementById("comment-char-count");
@@ -902,53 +926,331 @@
       counter.classList.toggle("is-full", input.value.length >= COMMENT_MAX_LENGTH);
     });
 
-    document.querySelector(".send-btn")?.addEventListener("click", () => {
-      if (!input || input.value.trim() === "") {
-        showToast("Vui lòng nhập nội dung bình luận", "warning");
-        return;
+    document.querySelector(".send-btn")?.addEventListener("click", handleSendCommentOrRating);
+
+    updateCommentFormUI();
+  }
+
+  function updateCommentFormUI() {
+    const isCommentTab = state.commentTab === "comments";
+    const input = document.getElementById("comment-input");
+    const spoilerToggle = document.querySelector(".spoiler-toggle");
+    const sendBtn = document.querySelector(".send-btn");
+    let ratingPicker = document.getElementById("rating-picker-box");
+
+    if (isCommentTab) {
+      if (input) input.placeholder = "Viết bình luận...";
+      if (spoilerToggle) spoilerToggle.style.display = "";
+      if (sendBtn) sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi';
+      if (ratingPicker) ratingPicker.style.display = "none";
+    } else {
+      if (input) input.placeholder = "Viết cảm nhận của bạn về phim (tùy chọn)...";
+      if (spoilerToggle) spoilerToggle.style.display = "none";
+      if (sendBtn) sendBtn.innerHTML = '<i class="fas fa-star"></i> Gửi đánh giá';
+
+      if (!ratingPicker) {
+        ratingPicker = document.createElement("div");
+        ratingPicker.id = "rating-picker-box";
+        ratingPicker.className = "rating-picker-container";
+        const form = document.querySelector(".rich-comment-form");
+        if (form && input) {
+          form.insertBefore(ratingPicker, input);
+        }
       }
-      showToast("Vui lòng đăng nhập để bình luận", "info");
+      if (ratingPicker) {
+        ratingPicker.style.display = "flex";
+        renderRatingPicker(ratingPicker);
+      }
+    }
+  }
+
+  function renderRatingPicker(container) {
+    container.innerHTML = `
+      <div class="rating-picker-label">
+        <span>Chọn điểm đánh giá:</span>
+        <span class="current-choice">${currentRatingScore} / 10 điểm</span>
+      </div>
+      <div class="rating-number-buttons">
+        ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+          .map(
+            (num) => `
+          <button type="button" class="rating-num-btn ${num === currentRatingScore ? "selected" : ""}" data-score="${num}">
+            ${num}
+          </button>`,
+          )
+          .join("")}
+      </div>
+    `;
+
+    container.querySelectorAll(".rating-num-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentRatingScore = parseInt(btn.dataset.score, 10) || 10;
+        container.querySelectorAll(".rating-num-btn").forEach((b) => {
+          b.classList.toggle("selected", b === btn);
+        });
+        const choice = container.querySelector(".current-choice");
+        if (choice) choice.textContent = `${currentRatingScore} / 10 điểm`;
+      });
     });
   }
 
-  function renderComments() {
+  async function handleSendCommentOrRating() {
+    const input = document.getElementById("comment-input");
+    const content = input ? input.value.trim() : "";
+    const isCommentTab = state.commentTab === "comments";
+
+    if (!isLoggedIn()) {
+      showToast(isCommentTab ? "Vui lòng đăng nhập để bình luận" : "Vui lòng đăng nhập để đánh giá", "info");
+      return;
+    }
+
+    if (!state.movie?.slug) return;
+
+    if (isCommentTab) {
+      if (!content) {
+        showToast("Vui lòng nhập nội dung bình luận", "warning");
+        return;
+      }
+
+      const spoilerInput = document.querySelector(".spoiler-toggle input");
+      const isSpoiler = Boolean(spoilerInput?.checked);
+
+      const res = await postMovieComment(state.movie.slug, {
+        content,
+        isSpoiler,
+        episode: state.episode || "1",
+      });
+
+      if (!res.success) {
+        showToast(res.error?.message || "Không thể gửi bình luận, vui lòng thử lại", "error");
+        return;
+      }
+
+      showToast("Gửi bình luận thành công!", "success");
+      if (input) input.value = "";
+      const counter = document.getElementById("comment-char-count");
+      if (counter) counter.textContent = `0 / ${COMMENT_MAX_LENGTH}`;
+      if (spoilerInput) spoilerInput.checked = false;
+
+      await renderComments();
+    } else {
+      const res = await postMovieRating(state.movie.slug, {
+        score: currentRatingScore,
+        content: content || null,
+      });
+
+      if (!res.success) {
+        showToast(res.error?.message || "Không thể gửi đánh giá, vui lòng thử lại", "error");
+        return;
+      }
+
+      showToast("Cảm ơn bạn đã đánh giá phim!", "success");
+      if (input) input.value = "";
+      const counter = document.getElementById("comment-char-count");
+      if (counter) counter.textContent = `0 / ${COMMENT_MAX_LENGTH}`;
+
+      await renderComments();
+    }
+  }
+
+  async function renderComments() {
     const list = document.getElementById("rich-comment-list");
     const tabTitle = document.querySelector(".cmt-tab-btn");
     if (!list) return;
 
-    const isCommentTab = state.commentTab === "comments";
-    const data = isCommentTab ? DEMO_COMMENTS : DEMO_RATINGS;
+    if (!state.movie?.slug) {
+      renderDemoData(state.commentTab === "comments");
+      return;
+    }
 
+    const isCommentTab = state.commentTab === "comments";
+    const session = getAuthSession();
+    const currentUser = session?.user || null;
+
+    if (isCommentTab) {
+      const res = await getMovieComments(state.movie.slug, 1);
+
+      if (res.error === "BACKEND_NOT_CONFIGURED") {
+        renderDemoData(isCommentTab);
+        return;
+      }
+
+      if (!res.success) {
+        renderEmptyState(list, {
+          icon: "fa-solid fa-triangle-exclamation",
+          message: "Không tải được bình luận.",
+          onRetry: () => renderComments(),
+        });
+        return;
+      }
+
+      const items = res.data?.data?.items || res.data?.items || [];
+      const total = res.data?.data?.pagination?.total ?? res.data?.pagination?.total ?? items.length;
+
+      if (tabTitle) {
+        tabTitle.innerHTML = `<i class="fas fa-comment-alt"></i> Bình luận ( <span id="comment-count-display">${total}</span> )`;
+      }
+
+      if (items.length === 0) {
+        renderEmptyState(list, {
+          icon: "fas fa-comment-dots",
+          message: "Chưa có bình luận nào. Hãy là người đầu tiên bình luận!",
+        });
+        return;
+      }
+
+      list.innerHTML = items
+        .map((c) => {
+          const user = c.user || {};
+          const isSpoiler = Boolean(c.isSpoiler);
+          const time = formatCommentTime(c.createdAt);
+          const epTag = c.episode ? `<span class="ep-tag">Tập ${escapeHtml(c.episode)}</span>` : "";
+          const isOwner = currentUser && (currentUser.id === user.id || currentUser.role === "admin" || currentUser.role === "super_admin");
+          const deleteBtn = isOwner
+            ? `<div class="action-link delete-link" data-id="${escapeHtml(c.id)}"><i class="fas fa-trash-alt"></i> Xóa</div>`
+            : "";
+
+          return `
+          <div class="comment-item-rich ${isSpoiler ? "is-spoiler" : ""}" id="comment-${escapeHtml(c.id)}">
+            <img src="${escapeHtml(user.avatarUrl || "assets/images/defaults/default-avatar1.jpg")}" class="user-avatar" alt="${escapeHtml(user.username || "Thành viên")}">
+            <div class="comment-content-wrapper">
+              <div class="comment-header">
+                <span class="user-name">${escapeHtml(user.username || "Thành viên")}</span>
+                ${epTag}
+                <span class="time-text">${escapeHtml(time)}</span>
+              </div>
+              ${isSpoiler ? `<div class="spoiler-warning-tag"><i class="fas fa-exclamation-triangle"></i> Cảnh báo tiết lộ nội dung — Bấm để xem</div>` : ""}
+              <div class="comment-body">${escapeHtml(c.content)}</div>
+              <div class="comment-actions">
+                <div class="action-link"><i class="fas fa-arrow-up circle-icon"></i> Thích</div>
+                ${deleteBtn}
+              </div>
+            </div>
+          </div>`;
+        })
+        .join("");
+
+      list.querySelectorAll(".comment-item-rich.is-spoiler").forEach((item) => {
+        const warning = item.querySelector(".spoiler-warning-tag");
+        const body = item.querySelector(".comment-body");
+        const toggleReveal = () => item.classList.toggle("revealed");
+        warning?.addEventListener("click", toggleReveal);
+        body?.addEventListener("click", toggleReveal);
+      });
+
+      list.querySelectorAll(".delete-link").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (!id) return;
+          if (confirm("Bạn có chắc chắn muốn xóa bình luận này?")) {
+            const delRes = await deleteComment(id);
+            if (delRes.success) {
+              showToast("Đã xóa bình luận", "success");
+              const el = document.getElementById(`comment-${id}`);
+              if (el) el.remove();
+            } else {
+              showToast(delRes.error?.message || "Không thể xóa bình luận", "error");
+            }
+          }
+        });
+      });
+    } else {
+      const res = await getMovieRatings(state.movie.slug, 1);
+
+      if (res.error === "BACKEND_NOT_CONFIGURED") {
+        renderDemoData(isCommentTab);
+        return;
+      }
+
+      if (!res.success) {
+        renderEmptyState(list, {
+          icon: "fa-solid fa-triangle-exclamation",
+          message: "Không tải được đánh giá.",
+          onRetry: () => renderComments(),
+        });
+        return;
+      }
+
+      const dataObj = res.data?.data || res.data || {};
+      const items = dataObj.items || [];
+      const summary = dataObj.summary || { average: 0, total: 0 };
+      const myScore = dataObj.myScore;
+
+      if (myScore && !currentRatingScore) {
+        currentRatingScore = myScore;
+      }
+
+      const sidebarRating = document.getElementById("sidebar-rating");
+      if (sidebarRating && summary.total > 0) {
+        sidebarRating.textContent = summary.average;
+      }
+
+      if (tabTitle) {
+        tabTitle.innerHTML = `<i class="fas fa-star"></i> Đánh giá ( <span id="comment-count-display">${summary.total}</span> | TB: ${summary.average}/10 )`;
+      }
+
+      if (items.length === 0) {
+        renderEmptyState(list, {
+          icon: "fas fa-star-half-alt",
+          message: "Chưa có đánh giá nào. Hãy là người đầu tiên chấm điểm bộ phim!",
+        });
+        return;
+      }
+
+      list.innerHTML = items
+        .map((r) => {
+          const user = r.user || {};
+          const time = formatCommentTime(r.createdAt || r.updatedAt);
+          const contentHtml = r.content ? `<div class="comment-body">${escapeHtml(r.content)}</div>` : "";
+
+          return `
+          <div class="comment-item-rich">
+            <img src="${escapeHtml(user.avatarUrl || "assets/images/defaults/default-avatar1.jpg")}" class="user-avatar" alt="${escapeHtml(user.username || "Thành viên")}">
+            <div class="comment-content-wrapper">
+              <div class="comment-header">
+                <span class="rating-score-badge"><i class="fas fa-star"></i> ${escapeHtml(r.score)}/10</span>
+                <span class="user-name">${escapeHtml(user.username || "Thành viên")}</span>
+                <span class="time-text">${escapeHtml(time)}</span>
+              </div>
+              ${contentHtml}
+            </div>
+          </div>`;
+        })
+        .join("");
+    }
+  }
+
+  function renderDemoData(isCommentTab) {
+    const list = document.getElementById("rich-comment-list");
+    const tabTitle = document.querySelector(".cmt-tab-btn");
+    if (!list) return;
+
+    const data = isCommentTab ? DEMO_COMMENTS : DEMO_RATINGS;
     if (tabTitle) {
       tabTitle.innerHTML = `<i class="fas fa-comment-alt"></i> ${isCommentTab ? "Bình luận" : "Đánh giá"} ( <span id="comment-count-display">${data.length}</span> )`;
     }
 
     list.innerHTML = data
       .map((c) => {
-        const badges = c.badges
+        const badges = (c.badges || [])
           .map((b) => `<i class="${escapeHtml(b.icon)} comment-badge comment-badge-${escapeHtml(b.tone)}"></i>`)
           .join("");
         const sentiment = c.rating
           ? `<span class="sentiment-badge sentiment-good"><i class="fas fa-star"></i> ${escapeHtml(c.rating)}/10</span>`
-          : `<span class="sentiment-badge sentiment-awesome"><i class="fas fa-fire-alt"></i> ${escapeHtml(c.sentiment)}</span>`;
+          : `<span class="sentiment-badge sentiment-awesome"><i class="fas fa-fire-alt"></i> ${escapeHtml(c.sentiment || "Hay")}</span>`;
 
         return `
         <div class="comment-item-rich">
-          <img src="${escapeHtml(c.avatar)}" class="user-avatar" alt="${escapeHtml(c.user)}">
+          <img src="${escapeHtml(c.avatar || "assets/images/defaults/default-avatar1.jpg")}" class="user-avatar" alt="${escapeHtml(c.user)}">
           <div class="comment-content-wrapper">
             <div class="comment-header">
               ${sentiment}
               <span class="user-name">${escapeHtml(c.user)}</span>
               ${badges}
-              <span class="time-text">${escapeHtml(c.time)}</span>
+              <span class="time-text">${escapeHtml(c.time || "")}</span>
             </div>
             <div class="comment-body">${escapeHtml(c.content)}</div>
-            <div class="comment-actions">
-              <div class="action-link"><i class="fas fa-arrow-up circle-icon"></i></div>
-              <div class="action-link"><i class="fas fa-arrow-down circle-icon"></i></div>
-              <div class="action-link"><i class="fas fa-reply"></i> Trả lời</div>
-              <div class="action-link"><i class="fas fa-ellipsis-h"></i> Thêm</div>
-            </div>
           </div>
         </div>`;
       })
