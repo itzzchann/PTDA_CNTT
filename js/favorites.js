@@ -28,6 +28,10 @@
   // ─── Lấy danh sách yêu thích từ server (US-50) ───────────────────────────────
   async function loadServerFavorites() {
     renderSkeleton(GRID_ID, ITEMS_PER_PAGE);
+
+    // Lần đầu đăng nhập trên máy này: đẩy toàn bộ yêu thích từ localStorage lên máy chủ (US-50)
+    await syncLocalFavoritesToServerOnce();
+
     const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES + "?limit=200");
     if (res.ok && res.data?.data?.items) {
       // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildFavoriteCard
@@ -41,6 +45,20 @@
       serverFavorites = [];
     }
     renderFavorites();
+  }
+
+  // Đẩy dữ liệu localStorage lên server lần đầu sau khi đăng nhập (chạy 1 lần / máy)
+  async function syncLocalFavoritesToServerOnce() {
+    const prefs = getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {});
+    if (prefs.syncedFavoritesToServer) return;
+
+    const localFavorites = getStoredList(STORAGE_KEYS.FAVORITES);
+    if (localFavorites.length > 0) {
+      for (const movie of localFavorites) {
+        await addServerFavorite(movie).catch(() => {});
+      }
+    }
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...prefs, syncedFavoritesToServer: true });
   }
 
   // ─── Thêm vào yêu thích server (US-50) ───────────────────────────────────────

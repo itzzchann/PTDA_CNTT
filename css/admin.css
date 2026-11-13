@@ -185,6 +185,141 @@
   white-space: nowrap;
 }
 
+/* ===== Tab Thành viên (DEV-2 — US-63) ===== */
+.admin-page .users-filter-row {
+  margin-bottom: 20px;
+}
+
+.admin-page .admin-select {
+  flex: 0 1 180px;
+  cursor: pointer;
+}
+
+.admin-page .admin-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.admin-page .admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+}
+
+.admin-page .admin-table th,
+.admin-page .admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.admin-page .admin-table th {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-page .admin-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.admin-page .admin-table .text-right {
+  text-align: right;
+}
+
+.admin-page .user-cell-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page .user-cell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #333;
+}
+
+.admin-page .user-cell-names strong {
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+.admin-page .user-email-text {
+  color: var(--text-base);
+}
+
+.admin-page .user-date-text {
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.admin-page .user-role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-page .user-role-badge.badge-super {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.admin-page .user-role-badge.badge-admin {
+  background-color: var(--primary-color);
+  color: #1a1a1a;
+}
+
+.admin-page .user-role-badge.badge-member {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-base);
+}
+
+.admin-page .user-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.admin-page .user-status-badge.status-active {
+  color: #2ecc71;
+}
+
+.admin-page .user-status-badge.status-banned {
+  color: #e74c3c;
+}
+
+.admin-page .btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.admin-page .btn-danger-outline {
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.admin-page .btn-danger-outline:hover {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .admin-page .admin-tab {
     padding: 8px 10px;

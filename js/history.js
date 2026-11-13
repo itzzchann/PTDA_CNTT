@@ -25,6 +25,10 @@
   // ─── Lấy lịch sử xem từ server (US-51) ───────────────────────────────────────
   async function loadServerHistory() {
     renderSkeleton(GRID_ID, ITEMS_PER_PAGE);
+
+    // Lần đầu đăng nhập trên máy này: đẩy toàn bộ lịch sử từ localStorage lên máy chủ (US-51)
+    await syncLocalHistoryToServerOnce();
+
     const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY + "?limit=50");
     if (res.ok && res.data?.data?.items) {
       // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildHistoryCard
@@ -40,6 +44,29 @@
       serverHistory = [];
     }
     renderHistory();
+  }
+
+  // Đẩy dữ liệu lịch sử localStorage lên server lần đầu sau khi đăng nhập (chạy 1 lần / máy)
+  async function syncLocalHistoryToServerOnce() {
+    const prefs = getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {});
+    if (prefs.syncedHistoryToServer) return;
+
+    const localHistory = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
+    if (localHistory.length > 0) {
+      for (const item of localHistory) {
+        await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY, {
+          method: "PUT",
+          body: {
+            movieSlug: item.slug,
+            name: item.name || "",
+            poster: item.poster || item.poster_url || item.thumb_url || "",
+            episode: String(item.episode || "1"),
+            progress: Number(item.progress) || 0,
+          },
+        }).catch(() => {});
+      }
+    }
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...prefs, syncedHistoryToServer: true });
   }
 
   // ─── Lấy danh sách hiển thị (ưu tiên server nếu đăng nhập) ──────────────────
