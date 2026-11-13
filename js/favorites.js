@@ -5,6 +5,9 @@
   let currentPage = 1;
   let pagination = null;
 
+  // Trạng thái server: null = chưa tải; [] = rỗng; [...] = đã có dữ liệu
+  let serverFavorites = null;
+
   document.addEventListener("DOMContentLoaded", () => {
     pagination = setupPagination((page) => {
       currentPage = page;
@@ -14,10 +17,57 @@
     document
       .getElementById("clearFavoritesBtn")
       ?.addEventListener("click", clearAllFavorites);
-    renderFavorites();
+
+    if (isLoggedIn()) {
+      loadServerFavorites();
+    } else {
+      renderFavorites();
+    }
   });
 
-  function getSortedFavorites() {
+  // ─── Lấy danh sách yêu thích từ server (US-50) ───────────────────────────────
+  async function loadServerFavorites() {
+    renderSkeleton(GRID_ID, ITEMS_PER_PAGE);
+    const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES + "?limit=200");
+    if (res.ok && res.data?.data?.items) {
+      // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildFavoriteCard
+      serverFavorites = res.data.data.items.map((item) => ({
+        slug: item.movieSlug,
+        name: item.name,
+        poster: item.poster,
+        addedAt: item.addedAt,
+      }));
+    } else {
+      serverFavorites = [];
+    }
+    renderFavorites();
+  }
+
+  // ─── Thêm vào yêu thích server (US-50) ───────────────────────────────────────
+  async function addServerFavorite(movie) {
+    await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES, {
+      method: "POST",
+      body: JSON.stringify({
+        movieSlug: movie.slug,
+        name: movie.name || "",
+        poster: movie.poster_url || movie.thumb_url || movie.poster || "",
+      }),
+    });
+  }
+
+  // ─── Xóa khỏi yêu thích server (US-50) ───────────────────────────────────────
+  async function removeServerFavorite(slug) {
+    const endpoint = BACKEND_CONFIG.ENDPOINTS.MY_FAVORITE.replace("[slug]", encodeURIComponent(slug));
+    await fetchBackend(endpoint, { method: "DELETE" });
+  }
+
+  // ─── Lấy danh sách hiển thị (ưu tiên server nếu đăng nhập) ──────────────────
+  function getFavorites() {
+    if (isLoggedIn() && serverFavorites !== null) {
+      return [...serverFavorites].sort(
+        (a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0),
+      );
+    }
     return getStoredList(STORAGE_KEYS.FAVORITES).sort(
       (a, b) => new Date(b.addedAt || 0) - new Date(a.addedAt || 0),
     );
@@ -27,7 +77,7 @@
     const grid = document.getElementById(GRID_ID);
     if (!grid) return;
 
-    const favorites = getSortedFavorites();
+    const favorites = getFavorites();
     const totalPages = Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
     currentPage = Math.min(currentPage, totalPages);
 
@@ -67,10 +117,21 @@
     removeBtn.title = "Xóa khỏi yêu thích";
     removeBtn.setAttribute("aria-label", "Xóa khỏi yêu thích");
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-    removeBtn.addEventListener("click", (e) => {
+    removeBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
+
+      // Xóa local luôn
       removeFromFavorites(movie.slug);
+
+      // Xóa server nếu đăng nhập (fire-and-forget)
+      if (isLoggedIn()) {
+        removeServerFavorite(movie.slug).catch(() => {});
+        if (serverFavorites) {
+          serverFavorites = serverFavorites.filter((f) => f.slug !== movie.slug);
+        }
+      }
+
       showToast("Đã xóa khỏi danh sách yêu thích", "info");
       renderFavorites();
     });
@@ -87,7 +148,8 @@
   }
 
   async function clearAllFavorites() {
-    if (getStoredList(STORAGE_KEYS.FAVORITES).length === 0) {
+    const favorites = getFavorites();
+    if (favorites.length === 0) {
       showToast("Danh sách yêu thích đang trống", "info");
       return;
     }
@@ -100,7 +162,16 @@
     });
     if (!confirmed) return;
 
+    // Xóa local
     removeFromStorage(STORAGE_KEYS.FAVORITES);
+
+    // Xóa từng phim trên server (fire-and-forget) nếu đăng nhập
+    if (isLoggedIn() && serverFavorites) {
+      const slugs = serverFavorites.map((f) => f.slug);
+      serverFavorites = [];
+      slugs.forEach((slug) => removeServerFavorite(slug).catch(() => {}));
+    }
+
     showToast("Đã xóa toàn bộ danh sách yêu thích", "success");
     currentPage = 1;
     renderFavorites();
