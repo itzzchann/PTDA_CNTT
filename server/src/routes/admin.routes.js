@@ -46,5 +46,35 @@ router.patch(
 // ===== Khối DEV-2 — US-63 =====
 //   GET   /admin/users
 //   PATCH /admin/users/:id
+const userService = require("../services/user.service");
+
+router.get(
+  "/admin/users",
+  requireAuth,
+  requireRole("admin", "super_admin"),
+  async (req, res, next) => {
+    try {
+      const data = await userService.listUsers(req.query);
+      res.json({ data });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.patch(
+  "/admin/users/:id",
+  requireAuth,
+  requireRole("admin", "super_admin"),
+  async (req, res, next) => {
+    try {
+      const status = req.body?.status;
+      const user = await userService.updateUserStatus(req.user.id, req.params.id, status);
+      res.json({ data: user });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 module.exports = router;

@@ -70,7 +70,247 @@
 
   /* ===== Tab Thành viên — DEV-2 (US-63) ===== */
   function initUsersTab(panel) {
-    renderTabPlaceholder(panel, "Tab Thành viên — DEV-2 đang làm (US-63)");
+    let currentPage = 1;
+    let currentQuery = "";
+    let currentStatus = "";
+    let pagination = null;
+    const session = getAuthSession();
+    const currentUserId = session?.user?.id;
+
+    panel.innerHTML = `
+      <div class="admin-card users-tab">
+        <h2 class="admin-card-title"><i class="fa-solid fa-users"></i> Quản lý thành viên</h2>
+        <p class="admin-card-desc">Tìm kiếm thành viên theo tên hoặc email, quản lý quyền hạn và khóa / mở khóa tài khoản (US-63).</p>
+
+        <div class="admin-field-row users-filter-row">
+          <input type="text" class="admin-input" id="admin-users-search" placeholder="Tìm theo tên hoặc email..." />
+          <select class="admin-input admin-select" id="admin-users-status">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="banned">Bị khóa</option>
+          </select>
+          <button type="button" class="btn btn-primary" id="admin-users-search-btn">
+            <i class="fa-solid fa-magnifying-glass"></i> Tìm
+          </button>
+        </div>
+
+        <div id="admin-users-list" class="admin-users-list mt-3">
+          <div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải danh sách thành viên...</div>
+        </div>
+
+        <div class="pagination mt-4" id="admin-users-pagination" hidden>
+          <button type="button" class="btn btn-outline" id="firstPage" title="Trang đầu"><i class="fa-solid fa-angles-left"></i></button>
+          <button type="button" class="btn btn-outline" id="prevPage" title="Trang trước"><i class="fa-solid fa-angle-left"></i></button>
+          <span class="pagination-info"><span id="currentPage">1</span> / <span id="totalPage">1</span></span>
+          <button type="button" class="btn btn-outline" id="nextPage" title="Trang sau"><i class="fa-solid fa-angle-right"></i></button>
+          <button type="button" class="btn btn-outline" id="lastPage" title="Trang cuối"><i class="fa-solid fa-angles-right"></i></button>
+        </div>
+      </div>
+    `;
+
+    pagination = setupPagination((page) => {
+      currentPage = page;
+      loadUsers();
+      panel.scrollIntoView({ behavior: "smooth" });
+    });
+
+    const searchInput = panel.querySelector("#admin-users-search");
+    const statusSelect = panel.querySelector("#admin-users-status");
+    const searchBtn = panel.querySelector("#admin-users-search-btn");
+
+    searchBtn?.addEventListener("click", () => {
+      currentQuery = searchInput.value.trim();
+      currentStatus = statusSelect.value;
+      currentPage = 1;
+      loadUsers();
+    });
+
+    searchInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        currentQuery = searchInput.value.trim();
+        currentStatus = statusSelect.value;
+        currentPage = 1;
+        loadUsers();
+      }
+    });
+
+    statusSelect?.addEventListener("change", () => {
+      currentQuery = searchInput.value.trim();
+      currentStatus = statusSelect.value;
+      currentPage = 1;
+      loadUsers();
+    });
+
+    async function loadUsers() {
+      const listContainer = panel.querySelector("#admin-users-list");
+      if (!listContainer) return;
+
+      listContainer.innerHTML = '<div class="admin-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
+
+      const res = await getAdminUsers({
+        q: currentQuery,
+        status: currentStatus,
+        page: currentPage,
+        limit: 10,
+      });
+
+      if (!res.success) {
+        pagination?.setVisible(false);
+        renderEmptyState(listContainer, {
+          icon: "fa-solid fa-triangle-exclamation",
+          message: res.error === "BACKEND_NOT_CONFIGURED" ? "Chưa kết nối backend." : (res.error || "Không tải được danh sách thành viên."),
+          onRetry: loadUsers,
+        });
+        return;
+      }
+
+      const { items, pagination: pageInfo } = res.data?.data || { items: [], pagination: { totalPages: 1 } };
+
+      if (!items || items.length === 0) {
+        pagination?.setVisible(false);
+        renderEmptyState(listContainer, {
+          icon: "fa-solid fa-user-slash",
+          message: currentQuery || currentStatus ? "Không tìm thấy thành viên nào khớp bộ lọc." : "Chưa có thành viên nào.",
+        });
+        return;
+      }
+
+      renderUsersTable(listContainer, items);
+      pagination?.setVisible(pageInfo.totalPages > 1);
+      pagination?.update(pageInfo.page, pageInfo.totalPages);
+    }
+
+    function renderUsersTable(container, users) {
+      container.innerHTML = `
+        <div class="admin-table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Thành viên</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th class="text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${users.map((u) => renderUserRow(u)).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.querySelectorAll(".btn-toggle-ban").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.id;
+          const currentAction = btn.dataset.action;
+          const username = btn.dataset.username;
+
+          if (currentAction === "ban") {
+            if (userId === currentUserId) {
+              showToast("Không thể tự khóa tài khoản của chính mình", "error");
+              return;
+            }
+
+            const confirmed = await showConfirmDialog({
+              title: "Khóa tài khoản?",
+              message: `Bạn có chắc muốn khóa tài khoản "${username}"? Người dùng này sẽ bị đăng xuất và không thể tiếp tục sử dụng.`,
+              confirmText: "Khóa tài khoản",
+              danger: true,
+            });
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            const res = await setUserStatus(userId, "banned");
+            if (res.success) {
+              showToast(`Đã khóa tài khoản "${username}"`, "success");
+              loadUsers();
+            } else {
+              btn.disabled = false;
+              showToast(res.error || "Không thể khóa tài khoản", "error");
+            }
+          } else {
+            const confirmed = await showConfirmDialog({
+              title: "Mở khóa tài khoản?",
+              message: `Mở khóa cho tài khoản "${username}"? Người dùng này sẽ có thể đăng nhập lại bình thường.`,
+              confirmText: "Mở khóa",
+            });
+            if (!confirmed) return;
+
+            btn.disabled = true;
+            const res = await setUserStatus(userId, "active");
+            if (res.success) {
+              showToast(`Đã mở khóa tài khoản "${username}"`, "success");
+              loadUsers();
+            } else {
+              btn.disabled = false;
+              showToast(res.error || "Không thể mở khóa tài khoản", "error");
+            }
+          }
+        });
+      });
+    }
+
+    function renderUserRow(u) {
+      const isSelf = u.id === currentUserId;
+      const isSuper = u.role === "super_admin";
+      const isBanned = u.status === "banned";
+      const avatar = u.avatarUrl || APP_CONFIG.DEFAULT_AVATAR;
+
+      let roleBadgeClass = "badge-member";
+      let roleText = "Thành viên";
+      if (u.role === "super_admin") {
+        roleBadgeClass = "badge-super";
+        roleText = "Super Admin";
+      } else if (u.role === "admin") {
+        roleBadgeClass = "badge-admin";
+        roleText = "Admin";
+      }
+
+      let statusBadge = isBanned
+        ? '<span class="user-status-badge status-banned"><i class="fa-solid fa-lock"></i> Bị khóa</span>'
+        : '<span class="user-status-badge status-active"><i class="fa-solid fa-circle-check"></i> Hoạt động</span>';
+
+      let actionBtn = "";
+      if (isSelf) {
+        actionBtn = '<span class="text-muted text-sm"><i class="fa-solid fa-user-tag"></i> Chính bạn</span>';
+      } else if (isSuper) {
+        actionBtn = '<span class="text-muted text-sm"><i class="fa-solid fa-shield"></i> Không thể khóa</span>';
+      } else if (isBanned) {
+        actionBtn = `
+          <button type="button" class="btn btn-sm btn-outline btn-toggle-ban" data-id="${escapeHtml(u.id)}" data-username="${escapeHtml(u.username)}" data-action="unban">
+            <i class="fa-solid fa-lock-open"></i> Mở khóa
+          </button>
+        `;
+      } else {
+        actionBtn = `
+          <button type="button" class="btn btn-sm btn-danger-outline btn-toggle-ban" data-id="${escapeHtml(u.id)}" data-username="${escapeHtml(u.username)}" data-action="ban">
+            <i class="fa-solid fa-ban"></i> Khóa
+          </button>
+        `;
+      }
+
+      return `
+        <tr>
+          <td>
+            <div class="user-cell-info">
+              <img src="${escapeHtml(avatar)}" alt="${escapeHtml(u.username)}" class="user-cell-avatar" onerror="this.src='${APP_CONFIG.DEFAULT_AVATAR}'" />
+              <div class="user-cell-names">
+                <strong>${escapeHtml(u.username)}</strong>
+              </div>
+            </div>
+          </td>
+          <td><span class="user-email-text">${escapeHtml(u.email || "—")}</span></td>
+          <td><span class="user-role-badge ${roleBadgeClass}">${roleText}</span></td>
+          <td>${statusBadge}</td>
+          <td><span class="user-date-text">${formatDate(u.createdAt)}</span></td>
+          <td class="text-right">${actionBtn}</td>
+        </tr>
+      `;
+    }
+
+    loadUsers();
   }
 
   /* ===== Tab Hệ thống — Lead (US-60, US-62) ===== */

@@ -5,16 +5,77 @@
   let currentPage = 1;
   let pagination = null;
 
+  // Trạng thái server: null = chưa tải; [] = rỗng; [...] = đã có dữ liệu
+  let serverHistory = null;
+
   document.addEventListener("DOMContentLoaded", () => {
     pagination = setupPagination((page) => {
       currentPage = page;
       renderHistory();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
-    renderHistory();
+
+    if (isLoggedIn()) {
+      loadServerHistory();
+    } else {
+      renderHistory();
+    }
   });
 
-  function getSortedHistory() {
+  // ─── Lấy lịch sử xem từ server (US-51) ───────────────────────────────────────
+  async function loadServerHistory() {
+    renderSkeleton(GRID_ID, ITEMS_PER_PAGE);
+
+    // Lần đầu đăng nhập trên máy này: đẩy toàn bộ lịch sử từ localStorage lên máy chủ (US-51)
+    await syncLocalHistoryToServerOnce();
+
+    const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY + "?limit=50");
+    if (res.ok && res.data?.data?.items) {
+      // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildHistoryCard
+      serverHistory = res.data.data.items.map((item) => ({
+        slug: item.movieSlug,
+        name: item.name,
+        poster: item.poster,
+        episode: item.episode,
+        progress: item.progress,
+        watchedAt: item.watchedAt,
+      }));
+    } else {
+      serverHistory = [];
+    }
+    renderHistory();
+  }
+
+  // Đẩy dữ liệu lịch sử localStorage lên server lần đầu sau khi đăng nhập (chạy 1 lần / máy)
+  async function syncLocalHistoryToServerOnce() {
+    const prefs = getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {});
+    if (prefs.syncedHistoryToServer) return;
+
+    const localHistory = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
+    if (localHistory.length > 0) {
+      for (const item of localHistory) {
+        await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY, {
+          method: "PUT",
+          body: {
+            movieSlug: item.slug,
+            name: item.name || "",
+            poster: item.poster || item.poster_url || item.thumb_url || "",
+            episode: String(item.episode || "1"),
+            progress: Number(item.progress) || 0,
+          },
+        }).catch(() => {});
+      }
+    }
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...prefs, syncedHistoryToServer: true });
+  }
+
+  // ─── Lấy danh sách hiển thị (ưu tiên server nếu đăng nhập) ──────────────────
+  function getHistory() {
+    if (isLoggedIn() && serverHistory !== null) {
+      return [...serverHistory].sort(
+        (a, b) => new Date(b.watchedAt || 0) - new Date(a.watchedAt || 0),
+      );
+    }
     return getStoredList(STORAGE_KEYS.WATCH_HISTORY).sort(
       (a, b) => new Date(b.watchedAt || 0) - new Date(a.watchedAt || 0),
     );
@@ -24,7 +85,7 @@
     const grid = document.getElementById(GRID_ID);
     if (!grid) return;
 
-    const history = getSortedHistory();
+    const history = getHistory();
     const totalPages = Math.max(1, Math.ceil(history.length / ITEMS_PER_PAGE));
     currentPage = Math.min(currentPage, totalPages);
 
@@ -65,6 +126,10 @@
     removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       removeFromWatchHistory(movie.slug);
+      // Xóa khỏi cache server (không gọi API riêng vì hợp đồng không có DELETE /me/history/:slug)
+      if (isLoggedIn() && serverHistory) {
+        serverHistory = serverHistory.filter((h) => h.slug !== movie.slug);
+      }
       renderHistory();
     });
     card.appendChild(removeBtn);
