@@ -1122,7 +1122,7 @@
           const user = c.user || {};
           const isSpoiler = Boolean(c.isSpoiler);
           const time = formatCommentTime(c.createdAt);
-          const epTag = c.episode ? `<span class="ep-tag">Tập ${escapeHtml(c.episode)}</span>` : "";
+          const epTag = c.episode ? `<span class="ep-tag">${escapeHtml(formatEpisodeName(c.episode))}</span>` : "";
           const isOwner = currentUser && (currentUser.id === user.id || currentUser.role === "admin" || currentUser.role === "super_admin");
           const deleteBtn = isOwner
             ? `<div class="action-link delete-link" data-id="${escapeHtml(c.id)}"><i class="fas fa-trash-alt"></i> Xóa</div>`
@@ -1140,7 +1140,7 @@
               ${isSpoiler ? `<div class="spoiler-warning-tag"><i class="fas fa-exclamation-triangle"></i> Cảnh báo tiết lộ nội dung — Bấm để xem</div>` : ""}
               <div class="comment-body">${escapeHtml(c.content)}</div>
               <div class="comment-actions">
-                <div class="action-link"><i class="fas fa-arrow-up circle-icon"></i> Thích</div>
+                <div class="action-link like-link" data-id="${escapeHtml(c.id)}"><i class="fas fa-thumbs-up"></i> Thích <span class="like-count"></span></div>
                 ${deleteBtn}
               </div>
             </div>
@@ -1170,6 +1170,27 @@
             } else {
               showToast(delRes.error || "Không thể xóa bình luận", "error");
             }
+          }
+        });
+      });
+
+      list.querySelectorAll(".like-link").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          if (!isLoggedIn()) {
+            showToast("Vui lòng đăng nhập để thả tim bình luận", "info");
+            return;
+          }
+          const id = btn.dataset.id;
+          if (!id) return;
+          const likeRes = await likeComment(id);
+          if (likeRes.success) {
+            const { liked, likeCount } = likeRes.data?.data || likeRes.data || {};
+            btn.classList.toggle("liked", Boolean(liked));
+            const countEl = btn.querySelector(".like-count");
+            if (countEl) countEl.textContent = likeCount > 0 ? likeCount : "";
+          } else {
+            showToast(likeRes.error || "Không thể thả tim, thử lại sau", "error");
           }
         });
       });

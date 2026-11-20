@@ -53,6 +53,7 @@ const BACKEND_CONFIG = {
 
     COMMENTS: "/movies/[slug]/comments",
     COMMENT: "/comments/[id]",
+    COMMENT_LIKE: "/comments/[id]/like",
     RATINGS: "/movies/[slug]/ratings",
     VIEWS: "/movies/[slug]/views",
 

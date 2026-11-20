@@ -363,6 +363,13 @@ async function deleteComment(id) {
   );
 }
 
+async function likeComment(id) {
+  return await fetchBackend(
+    buildBackendPath(BACKEND_CONFIG.ENDPOINTS.COMMENT_LIKE, { id }),
+    { method: "POST" },
+  );
+}
+
 async function getMovieRatings(slug, page = 1) {
   return await fetchBackend(
     `${buildBackendPath(BACKEND_CONFIG.ENDPOINTS.RATINGS, { slug })}?page=${page}`,
@@ -476,6 +483,7 @@ if (typeof module !== "undefined" && module.exports) {
     getMovieComments,
     postMovieComment,
     deleteComment,
+    likeComment,
     getMovieRatings,
     postMovieRating,
     recordMovieView,

@@ -1714,6 +1714,30 @@ body.lights-off #header {
   text-decoration: underline;
 }
 
+/* Nút like bình luận (US-55 mở rộng) */
+.action-link.like-link {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary, #aaa);
+  transition: color 0.2s;
+  user-select: none;
+}
+
+.action-link.like-link:hover {
+  color: var(--primary, #e50914);
+}
+
+.action-link.like-link.liked {
+  color: var(--primary, #e50914);
+}
+
+.action-link.like-link .like-count {
+  font-size: 12px;
+  min-width: 14px;
+}
+
 /* US-56: Rating form 1-10 */
 .rating-picker-container {
   display: flex;
