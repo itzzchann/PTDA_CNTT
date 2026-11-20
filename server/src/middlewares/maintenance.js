@@ -18,6 +18,15 @@ function invalidateMaintenanceCache() {
   cachedUntil = 0;
 }
 
+async function isMaintenanceActive() {
+  if (Date.now() >= cachedUntil) {
+    const settings = await settingsService.getSettings();
+    cachedMode = settings.maintenanceMode;
+    cachedUntil = Date.now() + 30_000;
+  }
+  return cachedMode;
+}
+
 async function maintenance(req, res, next) {
   try {
     if (!WRITE_METHODS.has(req.method)) return next();
@@ -25,12 +34,8 @@ async function maintenance(req, res, next) {
     // Token hỏng: coi như khách (401 sẽ do route requireAuth trả, không phải việc của middleware này).
     const user = await resolveUser(req).catch(() => null);
     if (user?.role === "admin" || user?.role === "super_admin") return next();
-    if (Date.now() >= cachedUntil) {
-      const settings = await settingsService.getSettings();
-      cachedMode = settings.maintenanceMode;
-      cachedUntil = Date.now() + 30_000;
-    }
-    if (cachedMode) {
+    const active = await isMaintenanceActive();
+    if (active) {
       throw new AppError(503, "MAINTENANCE", "Hệ thống đang bảo trì, vui lòng quay lại sau");
     }
     next();
@@ -39,4 +44,4 @@ async function maintenance(req, res, next) {
   }
 }
 
-module.exports = { maintenance, invalidateMaintenanceCache };
+module.exports = { maintenance, invalidateMaintenanceCache, isMaintenanceActive };

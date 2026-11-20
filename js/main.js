@@ -127,6 +127,7 @@ async function logout() {
   clearAuthSession(); // KHÔNG xóa USER_PREFERENCES (US-19 Sc2)
   renderAuthHeader();
   showToast("Đã đăng xuất", "success");
+  applySiteSettings();
 }
 
 /**

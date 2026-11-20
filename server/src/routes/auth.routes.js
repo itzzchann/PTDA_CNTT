@@ -6,6 +6,8 @@ const authService = require("../services/auth.service");
 const validate = require("../middlewares/validate");
 const { requireAuth } = require("../middlewares/auth");
 const { loginLimiter, registerLimiter } = require("../middlewares/rate-limit");
+const { isMaintenanceActive } = require("../middlewares/maintenance");
+const { AppError } = require("../errors");
 
 const router = express.Router();
 
@@ -32,6 +34,10 @@ const googleSchema = z.object({
 
 router.post("/auth/register", registerLimiter, validate({ body: registerSchema }), async (req, res, next) => {
   try {
+    const inMaintenance = await isMaintenanceActive();
+    if (inMaintenance) {
+      throw new AppError(503, "MAINTENANCE", "Hệ thống đang bảo trì, vui lòng quay lại sau");
+    }
     res.status(201).json({ data: await authService.register(req.body) });
   } catch (err) {
     next(err);
@@ -40,7 +46,12 @@ router.post("/auth/register", registerLimiter, validate({ body: registerSchema }
 
 router.post("/auth/login", loginLimiter, validate({ body: loginSchema }), async (req, res, next) => {
   try {
-    res.json({ data: await authService.login(req.body) });
+    const session = await authService.login(req.body);
+    const inMaintenance = await isMaintenanceActive();
+    if (inMaintenance && session.user.role !== "admin" && session.user.role !== "super_admin") {
+      throw new AppError(503, "MAINTENANCE", "Hệ thống đang bảo trì, vui lòng quay lại sau");
+    }
+    res.json({ data: session });
   } catch (err) {
     next(err);
   }
@@ -48,7 +59,12 @@ router.post("/auth/login", loginLimiter, validate({ body: loginSchema }), async 
 
 router.post("/auth/google", loginLimiter, validate({ body: googleSchema }), async (req, res, next) => {
   try {
-    res.json({ data: await authService.loginWithGoogle(req.body) });
+    const session = await authService.loginWithGoogle(req.body);
+    const inMaintenance = await isMaintenanceActive();
+    if (inMaintenance && session.user.role !== "admin" && session.user.role !== "super_admin") {
+      throw new AppError(503, "MAINTENANCE", "Hệ thống đang bảo trì, vui lòng quay lại sau");
+    }
+    res.json({ data: session });
   } catch (err) {
     next(err);
   }
