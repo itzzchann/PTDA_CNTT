@@ -76,7 +76,8 @@ async function fetchBackend(path, options = {}) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  if (res.status === 401 && session) {
+  const isBanned = res.status === 403 && res.data?.error?.code === "ACCOUNT_BANNED";
+  if ((res.status === 401 || isBanned) && session) {
     clearAuthSession();
     document.dispatchEvent(new CustomEvent("auth:expired"));
   }

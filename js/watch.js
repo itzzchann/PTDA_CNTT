@@ -30,6 +30,19 @@
 
   document.addEventListener("DOMContentLoaded", initWatchPage);
 
+  // Đồng bộ lịch sử xem lên server sau khi đã ghi local (US-51 — đa thiết bị).
+  // Fire-and-forget: không await, không block UI.
+  function syncHistoryToServer(movie, episode, progress) {
+    if (!isLoggedIn() || !movie) return;
+    saveMyHistory({
+      slug: movie.slug,
+      name: movie.name || "",
+      poster: movie.poster_url || movie.thumb_url || movie.poster || "",
+      episode: String(episode),
+      progress: Number(progress) || 0,
+    }).catch(() => {});
+  }
+
   function initWatchPage() {
     const params = new URLSearchParams(window.location.search);
     const slug = params.get("slug");
@@ -47,7 +60,10 @@
     const video = document.getElementById("hls-player");
     const saveProgress = () => {
       if (!state.movie || !video || !video.duration) return;
-      saveWatchHistory(state.movie, state.episode, Math.floor(video.currentTime));
+      const progress = Math.floor(video.currentTime);
+      saveWatchHistory(state.movie, state.episode, progress);
+      // Đồng bộ lên server nếu đã đăng nhập (US-51: lịch sử xem đồng bộ đa thiết bị)
+      syncHistoryToServer(state.movie, state.episode, progress);
     };
     video?.addEventListener("timeupdate", throttle(saveProgress, 5000));
     video?.addEventListener("pause", saveProgress);
@@ -120,6 +136,7 @@
     state.resumeAt =
       previous && String(previous.episode) === String(state.episode) ? Number(previous.progress) || 0 : 0;
     saveWatchHistory(movie, state.episode, state.resumeAt);
+    syncHistoryToServer(movie, state.episode, state.resumeAt);
 
     // Ghi nhận lượt xem cho thống kê (US-58)
     recordMovieView(movie.slug, state.episode);
@@ -658,6 +675,7 @@
     renderServerTabs();
     renderEpisodes();
     saveWatchHistory(state.movie, state.episode, 0);
+    syncHistoryToServer(state.movie, state.episode, 0);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
