@@ -122,6 +122,7 @@ Khi đăng nhập lần đầu trên một máy: frontend gửi các mục local
 | 🔓 | `GET /movies/:slug/comments` | `?page&limit` (mới nhất trước; bỏ bình luận đã bị admin xóa) | `{ data: { items: Comment[], pagination } }` |
 | 🔑 | `POST /movies/:slug/comments` | `{ content, isSpoiler, episode }` | `201 { data: Comment }`. Nội dung chỉ khoảng trắng → `400`. Bị ban → `403` |
 | 🔑 | `DELETE /comments/:id` | — | `204` (chủ bình luận hoặc admin) |
+| 🔑 | `POST /comments/:id/like` | — | `200 { data: { liked: bool, likeCount: number } }` — toggle like (like lần 2 = bỏ like) |
 | 🔓 | `GET /movies/:slug/ratings` | `?page&limit` | `{ data: { summary: RatingSummary, items: [{ score, content, user, createdAt }], pagination } }` |
 | 🔑 | `POST /movies/:slug/ratings` | `{ score: 1..10, content? }` (mỗi người 1 đánh giá / phim — gửi lại = sửa) | `200 { data: { summary: RatingSummary } }` |
 | 🔓 | `POST /movies/:slug/views` | `{ episode }` | `204` — ghi nhận lượt xem cho thống kê US-58 (gọi 1 lần mỗi lần mở trang xem) |
@@ -167,6 +168,7 @@ Mọi endpoint `/admin/*` **bắt buộc** kiểm tra role ở backend. Không p
 users          (id PK, username UNIQUE, email UNIQUE, password_hash NULL, google_id UNIQUE NULL, avatar_url, role, status, created_at)
                -- password_hash NULL = tài khoản chỉ đăng nhập bằng Google
 comments       (id PK, user_id FK, movie_slug, episode, content, is_spoiler, deleted_at NULL, created_at)   INDEX(movie_slug, created_at)
+comment_likes  (comment_id FK, user_id FK, created_at, PRIMARY KEY(comment_id, user_id))                   INDEX(comment_id)
 ratings        (id PK, user_id FK, movie_slug, score 1..10, content, created_at, UNIQUE(user_id, movie_slug))
 favorites      (user_id FK, movie_slug, name, poster, added_at, PRIMARY KEY(user_id, movie_slug))
 watch_history  (user_id FK, movie_slug, name, poster, episode, progress, watched_at, PRIMARY KEY(user_id, movie_slug))
