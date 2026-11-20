@@ -202,6 +202,7 @@
   border: 1px solid var(--border-color);
 }
 
+/* Bảng dùng chung cho tab Dashboard / Bình luận (DEV-1) và Thành viên (DEV-2) — đừng khai báo lại. */
 .admin-page .admin-table {
   width: 100%;
   border-collapse: collapse;
@@ -217,10 +218,15 @@
 }
 
 .admin-page .admin-table th {
-  background-color: rgba(255, 255, 255, 0.04);
-  color: var(--text-base);
+  background-color: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.admin-page .admin-table td {
+  color: var(--text-light);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .admin-page .admin-table tbody tr:hover {
@@ -382,32 +388,6 @@
 .admin-page .admin-table-wrapper {
   overflow-x: auto;
   margin-top: 12px;
-}
-
-.admin-page .admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  text-align: left;
-}
-
-.admin-page .admin-table th {
-  padding: 12px 14px;
-  background-color: rgba(0, 0, 0, 0.3);
-  color: var(--text-muted);
-  font-weight: 600;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.admin-page .admin-table td {
-  padding: 12px 14px;
-  color: var(--text-light);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  vertical-align: middle;
-}
-
-.admin-page .admin-table tr:hover td {
-  background-color: rgba(255, 255, 255, 0.02);
 }
 
 .admin-page .admin-movie-cell {
