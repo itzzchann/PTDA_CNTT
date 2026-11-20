@@ -32,8 +32,8 @@
     // Lần đầu đăng nhập trên máy này: đẩy toàn bộ yêu thích từ localStorage lên máy chủ (US-50)
     await syncLocalFavoritesToServerOnce();
 
-    const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES + "?limit=200");
-    if (res.ok && res.data?.data?.items) {
+    const res = await getMyFavorites(1, 200);
+    if (res.success && res.data?.data?.items) {
       // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildFavoriteCard
       serverFavorites = res.data.data.items.map((item) => ({
         slug: item.movieSlug,
@@ -63,20 +63,12 @@
 
   // ─── Thêm vào yêu thích server (US-50) ───────────────────────────────────────
   async function addServerFavorite(movie) {
-    await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_FAVORITES, {
-      method: "POST",
-      body: JSON.stringify({
-        movieSlug: movie.slug,
-        name: movie.name || "",
-        poster: movie.poster_url || movie.thumb_url || movie.poster || "",
-      }),
-    });
+    await addMyFavorite(movie);
   }
 
   // ─── Xóa khỏi yêu thích server (US-50) ───────────────────────────────────────
   async function removeServerFavorite(slug) {
-    const endpoint = BACKEND_CONFIG.ENDPOINTS.MY_FAVORITE.replace("[slug]", encodeURIComponent(slug));
-    await fetchBackend(endpoint, { method: "DELETE" });
+    await removeMyFavorite(slug);
   }
 
   // ─── Lấy danh sách hiển thị (ưu tiên server nếu đăng nhập) ──────────────────

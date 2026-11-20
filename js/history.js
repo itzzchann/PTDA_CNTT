@@ -29,8 +29,8 @@
     // Lần đầu đăng nhập trên máy này: đẩy toàn bộ lịch sử từ localStorage lên máy chủ (US-51)
     await syncLocalHistoryToServerOnce();
 
-    const res = await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY + "?limit=50");
-    if (res.ok && res.data?.data?.items) {
+    const res = await getMyHistory(1, 50);
+    if (res.success && res.data?.data?.items) {
       // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildHistoryCard
       serverHistory = res.data.data.items.map((item) => ({
         slug: item.movieSlug,
@@ -54,15 +54,12 @@
     const localHistory = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
     if (localHistory.length > 0) {
       for (const item of localHistory) {
-        await fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY, {
-          method: "PUT",
-          body: {
-            movieSlug: item.slug,
-            name: item.name || "",
-            poster: item.poster || item.poster_url || item.thumb_url || "",
-            episode: String(item.episode || "1"),
-            progress: Number(item.progress) || 0,
-          },
+        await saveMyHistory({
+          slug: item.slug,
+          name: item.name || "",
+          poster: item.poster || item.poster_url || item.thumb_url || "",
+          episode: String(item.episode || "1"),
+          progress: Number(item.progress) || 0,
         }).catch(() => {});
       }
     }

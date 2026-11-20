@@ -34,15 +34,12 @@
   // Fire-and-forget: không await, không block UI.
   function syncHistoryToServer(movie, episode, progress) {
     if (!isLoggedIn() || !movie) return;
-    fetchBackend(BACKEND_CONFIG.ENDPOINTS.MY_HISTORY, {
-      method: "PUT",
-      body: JSON.stringify({
-        movieSlug: movie.slug,
-        name: movie.name || "",
-        poster: movie.poster_url || movie.thumb_url || movie.poster || "",
-        episode: String(episode),
-        progress: Number(progress) || 0,
-      }),
+    saveMyHistory({
+      slug: movie.slug,
+      name: movie.name || "",
+      poster: movie.poster_url || movie.thumb_url || movie.poster || "",
+      episode: String(episode),
+      progress: Number(progress) || 0,
     }).catch(() => {});
   }
 
