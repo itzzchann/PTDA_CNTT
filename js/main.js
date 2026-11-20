@@ -26,7 +26,9 @@ async function applySiteSettings() {
   if (settings.maintenanceMode) {
     const session = getAuthSession();
     const isAdmin = session?.user?.role === "admin" || session?.user?.role === "super_admin";
-    if (!isAdmin) showMaintenanceScreen(settings.maintenanceMessage || "");
+    // Không chắn trang login.html: admin cần đăng nhập để tắt bảo trì (US-62).
+    const isLoginPage = window.location.pathname.endsWith("login.html");
+    if (!isAdmin && !isLoginPage) showMaintenanceScreen(settings.maintenanceMessage || "");
   }
 }
 

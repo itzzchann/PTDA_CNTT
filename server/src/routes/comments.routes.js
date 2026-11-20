@@ -26,4 +26,19 @@ router.delete(
   },
 );
 
+// POST /comments/:id/like — toggle like (like lần 2 = bỏ like). Yêu cầu đăng nhập.
+router.post(
+  "/comments/:id/like",
+  requireAuth,
+  validate({ params: idParamSchema }),
+  async (req, res, next) => {
+    try {
+      const result = await commentService.toggleCommentLike(req.user.id, req.params.id);
+      res.json({ data: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 module.exports = router;

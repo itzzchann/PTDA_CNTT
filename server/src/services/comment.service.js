@@ -197,6 +197,50 @@ async function adminDeleteComment(id) {
   await db.query(`UPDATE comments SET deleted_at = NOW() WHERE id = $1`, [id]);
 }
 
+/**
+ * Toggle like cho bình luận (US-55 mở rộng): like lần 2 = bỏ like.
+ * Trả về { liked: bool, likeCount: number }.
+ */
+async function toggleCommentLike(userId, commentId) {
+  // Kiểm tra bình luận tồn tại và chưa bị xóa
+  const { rows: commentRows } = await db.query(
+    `SELECT id FROM comments WHERE id = $1 AND deleted_at IS NULL`,
+    [commentId],
+  );
+  if (commentRows.length === 0) {
+    throw new AppError(404, "NOT_FOUND", "Không tìm thấy bình luận");
+  }
+
+  // Kiểm tra đã like chưa
+  const { rows: existing } = await db.query(
+    `SELECT 1 FROM comment_likes WHERE comment_id = $1 AND user_id = $2`,
+    [commentId, userId],
+  );
+
+  let liked;
+  if (existing.length > 0) {
+    // Đã like → bỏ like
+    await db.query(
+      `DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2`,
+      [commentId, userId],
+    );
+    liked = false;
+  } else {
+    // Chưa like → thêm like
+    await db.query(
+      `INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [commentId, userId],
+    );
+    liked = true;
+  }
+
+  const { rows: countRows } = await db.query(
+    `SELECT COUNT(*)::int AS count FROM comment_likes WHERE comment_id = $1`,
+    [commentId],
+  );
+  return { liked, likeCount: countRows[0]?.count ?? 0 };
+}
+
 module.exports = {
   getCommentsByMovieSlug,
   createComment,
@@ -204,4 +248,5 @@ module.exports = {
   getAdminComments,
   flagCommentSpoiler,
   adminDeleteComment,
+  toggleCommentLike,
 };
