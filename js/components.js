@@ -17,22 +17,19 @@ async function loadComponent(elementId, componentPath) {
 }
 
 async function loadAllComponents() {
-  console.log("🔄 Loading components...");
   await Promise.all([
     loadComponent("header-placeholder", "./components/header.html"),
     loadComponent("footer-placeholder", "./components/footer.html"),
   ]);
 
-  console.log("✅ Components loaded!");
+  if (typeof initializeApp === "function") {
+    initializeApp();
+  } else {
+    console.error("initializeApp is not defined — thiếu js/main.js?");
+  }
 
-  setTimeout(() => {
-    if (typeof initializeApp === "function") {
-      console.log("🚀 Calling initializeApp()...");
-      initializeApp();
-    } else {
-      console.error("❌ initializeApp is not defined!");
-    }
-  }, 100);
+  // Trang cần thao tác với header/footer thì nghe sự kiện này thay vì setTimeout.
+  document.dispatchEvent(new CustomEvent("components:loaded"));
 }
 
 if (document.readyState === "loading") {

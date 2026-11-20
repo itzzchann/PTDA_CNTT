@@ -27,3 +27,7 @@ build/
 
 # Cache
 .cache/
+
+# Tài liệu quản lý dự án (lưu ngoài repo)
+product_backlog.xlsx
+Chụp màn hình*.png

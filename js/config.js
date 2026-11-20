@@ -1,6 +1,7 @@
 const API_CONFIG = {
   BASE_URL: "https://phimapi.com",
   IMAGE_HOST: "https://phimimg.com/",
+  TMDB_IMAGE_HOST: "https://image.tmdb.org/t/p",
 
   BACKUP_URL: "https://phimapi.com",
 
@@ -9,7 +10,7 @@ const API_CONFIG = {
 
     COUNTRIES_LIST: "/v1/api/quoc-gia",
 
-    MOVIES_LIST: "/danh-sach/phim-moi-cap-nhat",
+    MOVIES_LIST: "/danh-sach/phim-moi-cap-nhat-v3",
 
     MOVIE_DETAIL: "/v1/api/phim/[slug]",
 
@@ -29,10 +30,49 @@ const API_CONFIG = {
     MOVIE_LIST: "/v1/api/danh-sach/[slug]",
   },
 
-  DEFAULT_PARAMS: {
-    page: 1,
-    limit: 24,
+  TIMEOUT_MS: 15000,
+};
+
+// Backend riêng của RoPhim (tài khoản, bình luận, đánh giá, admin) — xem docs/specs/backend_api_contract.md.
+// BASE_URL "/api" = qua proxy cùng origin do Vercel cấu hình (vercel.json) — không cần CORS.
+// Ví dụ khác: "" (chưa có backend → fetchBackend trả BACKEND_NOT_CONFIGURED, trang vẫn chạy)
+// hoặc "http://localhost:3000/api" khi dev local bằng Live Server (KHÔNG commit giá trị này).
+const BACKEND_CONFIG = {
+  BASE_URL: "/api",
+
+  ENDPOINTS: {
+    REGISTER: "/auth/register",
+    LOGIN: "/auth/login",
+    GOOGLE_LOGIN: "/auth/google",
+    LOGOUT: "/auth/logout",
+    ME: "/auth/me",
+
+    MY_FAVORITES: "/me/favorites",
+    MY_FAVORITE: "/me/favorites/[slug]",
+    MY_HISTORY: "/me/history",
+
+    COMMENTS: "/movies/[slug]/comments",
+    COMMENT: "/comments/[id]",
+    COMMENT_LIKE: "/comments/[id]/like",
+    RATINGS: "/movies/[slug]/ratings",
+    VIEWS: "/movies/[slug]/views",
+
+    SETTINGS: "/settings",
+
+    ADMIN_STATS: "/admin/stats",
+    ADMIN_SETTINGS: "/admin/settings",
+    ADMIN_USERS: "/admin/users",
+    ADMIN_USER: "/admin/users/[id]",
+    ADMIN_COMMENTS: "/admin/comments",
+    ADMIN_COMMENT: "/admin/comments/[id]",
   },
+
+  // Client ID của Google là thông tin công khai (Google thiết kế để nằm trong trang web), không phải bí mật.
+  // Rỗng = chưa cấu hình: login.html tự ẩn nút "Đăng nhập bằng Google". KHÔNG dán Client secret vào đây.
+  GOOGLE_CLIENT_ID: "134760757112-4gag2pjk4uj15jo68qfqnmtq06n0182g.apps.googleusercontent.com",
+
+  // Render gói free "ngủ" khi không có request — lần gọi đầu có thể mất 30–60 giây.
+  TIMEOUT_MS: 60000,
 };
 
 const APP_CONFIG = {
@@ -40,13 +80,19 @@ const APP_CONFIG = {
 
   ITEMS_PER_PAGE: 24,
 
+  LOCAL_ITEMS_PER_PAGE: 12,
+
   MAX_DESCRIPTION_LENGTH: 200,
 
   SEARCH_DEBOUNCE_TIME: 500,
 
-  SLIDER_ITEMS: 10,
+  SEARCH_MIN_LENGTH: 2,
 
-  AUTO_SLIDE_INTERVAL: 5000,
+  MAX_HISTORY_ITEMS: 50,
+
+  DEFAULT_POSTER: "./assets/images/defaults/no-poster.svg",
+
+  DEFAULT_AVATAR: "./assets/images/defaults/default-avatar1.jpg",
 };
 
 const CATEGORIES = [
@@ -127,12 +173,13 @@ const STORAGE_KEYS = {
   FAVORITES: "rophim_favorites",
   WATCH_HISTORY: "rophim_watch_history",
   USER_PREFERENCES: "rophim_user_prefs",
-  CONTINUE_WATCHING: "rophim_continue_watching",
+  AUTH_SESSION: "rophim_auth_session",
 };
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     API_CONFIG,
+    BACKEND_CONFIG,
     APP_CONFIG,
     CATEGORIES,
     COUNTRIES,

@@ -1,48 +1,61 @@
-document.addEventListener("DOMContentLoaded", initSearch);
+(() => {
+  const GRID_ID = "searchResultGrid";
 
-async function initSearch() {
-  const params = new URLSearchParams(window.location.search);
-  const keyword = params.get("q");
+  document.addEventListener("DOMContentLoaded", initSearchPage);
 
-  const titleElement = document.getElementById("searchTitle");
-  const grid = document.getElementById("searchResultGrid");
+  function initSearchPage() {
+    const keyword = (new URLSearchParams(window.location.search).get("q") || "").trim();
+    const titleElement = document.getElementById("searchTitle");
 
-  if (!keyword || keyword.trim() === "") {
-    if (titleElement) titleElement.textContent = "Vui lòng nhập từ khóa";
-    return;
-  }
-
-  if (titleElement) {
-    titleElement.textContent = `Kết quả tìm kiếm cho: "${keyword}"`;
-  }
-
-  renderSearchResults(keyword);
-}
-
-async function renderSearchResults(keyword) {
-  const grid = document.getElementById("searchResultGrid");
-  if (!grid) return;
-
-  renderSkeleton("searchResultGrid", 12);
-
-  try {
-    const res = await searchMovies(keyword);
-
-    const movies = res.data?.data?.items || res.data?.items;
-
-    if (!res.success || !movies || movies.length === 0) {
-      grid.innerHTML = `<div class="no-results">
-                <i class="fas fa-search"></i>
-                <p>Không tìm thấy phim nào với từ khóa "<strong>${keyword}</strong>"</p>
-                <a href="index.html" class="btn-back-home">Quay lại trang chủ</a>
-            </div>`;
+    if (!keyword) {
+      if (titleElement) titleElement.textContent = "Vui lòng nhập từ khóa";
+      renderEmptyState(GRID_ID, {
+        icon: "fa-solid fa-magnifying-glass",
+        message: "Nhập tên phim hoặc diễn viên vào ô tìm kiếm phía trên.",
+      });
       return;
     }
 
-    grid.innerHTML = movies.map((movie) => createMovieCard(movie)).join("");
-  } catch (error) {
-    console.error("Search Page Error:", error);
-    grid.innerHTML =
-      '<div class="error-message">Đã có lỗi xảy ra khi tải kết quả tìm kiếm.</div>';
+    if (titleElement) titleElement.textContent = `Kết quả tìm kiếm cho: "${keyword}"`;
+    document.title = `Tìm "${keyword}" | ${APP_CONFIG.APP_NAME}`;
+
+    // Điền lại từ khóa vào ô tìm kiếm header khi header nạp xong.
+    document.addEventListener("components:loaded", () => {
+      const input = document.getElementById("main-search");
+      if (input) input.value = keyword;
+    });
+
+    renderSearchResults(keyword);
   }
-}
+
+  async function renderSearchResults(keyword) {
+    const grid = document.getElementById(GRID_ID);
+    if (!grid) return;
+
+    renderSkeleton(GRID_ID, 12);
+
+    const res = await searchMovies(keyword);
+    const movies = extractMovieItems(res);
+
+    if (!res.success) {
+      renderEmptyState(GRID_ID, {
+        icon: "fa-solid fa-triangle-exclamation",
+        message: "Đã có lỗi xảy ra khi tải kết quả tìm kiếm.",
+        onRetry: () => renderSearchResults(keyword),
+      });
+      return;
+    }
+
+    if (movies.length === 0) {
+      renderEmptyState(GRID_ID, {
+        icon: "fa-solid fa-magnifying-glass",
+        message: `Không tìm thấy phim nào với từ khóa "${keyword}".`,
+        actionText: "Quay lại trang chủ",
+        actionHref: "index.html",
+      });
+      return;
+    }
+
+    grid.innerHTML = movies.map(createMovieCard).join("");
+  }
+})();

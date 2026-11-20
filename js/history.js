@@ -1,154 +1,162 @@
-const HISTORY_KEY = "rophim_watch_history";
-const ITEMS_PER_PAGE = 12;
+(() => {
+  const GRID_ID = "history-grid";
+  const ITEMS_PER_PAGE = APP_CONFIG.LOCAL_ITEMS_PER_PAGE;
 
-let currentPage = 1;
-let totalPages = 1;
-let historyData = [];
+  let currentPage = 1;
+  let pagination = null;
 
-let historyGrid;
-let currentPageEl;
-let totalPageEl;
-let firstBtn, prevBtn, nextBtn, lastBtn;
+  // Trạng thái server: null = chưa tải; [] = rỗng; [...] = đã có dữ liệu
+  let serverHistory = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-  initElements();
-  setupPaginationEvents();
-  loadHistory();
-});
+  document.addEventListener("DOMContentLoaded", () => {
+    pagination = setupPagination((page) => {
+      currentPage = page;
+      renderHistory();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
 
-function initElements() {
-  historyGrid = document.getElementById("history-grid");
-  currentPageEl = document.getElementById("currentPage");
-  totalPageEl = document.getElementById("totalPage");
-
-  firstBtn = document.getElementById("firstPage");
-  prevBtn = document.getElementById("prevPage");
-  nextBtn = document.getElementById("nextPage");
-  lastBtn = document.getElementById("lastPage");
-}
-
-function loadHistory() {
-  setTimeout(() => {
-    try {
-      const stored = localStorage.getItem(HISTORY_KEY);
-      historyData = stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error("History parse error:", error);
-      historyData = [];
+    if (isLoggedIn()) {
+      loadServerHistory();
+    } else {
+      renderHistory();
     }
+  });
 
-    historyData.sort((a, b) => new Date(b.watchedAt) - new Date(a.watchedAt));
+  // ─── Lấy lịch sử xem từ server (US-51) ───────────────────────────────────────
+  async function loadServerHistory() {
+    renderSkeleton(GRID_ID, ITEMS_PER_PAGE);
 
-    totalPages = Math.max(1, Math.ceil(historyData.length / ITEMS_PER_PAGE));
+    // Lần đầu đăng nhập trên máy này: đẩy toàn bộ lịch sử từ localStorage lên máy chủ (US-51)
+    await syncLocalHistoryToServerOnce();
 
-    if (currentPage > totalPages) currentPage = totalPages;
-
-    renderHistory(currentPage);
-    updatePagination();
-  }, 400);
-}
-
-function renderHistory(page) {
-  historyGrid.innerHTML = "";
-
-  if (historyData.length === 0) {
-    historyGrid.innerHTML = `
-      <div style="padding:40px;text-align:center;color:#aaa">
-        <i class="fa-solid fa-film" style="font-size:48px;margin-bottom:12px;"></i>
-        <p>Bạn chưa xem phim nào.</p>
-        <a href="movies.html" style="color:var(--primary-color)">
-          Xem phim ngay →
-        </a>
-      </div>
-    `;
-    return;
+    const res = await getMyHistory(1, 50);
+    if (res.success && res.data?.data?.items) {
+      // Chuyển sang định dạng local (slug thay movieSlug) để dùng lại buildHistoryCard
+      serverHistory = res.data.data.items.map((item) => ({
+        slug: item.movieSlug,
+        name: item.name,
+        poster: item.poster,
+        episode: item.episode,
+        progress: item.progress,
+        watchedAt: item.watchedAt,
+      }));
+    } else {
+      serverHistory = [];
+    }
+    renderHistory();
   }
 
-  const start = (page - 1) * ITEMS_PER_PAGE;
-  const end = start + ITEMS_PER_PAGE;
-  const currentItems = historyData.slice(start, end);
+  // Đẩy dữ liệu lịch sử localStorage lên server lần đầu sau khi đăng nhập (chạy 1 lần / máy)
+  async function syncLocalHistoryToServerOnce() {
+    const prefs = getFromStorage(STORAGE_KEYS.USER_PREFERENCES, {});
+    if (prefs.syncedHistoryToServer) return;
 
-  currentItems.forEach((movie) => {
-    const cardHtml = createMovieCard(movie);
+    const localHistory = getStoredList(STORAGE_KEYS.WATCH_HISTORY);
+    if (localHistory.length > 0) {
+      for (const item of localHistory) {
+        await saveMyHistory({
+          slug: item.slug,
+          name: item.name || "",
+          poster: item.poster || item.poster_url || item.thumb_url || "",
+          episode: String(item.episode || "1"),
+          progress: Number(item.progress) || 0,
+        }).catch(() => {});
+      }
+    }
+    saveToStorage(STORAGE_KEYS.USER_PREFERENCES, { ...prefs, syncedHistoryToServer: true });
+  }
+
+  // ─── Lấy danh sách hiển thị (ưu tiên server nếu đăng nhập) ──────────────────
+  function getHistory() {
+    if (isLoggedIn() && serverHistory !== null) {
+      return [...serverHistory].sort(
+        (a, b) => new Date(b.watchedAt || 0) - new Date(a.watchedAt || 0),
+      );
+    }
+    return getStoredList(STORAGE_KEYS.WATCH_HISTORY).sort(
+      (a, b) => new Date(b.watchedAt || 0) - new Date(a.watchedAt || 0),
+    );
+  }
+
+  function renderHistory() {
+    const grid = document.getElementById(GRID_ID);
+    if (!grid) return;
+
+    const history = getHistory();
+    const totalPages = Math.max(1, Math.ceil(history.length / ITEMS_PER_PAGE));
+    currentPage = Math.min(currentPage, totalPages);
+
+    if (history.length === 0) {
+      pagination.setVisible(false);
+      renderEmptyState(GRID_ID, {
+        icon: "fa-solid fa-film",
+        message: "Bạn chưa xem phim nào.",
+        actionText: "Xem phim ngay",
+        actionHref: "movies.html",
+      });
+      return;
+    }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    grid.innerHTML = "";
+    history.slice(start, start + ITEMS_PER_PAGE).forEach((movie) => {
+      const card = buildHistoryCard(movie);
+      if (card) grid.appendChild(card);
+    });
+
+    pagination.setVisible(true);
+    pagination.update(currentPage, totalPages);
+  }
+
+  function buildHistoryCard(movie) {
     const temp = document.createElement("div");
-    temp.innerHTML = cardHtml.trim();
-    const card = temp.firstElementChild || temp.firstChild;
-    if (!card) return;
+    temp.innerHTML = createMovieCard(movie).trim();
+    const card = temp.firstElementChild;
+    if (!card) return null;
 
     const removeBtn = document.createElement("button");
-    removeBtn.className = "btn-remove-history";
-    removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    removeBtn.type = "button";
+    removeBtn.className = "btn-remove-card";
     removeBtn.title = "Xóa khỏi lịch sử";
-    removeBtn.style.cssText = `
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      border: none;
-      z-index: 10;
-      cursor: pointer;
-    `;
-    removeBtn.onclick = (e) => {
+    removeBtn.setAttribute("aria-label", "Xóa khỏi lịch sử");
+    removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    removeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      removeFromHistory(movie.slug);
-    };
+      removeFromWatchHistory(movie.slug);
+      // Xóa khỏi cache server (không gọi API riêng vì hợp đồng không có DELETE /me/history/:slug)
+      if (isLoggedIn() && serverHistory) {
+        serverHistory = serverHistory.filter((h) => h.slug !== movie.slug);
+      }
+      renderHistory();
+    });
     card.appendChild(removeBtn);
 
+    const episode = movie.episode || "1";
+    const watchUrl = `watch.html?slug=${encodeURIComponent(movie.slug)}&ep=${encodeURIComponent(episode)}`;
     const poster = card.querySelector(".movie-poster");
-    poster.onclick = () => {
-      window.location.href = `watch.html?slug=${movie.slug}&ep=${movie.episode || "1"}`;
-    };
+    if (poster) {
+      poster.removeAttribute("onclick");
+      poster.addEventListener("click", () => {
+        window.location.href = watchUrl;
+      });
+    }
 
-    historyGrid.appendChild(card);
-  });
-}
+    const watchedInfo = document.createElement("div");
+    watchedInfo.className = "movie-added-at";
+    const progressText = movie.progress > 0 ? ` · ${formatProgressTime(movie.progress)}` : "";
+    watchedInfo.textContent = `Đang xem: ${formatEpisodeName(episode)}${progressText} · ${formatDate(movie.watchedAt)}`;
+    card.querySelector(".movie-info")?.appendChild(watchedInfo);
 
-function removeFromHistory(slug) {
-  historyData = historyData.filter((item) => item.slug !== slug);
-  saveHistory();
-  loadHistory();
-}
+    return card;
+  }
 
-function saveHistory() {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
-}
-
-function updatePagination() {
-  currentPageEl.textContent = currentPage;
-  totalPageEl.textContent = totalPages;
-
-  firstBtn.disabled = currentPage === 1;
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
-  lastBtn.disabled = currentPage === totalPages;
-}
-
-function setupPaginationEvents() {
-  firstBtn.addEventListener("click", () => changePage(1));
-  lastBtn.addEventListener("click", () => changePage(totalPages));
-
-  prevBtn.addEventListener("click", () => {
-    if (currentPage > 1) changePage(currentPage - 1);
-  });
-
-  nextBtn.addEventListener("click", () => {
-    if (currentPage < totalPages) changePage(currentPage + 1);
-  });
-}
-
-function changePage(page) {
-  currentPage = page;
-  renderHistory(page);
-  updatePagination();
-}
-
-function formatDate(dateString) {
-  if (!dateString) return "Không rõ";
-
-  const date = new Date(dateString);
-  return date.toLocaleDateString("vi-VN");
-}
+  // Định dạng giây thành mm:ss hoặc hh:mm:ss cho trang lịch sử (US-53)
+  function formatProgressTime(seconds) {
+    const total = Math.floor(Number(seconds) || 0);
+    if (total <= 0) return "";
+    const h = Math.floor(total / 3600);
+    const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+    const s = String(total % 60).padStart(2, "0");
+    return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+  }
+})();
