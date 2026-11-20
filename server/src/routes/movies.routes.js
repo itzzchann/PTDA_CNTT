@@ -21,10 +21,14 @@ const paginationQuerySchema = z.object({
 // GET /movies/:slug/comments (US-54)
 router.get(
   "/movies/:slug/comments",
+  optionalAuth,
   validate({ params: slugParamSchema, query: paginationQuerySchema }),
   async (req, res, next) => {
     try {
-      const data = await commentService.getCommentsByMovieSlug(req.params.slug, req.query);
+      const data = await commentService.getCommentsByMovieSlug(req.params.slug, {
+        ...req.query,
+        currentUser: req.user,
+      });
       res.json({ data });
     } catch (err) {
       next(err);

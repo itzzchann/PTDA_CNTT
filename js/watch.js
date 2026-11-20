@@ -1127,6 +1127,9 @@
           const deleteBtn = isOwner
             ? `<div class="action-link delete-link" data-id="${escapeHtml(c.id)}"><i class="fas fa-trash-alt"></i> Xóa</div>`
             : "";
+          const isLiked = Boolean(c.isLiked);
+          const likeCount = Number(c.likeCount) || 0;
+          const likeCountText = likeCount > 0 ? likeCount : "";
 
           return `
           <div class="comment-item-rich ${isSpoiler ? "is-spoiler" : ""}" id="comment-${escapeHtml(c.id)}">
@@ -1140,7 +1143,7 @@
               ${isSpoiler ? `<div class="spoiler-warning-tag"><i class="fas fa-exclamation-triangle"></i> Cảnh báo tiết lộ nội dung — Bấm để xem</div>` : ""}
               <div class="comment-body">${escapeHtml(c.content)}</div>
               <div class="comment-actions">
-                <div class="action-link like-link" data-id="${escapeHtml(c.id)}"><i class="fas fa-thumbs-up"></i> Thích <span class="like-count"></span></div>
+                <div class="action-link like-link ${isLiked ? "liked" : ""}" data-id="${escapeHtml(c.id)}"><i class="fas fa-thumbs-up"></i> Thích <span class="like-count">${escapeHtml(likeCountText)}</span></div>
                 ${deleteBtn}
               </div>
             </div>

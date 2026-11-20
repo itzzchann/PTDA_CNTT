@@ -6,7 +6,7 @@ const { AppError } = require("../errors");
 /**
  * Lấy danh sách bình luận công khai theo slug phim (US-54)
  */
-async function getCommentsByMovieSlug(slug, { page = 1, limit = 20 } = {}) {
+async function getCommentsByMovieSlug(slug, { page = 1, limit = 20, currentUser = null } = {}) {
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   const offset = (pageNum - 1) * limitNum;
@@ -18,15 +18,25 @@ async function getCommentsByMovieSlug(slug, { page = 1, limit = 20 } = {}) {
   const total = countRes.rows[0]?.total || 0;
   const totalPages = Math.ceil(total / limitNum) || 1;
 
+  const currentUserId = currentUser?.id || null;
+
   const { rows } = await db.query(
     `SELECT c.id, c.movie_slug AS "movieSlug", c.episode, c.content, c.is_spoiler AS "isSpoiler", c.created_at AS "createdAt",
-            json_build_object('id', u.id, 'username', u.username, 'avatarUrl', u.avatar_url) AS "user"
+            json_build_object('id', u.id, 'username', u.username, 'avatarUrl', u.avatar_url) AS "user",
+            COALESCE(cl.like_count, 0)::int AS "likeCount",
+            CASE WHEN user_like.comment_id IS NOT NULL THEN true ELSE false END AS "isLiked"
        FROM comments c
        JOIN users u ON u.id = c.user_id
+       LEFT JOIN (
+         SELECT comment_id, COUNT(*)::int AS like_count
+           FROM comment_likes
+          GROUP BY comment_id
+       ) cl ON cl.comment_id = c.id
+       LEFT JOIN comment_likes user_like ON user_like.comment_id = c.id AND user_like.user_id = $4
       WHERE c.movie_slug = $1 AND c.deleted_at IS NULL
       ORDER BY c.created_at DESC
       LIMIT $2 OFFSET $3`,
-    [slug, limitNum, offset],
+    [slug, limitNum, offset, currentUserId],
   );
 
   return {
