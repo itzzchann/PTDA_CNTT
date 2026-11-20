@@ -29,4 +29,10 @@ module.exports = {
     limit: 5,
     message: "Bạn đăng ký quá nhiều lần, vui lòng thử lại sau",
   }),
+  // Gửi bình luận: 10 bình luận / phút / IP.
+  commentLimiter: createLimiter({
+    windowMs: 1 * MINUTE,
+    limit: 10,
+    message: "Bạn gửi bình luận quá nhanh, vui lòng chờ 1 phút",
+  }),
 };
