@@ -1040,7 +1040,7 @@
       });
 
       if (!res.success) {
-        showToast(res.error?.message || "Không thể gửi bình luận, vui lòng thử lại", "error");
+        showToast(res.error || "Không thể gửi bình luận, vui lòng thử lại", "error");
         return;
       }
 
@@ -1058,7 +1058,7 @@
       });
 
       if (!res.success) {
-        showToast(res.error?.message || "Không thể gửi đánh giá, vui lòng thử lại", "error");
+        showToast(res.error || "Không thể gửi đánh giá, vui lòng thử lại", "error");
         return;
       }
 
@@ -1168,7 +1168,7 @@
               const el = document.getElementById(`comment-${id}`);
               if (el) el.remove();
             } else {
-              showToast(delRes.error?.message || "Không thể xóa bình luận", "error");
+              showToast(delRes.error || "Không thể xóa bình luận", "error");
             }
           }
         });
